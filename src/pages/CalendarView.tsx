@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 import { Schedule, ScheduleProps } from '@mantine/schedule';
-import { Container, Title, Text, Badge } from '@mantine/core';
+import { Container, Title, Text, Badge, Grid, Box, Paper, Group } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useTimesheets } from '../hooks/useTimesheets';
 
@@ -21,56 +21,74 @@ const MobileMonthView = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
 
+  // Adjust for Monday-first week (0=Sunday, 1=Monday, etc.)
+  // Convert Sunday (0) to 7 to make it the end of the week
+  const firstDayAdjusted = firstDayOfMonth === 0 ? 7 : firstDayOfMonth;
+  const emptySlotsCount = firstDayAdjusted - 1;
+
   // Create array of days with empty slots for start of week
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const emptySlots = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+  const emptySlots = Array.from({ length: emptySlotsCount }, (_, i) => i);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-      {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-        <div key={day} style={{ textAlign: 'center', fontWeight: 'bold', padding: '8px 0' }}>
-          {day}
-        </div>
-      ))}
+    <Box>
+      {/* Weekday headers */}
+      <Grid gutter="xs">
+        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day, index) => (
+          <Grid.Col span={1.7} key={day}>
+            <Paper p={4} ta="center" fw={700} bg="gray.1">
+              {day}
+            </Paper>
+          </Grid.Col>
+        ))}
+      </Grid>
 
-      {emptySlots.map(slot => (
-        <div key={`empty-${slot}`} style={{ height: '60px' }} />
-      ))}
+      {/* Calendar grid */}
+      <Grid gutter="xs">
+        {/* Empty slots at the beginning of the month */}
+        {emptySlots.map((_, index) => (
+          <Grid.Col span={1.7} key={`empty-${index}`}>
+            <Paper p="sm" h={80} />
+          </Grid.Col>
+        ))}
 
-      {days.map(day => {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayTimesheet = timesheets.find(ts => ts.date === dateStr);
+        {/* Days of the month */}
+        {days.map((day, index) => {
+          // Calculate the actual grid position considering empty slots
+          const gridPosition = (emptySlotsCount + index) % 7;
 
-        return (
-          <div
-            key={day}
-            onClick={() => onDayClick(new Date(year, month, day))}
-            style={{
-              height: '60px',
-              border: '1px solid #eee',
-              padding: '4px',
-              cursor: 'pointer',
-              backgroundColor: dayTimesheet ? '#e3f2fd' : 'white'
-            }}
-          >
-            <div style={{ fontWeight: 'bold' }}>{day}</div>
-            {dayTimesheet && (
-              <div>
-                <Text size="xs">{Math.round(dayTimesheet.rows.reduce((sum, row) => sum + row.duration, 0) / 60)}ч</Text>
-                {dayTimesheet.rows.slice(0, 1).map(row => {
-                  const task = dayTimesheet.rows.find(r => r.taskId === row.taskId);
-                  return task ? (
-                    <Badge key={row.id} size="xs" variant="dot">
-                      {task.projectName}
-                    </Badge>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const dayTimesheet = timesheets.find(ts => ts.date === dateStr);
+
+          return (
+            <Grid.Col span={1.7} key={day}>
+              <Paper
+                p="xs"
+                h={80}
+                onClick={() => onDayClick(new Date(year, month, day))}
+                style={{ cursor: 'pointer' }}
+                bg={dayTimesheet ? 'blue.0' : 'white'}
+                bd="1px solid #eee"
+              >
+                <Text fw={700}>{day}</Text>
+                {dayTimesheet && (
+                  <Box mt="xs">
+                    <Text size="xs">{Math.round(dayTimesheet.rows.reduce((sum, row) => sum + row.duration, 0) / 60)}ч</Text>
+                    {dayTimesheet.rows.slice(0, 1).map(row => {
+                      return (
+                        <Badge key={row.id} size="xs" variant="dot">
+                          {row.description || 'Без описания'}
+                        </Badge>
+                      );
+                    })}
+                  </Box>
+                )}
+              </Paper>
+            </Grid.Col>
+          );
+        })}
+      </Grid>
+    </Box>
   );
 };
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TimesheetRow } from '../api/mockBackend';
 
 export interface TimesheetCalculatorResult {
@@ -18,16 +18,46 @@ export interface TimesheetCalculatorResult {
 export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCalculatorResult => {
   const [rows, setRows] = useState<TimesheetRow[]>(initialRows);
 
-  // Convert time string (HH:mm) to minutes from midnight
+  // Update rows when initialRows change (e.g., data loaded from API)
+  useEffect(() => {
+    setRows(initialRows);
+  }, [initialRows]);
+
+  // Convert time string (HH:mm) to minutes from midnight with validation
   const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(':').map(Number);
+    // Validate input
+    if (!time || typeof time !== 'string') {
+      return 0;
+    }
+
+    const parts = time.split(':');
+    if (parts.length !== 2) {
+      return 0;
+    }
+
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    // Validate parsed values
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return 0;
+    }
+
     return hours * 60 + minutes;
   };
 
-  // Convert minutes from midnight to time string (HH:mm)
+  // Convert minutes from midnight to time string (HH:mm) with validation
   const minutesToTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+    // Validate input
+    if (isNaN(minutes) || minutes < 0) {
+      return '00:00';
+    }
+
+    // Handle overflow
+    const normalizedMinutes = minutes % (24 * 60);
+    const hours = Math.floor(normalizedMinutes / 60);
+    const mins = normalizedMinutes % 60;
+
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
@@ -59,7 +89,7 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
     }
 
     return newRows;
-  }, []);
+  }, [timeToMinutes, minutesToTime]);
 
   // Update a specific row and recalculate all subsequent rows
   const updateRow = useCallback((index: number, updatedRow: Partial<TimesheetRow>) => {
