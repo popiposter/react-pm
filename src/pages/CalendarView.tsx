@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 import { Schedule, ScheduleProps } from '@mantine/schedule';
-import { Container, Title, Text, Badge, Grid, Box, Paper, Group } from '@mantine/core';
+import { Container, Title, Text, Badge, Grid, Box, Paper } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useTimesheets } from '../hooks/useTimesheets';
 
@@ -34,7 +34,7 @@ const MobileMonthView = ({
     <Box>
       {/* Weekday headers */}
       <Grid gutter="xs">
-        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day, index) => (
+        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
           <Grid.Col span={1.7} key={day}>
             <Paper p={4} ta="center" fw={700} bg="gray.1">
               {day}
@@ -53,10 +53,7 @@ const MobileMonthView = ({
         ))}
 
         {/* Days of the month */}
-        {days.map((day, index) => {
-          // Calculate the actual grid position considering empty slots
-          const gridPosition = (emptySlotsCount + index) % 7;
-
+        {days.map(day => {
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const dayTimesheet = timesheets.find(ts => ts.date === dateStr);
 

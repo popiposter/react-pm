@@ -24,7 +24,7 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
   }, [initialRows]);
 
   // Convert time string (HH:mm) to minutes from midnight with validation
-  const timeToMinutes = (time: string): number => {
+  const timeToMinutes = useCallback((time: string): number => {
     // Validate input
     if (!time || typeof time !== 'string') {
       return 0;
@@ -44,10 +44,10 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
     }
 
     return hours * 60 + minutes;
-  };
+  }, []);
 
   // Convert minutes from midnight to time string (HH:mm) with validation
-  const minutesToTime = (minutes: number): string => {
+  const minutesToTime = useCallback((minutes: number): string => {
     // Validate input
     if (isNaN(minutes) || minutes < 0) {
       return '00:00';
@@ -59,7 +59,7 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
     const mins = normalizedMinutes % 60;
 
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-  };
+  }, []);
 
   // Recalculate all rows from a given index
   const recalculateFromIndex = useCallback((rowsToUpdate: TimesheetRow[], startIndex: number): TimesheetRow[] => {
