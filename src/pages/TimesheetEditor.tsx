@@ -14,10 +14,12 @@ import {
   Modal,
   Stack,
   ActionIcon,
+  ScrollArea,
 } from '@mantine/core';
 import { TimeInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import { useNotifications } from '@mantine/notifications';
+import { useMediaQuery } from '@mantine/hooks';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -25,7 +27,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconTrash, IconGripVertical, IconAlertTriangle } from '@tabler/icons-react';
+import { IconTrash, IconGripVertical, IconAlertTriangle, IconPlus, IconDiskette } from '@tabler/icons-react';
 import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
 import { useTimesheetCalculator } from '../hooks/useTimesheetCalculator';
@@ -43,7 +45,7 @@ const minutesToHours = (minutes: number): number => {
   return minutes / 60;
 };
 
-// SortableRow component for @dnd-kit
+// SortableRow component for @dnd-kit - Desktop (Table)
 const SortableRow = ({
   row,
   index,
@@ -123,9 +125,96 @@ const SortableRow = ({
   );
 };
 
+// MobileRow component for @dnd-kit - Mobile (Card)
+const MobileRow = ({
+  row,
+  index,
+  groupedTasks,
+  updateRow,
+  removeRow,
+}: {
+  row: any;
+  index: number;
+  groupedTasks: Record<string, { value: string; label: string }[]>;
+  updateRow: (index: number, row: Partial<any>) => void;
+  removeRow: (index: number) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Paper
+      ref={setNodeRef}
+      style={style}
+      shadow="xs"
+      p="sm"
+      mb="sm"
+      withBorder
+      {...attributes}
+      {...listeners}
+    >
+      <Group justify="space-between" mb="xs">
+        <IconGripVertical size={16} style={{ cursor: 'grab' }} />
+        <ActionIcon variant="subtle" color="red" onClick={() => removeRow(index)}>
+          <IconTrash size={16} />
+        </ActionIcon>
+      </Group>
+      <Select
+        placeholder="Выберите задачу"
+        data={Object.entries(groupedTasks).map(([group, items]) => ({
+          group,
+          items,
+        }))}
+        value={row.taskId}
+        onChange={(value) => updateRow(index, { taskId: value || '' })}
+        searchable
+        size="sm"
+      />
+      <Group mt="xs" justify="space-between">
+        <TimeInput
+          value={row.startTime}
+          onChange={(value) => updateRow(index, { startTime: value || '00:00' })}
+          size="sm"
+          placeholder="Начало"
+        />
+        <TimeInput value={row.endTime} size="sm" readOnly />
+        <NumberInput
+          value={minutesToHours(row.duration)}
+          onChange={(value) =>
+            updateRow(index, { duration: hoursToMinutes(value || 0) })
+          }
+          min={0}
+          step={0.5}
+          decimalScale={2}
+          suffix=" ч"
+          allowNegative={false}
+          precision={2}
+          size="sm"
+          w={80}
+        />
+      </Group>
+      <TimeInput
+        value={row.description || ''}
+        onChange={(e) => updateRow(index, { description: e.target.value })}
+        placeholder="Описание..."
+        size="sm"
+        mt="xs"
+      />
+    </Paper>
+  );
+};
+
 const TimesheetEditor = () => {
   const { date } = useParams<{ date: string }>();
   const notifications = useNotifications();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] =
     useDisclosure(false);
   const [conflictError, setConflictError] = React.useState<{ message: string } | null>(null);
@@ -288,8 +377,10 @@ const TimesheetEditor = () => {
             </Badge>
           </Title>
           <Group>
-            <Button onClick={handleAddRow}>Добавить строку</Button>
-            <Button onClick={handleSave} loading={saveMutation.isPending}>
+            <Button onClick={handleAddRow} leftSection={<IconPlus size={18} />}>
+              Добавить строку
+            </Button>
+            <Button onClick={handleSave} leftSection={<IconDiskette size={18} />} loading={saveMutation.isPending}>
               Сохранить
             </Button>
           </Group>
@@ -300,21 +391,11 @@ const TimesheetEditor = () => {
             items={rows.map((row: any) => row.id)}
             strategy={verticalListSortingStrategy}
           >
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th style={{ width: '40px' }}></Table.Th>
-                  <Table.Th>Задача</Table.Th>
-                  <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
-                  <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
-                  <Table.Th style={{ width: '120px' }}>Длительность (часы)</Table.Th>
-                  <Table.Th>Описание</Table.Th>
-                  <Table.Th style={{ width: '60px' }}></Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
+            {isMobile ? (
+              // Mobile view - scrollable list of cards
+              <ScrollArea mah={600} type="scroll">
                 {rows.map((row: any, index: number) => (
-                  <SortableRow
+                  <MobileRow
                     key={row.id}
                     row={row}
                     index={index}
@@ -323,8 +404,37 @@ const TimesheetEditor = () => {
                     removeRow={removeRow}
                   />
                 ))}
-              </Table.Tbody>
-            </Table>
+              </ScrollArea>
+            ) : (
+              // Desktop view - table with horizontal scroll for smaller screens
+              <ScrollArea type="scroll">
+                <Table highlightOnHover>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th style={{ width: '40px' }}></Table.Th>
+                    <Table.Th>Задача</Table.Th>
+                    <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
+                    <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
+                    <Table.Th style={{ width: '120px' }}>Длительность (часы)</Table.Th>
+                    <Table.Th>Описание</Table.Th>
+                    <Table.Th style={{ width: '60px' }}></Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {rows.map((row: any, index: number) => (
+                    <SortableRow
+                      key={row.id}
+                      row={row}
+                      index={index}
+                      groupedTasks={groupedTasks}
+                      updateRow={updateRow}
+                      removeRow={removeRow}
+                    />
+                  ))}
+                </Table.Tbody>
+              </Table>
+              </ScrollArea>
+            )}
           </SortableContext>
         </DndContext>
 
