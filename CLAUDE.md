@@ -15,6 +15,15 @@
 - Mantine Alpha (v9+): https://alpha.mantine.dev/llms.txt
 - TanStack Query v5: https://tanstack.com/llms.txt
 
+# React 19 & Testing Best Practices
+1. **React 19 Hooks:** Используй новые хуки `use`, `useActionState` (вместо `useFormState`), `useFormStatus` для форм, где это уместно. Не используй старые хаки с `useEffect` для получения данных, если можно использовать TanStack Query.
+2. **Refs:** В React 19 `ref` теперь передается как обычный пропс (`<div ref={ref}>`), больше не нужно использовать `forwardRef`! Обязательно используй этот паттерн.
+3. **Context:** В React 19 вместо `<Context.Provider>` можно использовать просто `<Context>`.
+4. **Тестирование (Testing Library):**
+   - Всегда используй `userEvent.setup()` для взаимодействия с UI (клики, ввод).
+   - Никогда не тестируй внутренний стейт (не проверяй вызовы `setState`), тестируй только то, что видит пользователь на экране (через `screen.getByRole` или `screen.getByText`).
+   - Используй `waitFor` только для реальных асинхронных операций.
+
 ## Build & Dev Commands
 - `npm install` - установка зависимостей
 - `npm run dev` - запуск dev-сервера

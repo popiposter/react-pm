@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Container,
@@ -13,23 +13,102 @@ import {
   Text,
   Badge,
   Modal,
-  Stack
+  Stack,
+  ActionIcon
 } from '@mantine/core';
 import { TimeInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import { useNotifications } from '@mantine/notifications';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { IconTrash, IconGripHorizontal, IconAlertTriangle } from '@tabler/icons-react';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { IconTrash, IconGripVertical, IconAlertTriangle } from '@tabler/icons-react';
 import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
 import { useTimesheetCalculator } from '../hooks/useTimesheetCalculator';
 import { useSaveTimesheet } from '../hooks/useSaveTimesheet';
 
+// SortableRow component for @dnd-kit
+const SortableRow = ({ row, index, groupedTasks, updateRow, removeRow }: {
+  row: any;
+  index: number;
+  groupedTasks: Record<string, { value: string; label: string }[]>;
+  updateRow: (index: number, row: Partial<any>) => void;
+  removeRow: (index: number) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Table.Tr ref={setNodeRef} style={style}>
+      <Table.Td {...attributes} {...listeners} style={{ cursor: 'grab', textAlign: 'center' }}>
+        <IconGripVertical size={16} />
+      </Table.Td>
+      <Table.Td>
+        <Select
+          placeholder="Выберите задачу"
+          data={Object.entries(groupedTasks).map(([group, items]) => ({
+            group,
+            items
+          }))}
+          value={row.taskId}
+          onChange={(value) => updateRow(index, { taskId: value || '' })}
+          searchable
+        />
+      </Table.Td>
+      <Table.Td>
+        <TimeInput
+          value={row.startTime}
+          onChange={(value) => updateRow(index, { startTime: value || '00:00' })}
+        />
+      </Table.Td>
+      <Table.Td>
+        <TimeInput
+          value={row.endTime}
+          readOnly
+        />
+      </Table.Td>
+      <Table.Td>
+        <NumberInput
+          value={row.duration}
+          onChange={(value) => updateRow(index, { duration: Number(value) || 0 })}
+          min={0}
+        />
+      </Table.Td>
+      <Table.Td>
+        <TextInput
+          value={row.description || ''}
+          onChange={(e) => updateRow(index, { description: e.target.value })}
+          placeholder="Описание..."
+        />
+      </Table.Td>
+      <Table.Td>
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          onClick={() => removeRow(index)}
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      </Table.Td>
+    </Table.Tr>
+  );
+};
+
 const TimesheetEditor = () => {
   const { date } = useParams<{ date: string }>();
   const notifications = useNotifications();
   const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] = useDisclosure(false);
-  const [conflictError, setConflictError] = useState<{ message: string } | null>(null);
+  const [conflictError, setConflictError] = React.useState<{ message: string } | null>(null);
 
   // Load data
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
@@ -43,13 +122,15 @@ const TimesheetEditor = () => {
   const saveMutation = useSaveTimesheet();
 
   // Group tasks by project for the Select component
-  const groupedTasks = tasks.reduce((acc, task) => {
-    if (!acc[task.projectName]) {
-      acc[task.projectName] = [];
-    }
-    acc[task.projectName].push({ value: task.id, label: task.title });
-    return acc;
-  }, {} as Record<string, { value: string; label: string }[]>);
+  const groupedTasks = React.useMemo(() => {
+    return tasks.reduce((acc, task) => {
+      if (!acc[task.projectName]) {
+        acc[task.projectName] = [];
+      }
+      acc[task.projectName].push({ value: task.id, label: task.title });
+      return acc;
+    }, {} as Record<string, { value: string; label: string }[]>);
+  }, [tasks]);
 
   const handleAddRow = () => {
     const lastRow = rows[rows.length - 1];
@@ -158,9 +239,16 @@ const TimesheetEditor = () => {
     });
   };
 
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return;
-    moveRow(result.source.index, result.destination.index);
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeIndex = rows.findIndex((row: any) => row.id === active.id);
+    const overIndex = rows.findIndex((row: any) => row.id === over.id);
+
+    if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+      moveRow(activeIndex, overIndex);
+    }
   };
 
   if (tasksLoading || timesheetLoading) {
@@ -185,89 +273,41 @@ const TimesheetEditor = () => {
           </Group>
         </Group>
 
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="timesheet-rows">
-            {(provided) => (
-              <Table highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th style={{ width: '40px' }}></Table.Th>
-                    <Table.Th>Задача</Table.Th>
-                    <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
-                    <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
-                    <Table.Th style={{ width: '120px' }}>Длительность (мин)</Table.Th>
-                    <Table.Th>Описание</Table.Th>
-                    <Table.Th style={{ width: '60px' }}></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody {...provided.droppableProps} ref={provided.innerRef}>
-                  {rows.map((row, index) => (
-                    <Draggable key={row.id} draggableId={row.id} index={index}>
-                      {(provided) => (
-                        <Table.Tr
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                        >
-                          <Table.Td {...provided.dragHandleProps}>
-                            <IconGripHorizontal size={16} />
-                          </Table.Td>
-                          <Table.Td>
-                            <Select
-                              placeholder="Выберите задачу"
-                              data={Object.entries(groupedTasks).map(([group, items]) => ({
-                                group,
-                                items
-                              }))}
-                              value={row.taskId}
-                              onChange={(value) => updateRow(index, { taskId: value || '' })}
-                              searchable
-                            />
-                          </Table.Td>
-                          <Table.Td>
-                            <TimeInput
-                              value={row.startTime}
-                              onChange={(value) => updateRow(index, { startTime: value || '00:00' })}
-                            />
-                          </Table.Td>
-                          <Table.Td>
-                            <TimeInput
-                              value={row.endTime}
-                              readOnly
-                            />
-                          </Table.Td>
-                          <Table.Td>
-                            <NumberInput
-                              value={row.duration}
-                              onChange={(value) => updateRow(index, { duration: Number(value) || 0 })}
-                              min={0}
-                            />
-                          </Table.Td>
-                          <Table.Td>
-                            <TextInput
-                              value={row.description || ''}
-                              onChange={(e) => updateRow(index, { description: e.target.value })}
-                              placeholder="Описание..."
-                            />
-                          </Table.Td>
-                          <Table.Td>
-                            <Button
-                              variant="subtle"
-                              color="red"
-                              onClick={() => removeRow(index)}
-                            >
-                              <IconTrash size={16} />
-                            </Button>
-                          </Table.Td>
-                        </Table.Tr>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </Table.Tbody>
-              </Table>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext
+            items={rows.map((row: any) => row.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <Table highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th style={{ width: '40px' }}></Table.Th>
+                  <Table.Th>Задача</Table.Th>
+                  <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
+                  <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
+                  <Table.Th style={{ width: '120px' }}>Длительность (мин)</Table.Th>
+                  <Table.Th>Описание</Table.Th>
+                  <Table.Th style={{ width: '60px' }}></Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {rows.map((row: any, index: number) => (
+                  <SortableRow
+                    key={row.id}
+                    row={row}
+                    index={index}
+                    groupedTasks={groupedTasks}
+                    updateRow={updateRow}
+                    removeRow={removeRow}
+                  />
+                ))}
+              </Table.Tbody>
+            </Table>
+          </SortableContext>
+        </DndContext>
 
         {rows.length === 0 && (
           <Text ta="center" c="dimmed" py="xl">
