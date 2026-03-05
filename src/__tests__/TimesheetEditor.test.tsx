@@ -96,7 +96,7 @@ vi.mock('@tabler/icons-react', () => ({
   IconGripVertical: () => <svg data-icon="grip" />,
   IconAlertTriangle: () => <svg data-icon="alert" />,
   IconPlus: () => <svg data-icon="plus" />,
-  IconDiskette: () => <svg data-icon="diskette" />,
+  IconDeviceFloppy: () => <svg data-icon="diskette" />,
 }));
 
 // Mock custom hooks

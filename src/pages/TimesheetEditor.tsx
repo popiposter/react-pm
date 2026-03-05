@@ -27,7 +27,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconTrash, IconGripVertical, IconAlertTriangle, IconPlus, IconDiskette } from '@tabler/icons-react';
+import { IconTrash, IconGripVertical, IconAlertTriangle, IconPlus, IconDeviceFloppy } from '@tabler/icons-react';
 import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
 import { useTimesheetCalculator } from '../hooks/useTimesheetCalculator';
@@ -380,7 +380,7 @@ const TimesheetEditor = () => {
             <Button onClick={handleAddRow} leftSection={<IconPlus size={18} />}>
               Добавить строку
             </Button>
-            <Button onClick={handleSave} leftSection={<IconDiskette size={18} />} loading={saveMutation.isPending}>
+            <Button onClick={handleSave} leftSection={<IconDeviceFloppy size={18} />} loading={saveMutation.isPending}>
               Сохранить
             </Button>
           </Group>
