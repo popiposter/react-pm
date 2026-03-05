@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
-import { Schedule, ScheduleProps } from '@mantine/schedule';
+import { Schedule } from '@mantine/schedule';
 import { Container, Title, Text, Badge, Grid, Box, Paper } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useTimesheets } from '../hooks/useTimesheets';
@@ -9,7 +9,7 @@ import { useTimesheets } from '../hooks/useTimesheets';
 const MobileMonthView = ({
   year,
   month,
-  onDayClick
+  onDayClick,
 }: {
   year: number;
   month: number;
@@ -34,7 +34,7 @@ const MobileMonthView = ({
     <Box>
       {/* Weekday headers */}
       <Grid gutter="xs">
-        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day) => (
           <Grid.Col span={1.7} key={day}>
             <Paper p={4} ta="center" fw={700} bg="gray.1">
               {day}
@@ -53,9 +53,9 @@ const MobileMonthView = ({
         ))}
 
         {/* Days of the month */}
-        {days.map(day => {
+        {days.map((day) => {
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const dayTimesheet = timesheets.find(ts => ts.date === dateStr);
+          const dayTimesheet = timesheets.find((ts) => ts.date === dateStr);
 
           return (
             <Grid.Col span={1.7} key={day}>
@@ -70,8 +70,10 @@ const MobileMonthView = ({
                 <Text fw={700}>{day}</Text>
                 {dayTimesheet && (
                   <Box mt="xs">
-                    <Text size="xs">{Math.round(dayTimesheet.rows.reduce((sum, row) => sum + row.duration, 0) / 60)}ч</Text>
-                    {dayTimesheet.rows.slice(0, 1).map(row => {
+                    <Text size="xs">
+                      {Math.round(dayTimesheet.rows.reduce((sum, row) => sum + row.duration, 0) / 60)}ч
+                    </Text>
+                    {dayTimesheet.rows.slice(0, 1).map((row) => {
                       return (
                         <Badge key={row.id} size="xs" variant="dot">
                           {row.description || 'Без описания'}
@@ -104,28 +106,16 @@ const CalendarView = () => {
     navigate(`/timesheet/${dateStr}`);
   };
 
-  const handlePreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const handleDateChange = (dateString: string) => {
+    setCurrentDate(new Date(dateString));
   };
 
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  };
-
-  const events: ScheduleProps['events'] = timesheets.map(timesheet => ({
-    date: new Date(timesheet.date),
-    children: (
-      <div>
-        <Text size="sm" fw={500}>
-          {Math.round(timesheet.rows.reduce((sum, row) => sum + row.duration, 0) / 60)} часов
-        </Text>
-        {timesheet.rows.slice(0, 2).map(row => (
-          <Text key={row.id} size="xs" c="dimmed">
-            {row.description || 'Без описания'}
-          </Text>
-        ))}
-      </div>
-    ),
+  const events = timesheets.map((timesheet) => ({
+    id: timesheet.id,
+    title: `${Math.round(timesheet.rows.reduce((sum, row) => sum + row.duration, 0) / 60)} часов`,
+    start: new Date(timesheet.date),
+    end: new Date(timesheet.date),
+    description: timesheet.rows.slice(0, 2).map((row) => row.description || 'Без описания').join(', '),
   }));
 
   return (
@@ -140,11 +130,10 @@ const CalendarView = () => {
         />
       ) : (
         <Schedule
+          date={currentDate.toISOString().split('T')[0]}
+          onDateChange={handleDateChange}
           events={events}
-          currentDate={currentDate}
-          onDateChange={setCurrentDate}
-          onNext={handleNextMonth}
-          onPrevious={handlePreviousMonth}
+          mode="static" // Disable drag and other interactions
           locale="ru"
         />
       )}
