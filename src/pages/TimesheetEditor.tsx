@@ -15,6 +15,7 @@ import {
   Modal,
   Stack
 } from '@mantine/core';
+import { TimeInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import { useNotifications } from '@mantine/notifications';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -223,14 +224,13 @@ const TimesheetEditor = () => {
                             />
                           </Table.Td>
                           <Table.Td>
-                            <TextInput
+                            <TimeInput
                               value={row.startTime}
-                              onChange={(e) => updateRow(index, { startTime: e.target.value })}
-                              placeholder="09:00"
+                              onChange={(value) => updateRow(index, { startTime: value || '00:00' })}
                             />
                           </Table.Td>
                           <Table.Td>
-                            <TextInput
+                            <TimeInput
                               value={row.endTime}
                               readOnly
                             />

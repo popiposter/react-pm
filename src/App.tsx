@@ -1,5 +1,6 @@
 import React from 'react';
 import { MantineProvider } from '@mantine/core';
+import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -37,35 +38,37 @@ if (typeof window !== 'undefined') {
 function App() {
   return (
     <MantineProvider defaultColorScheme="light">
-      <Notifications />
-      {persister ? (
-        <PersistQueryClientProvider
-          client={queryClient}
-          persistOptions={{
-            persister,
-            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-            restoreBatchSize: 50
-          }}
-        >
-          <Layout>
-            <Routes>
-              <Route path="/" element={<CalendarView />} />
-              <Route path="/calendar" element={<CalendarView />} />
-              <Route path="/timesheet/:date" element={<TimesheetEditor />} />
-            </Routes>
-          </Layout>
-        </PersistQueryClientProvider>
-      ) : (
-        <QueryClientProvider client={queryClient}>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<CalendarView />} />
-              <Route path="/calendar" element={<CalendarView />} />
-              <Route path="/timesheet/:date" element={<TimesheetEditor />} />
-            </Routes>
-          </Layout>
-        </QueryClientProvider>
-      )}
+      <DatesProvider settings={{ locale: 'ru' }}>
+        <Notifications />
+        {persister ? (
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{
+              persister,
+              maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+              restoreBatchSize: 50
+            }}
+          >
+            <Layout>
+              <Routes>
+                <Route path="/" element={<CalendarView />} />
+                <Route path="/calendar" element={<CalendarView />} />
+                <Route path="/timesheet/:date" element={<TimesheetEditor />} />
+              </Routes>
+            </Layout>
+          </PersistQueryClientProvider>
+        ) : (
+          <QueryClientProvider client={queryClient}>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<CalendarView />} />
+                <Route path="/calendar" element={<CalendarView />} />
+                <Route path="/timesheet/:date" element={<TimesheetEditor />} />
+              </Routes>
+            </Layout>
+          </QueryClientProvider>
+        )}
+      </DatesProvider>
     </MantineProvider>
   );
 }
