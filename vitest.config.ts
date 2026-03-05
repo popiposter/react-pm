@@ -7,7 +7,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
-    // Disable workers entirely - run in main thread
+    // Отключаем worker-ы - запускаем в основном потоке
     threads: false,
+    // Запускаем тесты последовательно
+    fileParallelism: false,
   },
 });

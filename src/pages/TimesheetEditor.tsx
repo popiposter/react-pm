@@ -8,13 +8,12 @@ import {
   Button,
   Select,
   NumberInput,
-  TextInput,
   Group,
   Text,
   Badge,
   Modal,
   Stack,
-  ActionIcon
+  ActionIcon,
 } from '@mantine/core';
 import { TimeInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
@@ -32,15 +31,35 @@ import { useTimesheet } from '../hooks/useTimesheet';
 import { useTimesheetCalculator } from '../hooks/useTimesheetCalculator';
 import { useSaveTimesheet } from '../hooks/useSaveTimesheet';
 
+// Convert duration in hours (1.5, 2, 0.5) to minutes (90, 120, 30)
+const hoursToMinutes = (value: number | string): number => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num) || num < 0) return 0;
+  return Math.round(num * 60);
+};
+
+// Convert duration in minutes to hours for display (90 -> 1.5)
+const minutesToHours = (minutes: number): number => {
+  return minutes / 60;
+};
+
 // SortableRow component for @dnd-kit
-const SortableRow = ({ row, index, groupedTasks, updateRow, removeRow }: {
+const SortableRow = ({
+  row,
+  index,
+  groupedTasks,
+  updateRow,
+  removeRow,
+}: {
   row: any;
   index: number;
   groupedTasks: Record<string, { value: string; label: string }[]>;
   updateRow: (index: number, row: Partial<any>) => void;
   removeRow: (index: number) => void;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -58,7 +77,7 @@ const SortableRow = ({ row, index, groupedTasks, updateRow, removeRow }: {
           placeholder="Выберите задачу"
           data={Object.entries(groupedTasks).map(([group, items]) => ({
             group,
-            items
+            items,
           }))}
           value={row.taskId}
           onChange={(value) => updateRow(index, { taskId: value || '' })}
@@ -72,31 +91,31 @@ const SortableRow = ({ row, index, groupedTasks, updateRow, removeRow }: {
         />
       </Table.Td>
       <Table.Td>
-        <TimeInput
-          value={row.endTime}
-          readOnly
-        />
+        <TimeInput value={row.endTime} readOnly />
       </Table.Td>
       <Table.Td>
         <NumberInput
-          value={row.duration}
-          onChange={(value) => updateRow(index, { duration: Number(value) || 0 })}
+          value={minutesToHours(row.duration)}
+          onChange={(value) =>
+            updateRow(index, { duration: hoursToMinutes(value || 0) })
+          }
           min={0}
+          step={0.5}
+          decimalScale={2}
+          suffix=" ч"
+          allowNegative={false}
+          precision={2}
         />
       </Table.Td>
       <Table.Td>
-        <TextInput
+        <TimeInput
           value={row.description || ''}
           onChange={(e) => updateRow(index, { description: e.target.value })}
           placeholder="Описание..."
         />
       </Table.Td>
       <Table.Td>
-        <ActionIcon
-          variant="subtle"
-          color="red"
-          onClick={() => removeRow(index)}
-        >
+        <ActionIcon variant="subtle" color="red" onClick={() => removeRow(index)}>
           <IconTrash size={16} />
         </ActionIcon>
       </Table.Td>
@@ -107,7 +126,8 @@ const SortableRow = ({ row, index, groupedTasks, updateRow, removeRow }: {
 const TimesheetEditor = () => {
   const { date } = useParams<{ date: string }>();
   const notifications = useNotifications();
-  const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] = useDisclosure(false);
+  const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] =
+    useDisclosure(false);
   const [conflictError, setConflictError] = React.useState<{ message: string } | null>(null);
 
   // Load data
@@ -122,12 +142,14 @@ const TimesheetEditor = () => {
   const saveMutation = useSaveTimesheet();
 
   // Group tasks by project for the Select component
+  // Tasks without project go to "Без проекта" group
   const groupedTasks = React.useMemo(() => {
     return tasks.reduce((acc, task) => {
-      if (!acc[task.projectName]) {
-        acc[task.projectName] = [];
+      const groupName = task.projectName || 'Без проекта';
+      if (!acc[groupName]) {
+        acc[groupName] = [];
       }
-      acc[task.projectName].push({ value: task.id, label: task.title });
+      acc[groupName].push({ value: task.id, label: task.title });
       return acc;
     }, {} as Record<string, { value: string; label: string }[]>);
   }, [tasks]);
@@ -142,7 +164,7 @@ const TimesheetEditor = () => {
       startTime,
       endTime: '10:00',
       duration: 60,
-      description: ''
+      description: '',
     });
   };
 
@@ -154,14 +176,14 @@ const TimesheetEditor = () => {
       title: 'Сохранение...',
       message: 'Сохраняем табель...',
       loading: true,
-      autoClose: false
+      autoClose: false,
     });
 
     try {
       await saveMutation.mutateAsync({
         ...timesheet,
         rows,
-        version: timesheet.version
+        version: timesheet.version,
       });
 
       notifications.update({
@@ -172,7 +194,7 @@ const TimesheetEditor = () => {
           : 'Табель сохранен локально (нет сети)',
         color: 'green',
         loading: false,
-        autoClose: 3000
+        autoClose: 3000,
       });
     } catch (error: any) {
       if (error.status === 409) {
@@ -184,7 +206,7 @@ const TimesheetEditor = () => {
           message: 'Обнаружен более новая версия табеля на сервере',
           color: 'orange',
           loading: false,
-          autoClose: 5000
+          autoClose: 5000,
         });
       } else {
         notifications.update({
@@ -193,7 +215,7 @@ const TimesheetEditor = () => {
           message: 'Не удалось сохранить табель',
           color: 'red',
           loading: false,
-          autoClose: 5000
+          autoClose: 5000,
         });
       }
     }
@@ -207,7 +229,7 @@ const TimesheetEditor = () => {
       await saveMutation.mutateAsync({
         ...timesheet,
         rows,
-        version: timesheet.version + 1
+        version: timesheet.version + 1,
       });
 
       closeConflictModal();
@@ -215,14 +237,14 @@ const TimesheetEditor = () => {
         title: 'Перезаписано',
         message: 'Локальная версия перезаписана на сервере',
         color: 'green',
-        autoClose: 3000
+        autoClose: 3000,
       });
     } catch (error) {
       notifications.show({
         title: 'Ошибка',
         message: 'Не удалось перезаписать табель',
         color: 'red',
-        autoClose: 3000
+        autoClose: 3000,
       });
     }
   };
@@ -235,7 +257,7 @@ const TimesheetEditor = () => {
       title: 'Обновлено',
       message: 'Данные обновлены с сервера',
       color: 'blue',
-      autoClose: 3000
+      autoClose: 3000,
     });
   };
 
@@ -273,10 +295,7 @@ const TimesheetEditor = () => {
           </Group>
         </Group>
 
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
-        >
+        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
             items={rows.map((row: any) => row.id)}
             strategy={verticalListSortingStrategy}
@@ -288,7 +307,7 @@ const TimesheetEditor = () => {
                   <Table.Th>Задача</Table.Th>
                   <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
                   <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
-                  <Table.Th style={{ width: '120px' }}>Длительность (мин)</Table.Th>
+                  <Table.Th style={{ width: '120px' }}>Длительность (часы)</Table.Th>
                   <Table.Th>Описание</Table.Th>
                   <Table.Th style={{ width: '60px' }}></Table.Th>
                 </Table.Tr>
@@ -328,12 +347,8 @@ const TimesheetEditor = () => {
         size="md"
       >
         <Stack>
-          <Text>
-            {conflictError?.message || 'Обнаружена более новая версия табеля на сервере.'}
-          </Text>
-          <Text>
-            Ваши локальные изменения могут быть потеряны при обновлении.
-          </Text>
+          <Text>{conflictError?.message || 'Обнаружена более новая версия табеля на сервере.'}</Text>
+          <Text>Ваши локальные изменения могут быть потеряны при обновлении.</Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={handleUpdateFromServer}>
               Обновить с сервера
