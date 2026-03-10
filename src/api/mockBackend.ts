@@ -68,9 +68,9 @@ export const getTimesheets = async (month: string): Promise<Timesheet[]> => {
   const allTimesheets = timesheetsData ? JSON.parse(timesheetsData) : {};
 
   // Filter timesheets for the requested month
-  return Object.values(allTimesheets).filter((ts: any) =>
+  return (Object.values(allTimesheets) as Timesheet[]).filter((ts) =>
     ts.date.startsWith(month)
-  ) as Timesheet[];
+  );
 };
 
 export const getTimesheet = async (id: string): Promise<Timesheet | null> => {
@@ -91,9 +91,9 @@ export const getTimesheetByDate = async (date: string): Promise<Timesheet | null
   const allTimesheets = timesheetsData ? JSON.parse(timesheetsData) : {};
 
   // Find timesheet for the specific date
-  for (const ts of Object.values(allTimesheets)) {
+  for (const ts of Object.values(allTimesheets) as Timesheet[]) {
     if (ts.date === date) {
-      return ts as Timesheet;
+      return ts;
     }
   }
 

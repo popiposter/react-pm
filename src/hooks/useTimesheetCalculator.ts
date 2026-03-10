@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { TimesheetRow } from '../api/mockBackend';
 
 export interface TimesheetCalculatorResult {
   rows: TimesheetRow[];
+  isDirty: boolean;
+  setIsDirty: (value: boolean) => void;
   updateRow: (index: number, updatedRow: Partial<TimesheetRow>) => void;
   addRow: (row: Omit<TimesheetRow, 'id'>) => void;
   removeRow: (index: number) => void;
@@ -13,15 +15,48 @@ export interface TimesheetCalculatorResult {
 /**
  * Hook for calculating timesheet rows with cascading time calculations
  * @param initialRows Initial timesheet rows
- * @returns Calculator functions and updated rows
+ * @returns Calculator functions and updated rows with dirty state tracking
  */
 export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCalculatorResult => {
   const [rows, setRows] = useState<TimesheetRow[]>(initialRows);
+  const [isDirty, setIsDirty] = useState(false);
 
-  // Update rows when initialRows change (e.g., data loaded from API)
+  // Track initial rows for dirty comparison
+  const initialRowsRef = useRef<TimesheetRow[]>(initialRows);
+
+  // Check if rows are different from initial (for dirty state)
+  const isRowsDifferent = useCallback(() => {
+    if (initialRowsRef.current.length !== rows.length) {
+      return true;
+    }
+    return rows.some((row, index) => {
+      const initialRow = initialRowsRef.current[index];
+      return (
+        row.taskId !== initialRow?.taskId ||
+        row.startTime !== initialRow?.startTime ||
+        row.endTime !== initialRow?.endTime ||
+        row.duration !== initialRow?.duration ||
+        row.description !== initialRow?.description
+      );
+    });
+  }, [rows]);
+
+  // Update dirty state when rows change
   useEffect(() => {
-    setRows(initialRows);
-  }, [initialRows]);
+    if (!isDirty) {
+      setIsDirty(isRowsDifferent());
+    }
+  }, [rows, isDirty, isRowsDifferent]);
+
+  // Sync initialRows when server data arrives, but only if not dirty
+  // This ensures user changes are not overwritten when server data arrives
+  useEffect(() => {
+    if (!isDirty && initialRows.length > 0 && initialRowsRef.current.length === 0) {
+      // Only sync when server sends actual data and we have no local rows yet
+      setRows(initialRows);
+      initialRowsRef.current = initialRows;
+    }
+  }, [initialRows, isDirty]);
 
   // Convert time string (HH:mm) to minutes from midnight with validation
   const timeToMinutes = useCallback((time: string): number => {
@@ -151,6 +186,8 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
 
   return {
     rows,
+    isDirty,
+    setIsDirty,
     updateRow,
     addRow,
     removeRow,

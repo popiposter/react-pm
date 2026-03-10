@@ -1,13 +1,11 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Title,
   Paper,
   Table,
   Button,
-  Select,
-  NumberInput,
   Group,
   Text,
   Badge,
@@ -15,10 +13,13 @@ import {
   Stack,
   ActionIcon,
   ScrollArea,
+  TextInput,
+  Select,
+  NumberInput,
 } from '@mantine/core';
 import { TimeInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { useNotifications } from '@mantine/notifications';
+import { notifications } from '@mantine/notifications';
 import { useMediaQuery } from '@mantine/hooks';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import {
@@ -27,11 +28,38 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconTrash, IconGripVertical, IconAlertTriangle, IconPlus, IconDeviceFloppy } from '@tabler/icons-react';
+import {
+  IconTrash,
+  IconGripVertical,
+  IconAlertTriangle,
+  IconPlus,
+  IconDeviceFloppy,
+  IconCopy,
+  IconArrowLeft,
+  IconFileText,
+} from '@tabler/icons-react';
 import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
 import { useTimesheetCalculator } from '../hooks/useTimesheetCalculator';
 import { useSaveTimesheet } from '../hooks/useSaveTimesheet';
+
+// Types
+interface Task {
+  id: string;
+  title: string;
+  projectId: string;
+  projectName: string;
+}
+
+interface TimesheetRow {
+  id: string;
+  taskId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  description?: string;
+}
 
 // Convert duration in hours (1.5, 2, 0.5) to minutes (90, 120, 30)
 const hoursToMinutes = (value: number | string): number => {
@@ -53,10 +81,10 @@ const SortableRow = ({
   updateRow,
   removeRow,
 }: {
-  row: any;
+  row: TimesheetRow;
   index: number;
   groupedTasks: Record<string, { value: string; label: string }[]>;
-  updateRow: (index: number, row: Partial<any>) => void;
+  updateRow: (index: number, row: Partial<TimesheetRow>) => void;
   removeRow: (index: number) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -89,7 +117,7 @@ const SortableRow = ({
       <Table.Td>
         <TimeInput
           value={row.startTime}
-          onChange={(value) => updateRow(index, { startTime: value || '00:00' })}
+          onChange={(event) => updateRow(index, { startTime: event.currentTarget.value || '00:00' })}
         />
       </Table.Td>
       <Table.Td>
@@ -106,14 +134,14 @@ const SortableRow = ({
           decimalScale={2}
           suffix=" ч"
           allowNegative={false}
-          precision={2}
         />
       </Table.Td>
       <Table.Td>
-        <TimeInput
+        <TextInput
           value={row.description || ''}
           onChange={(e) => updateRow(index, { description: e.target.value })}
           placeholder="Описание..."
+          size="sm"
         />
       </Table.Td>
       <Table.Td>
@@ -133,10 +161,10 @@ const MobileRow = ({
   updateRow,
   removeRow,
 }: {
-  row: any;
+  row: TimesheetRow;
   index: number;
   groupedTasks: Record<string, { value: string; label: string }[]>;
-  updateRow: (index: number, row: Partial<any>) => void;
+  updateRow: (index: number, row: Partial<TimesheetRow>) => void;
   removeRow: (index: number) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -180,7 +208,7 @@ const MobileRow = ({
       <Group mt="xs" justify="space-between">
         <TimeInput
           value={row.startTime}
-          onChange={(value) => updateRow(index, { startTime: value || '00:00' })}
+          onChange={(event) => updateRow(index, { startTime: event.currentTarget.value || '00:00' })}
           size="sm"
           placeholder="Начало"
         />
@@ -195,12 +223,11 @@ const MobileRow = ({
           decimalScale={2}
           suffix=" ч"
           allowNegative={false}
-          precision={2}
           size="sm"
           w={80}
         />
       </Group>
-      <TimeInput
+      <TextInput
         value={row.description || ''}
         onChange={(e) => updateRow(index, { description: e.target.value })}
         placeholder="Описание..."
@@ -213,27 +240,28 @@ const MobileRow = ({
 
 const TimesheetEditor = () => {
   const { date } = useParams<{ date: string }>();
-  const notifications = useNotifications();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [conflictModalOpened, { open: openConflictModal, close: closeConflictModal }] =
     useDisclosure(false);
   const [conflictError, setConflictError] = React.useState<{ message: string } | null>(null);
+  const initialRowsRef = useRef<TimesheetRow[]>([]);
 
   // Load data
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
-  const { data: timesheet, isLoading: timesheetLoading } = useTimesheet(date || '');
+  const { data: timesheet, isLoading: timesheetLoading, refetch: refetchTimesheet } = useTimesheet(date || '');
 
   // Initialize calculator with timesheet rows or empty array
   const initialRows = timesheet?.rows || [];
-  const { rows, updateRow, addRow, removeRow, moveRow } = useTimesheetCalculator(initialRows);
+  const { rows, isDirty, setIsDirty, updateRow, addRow, removeRow, moveRow, recalculateAll } = useTimesheetCalculator(initialRows);
 
   // Save mutation
   const saveMutation = useSaveTimesheet();
 
   // Group tasks by project for the Select component
   // Tasks without project go to "Без проекта" group
-  const groupedTasks = React.useMemo(() => {
-    return tasks.reduce((acc, task) => {
+  const groupedTasks = useMemo(() => {
+    return tasks.reduce((acc, task: Task) => {
       const groupName = task.projectName || 'Без проекта';
       if (!acc[groupName]) {
         acc[groupName] = [];
@@ -243,25 +271,30 @@ const TimesheetEditor = () => {
     }, {} as Record<string, { value: string; label: string }[]>);
   }, [tasks]);
 
-  const handleAddRow = () => {
-    const lastRow = rows[rows.length - 1];
-    const startTime = lastRow ? lastRow.endTime : '09:00';
+  // Sync dirty state when timesheet data loads
+  useEffect(() => {
+    if (timesheet?.rows) {
+      initialRowsRef.current = timesheet.rows;
+      setIsDirty(false);
+    }
+  }, [timesheet?.id, timesheet?.rows, setIsDirty]);
 
-    addRow({
-      taskId: '',
-      date: date || new Date().toISOString().split('T')[0],
-      startTime,
-      endTime: '10:00',
-      duration: 60,
-      description: '',
-    });
-  };
+  // Notify parent about dirty state change
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('timesheet-dirty-change', {
+        detail: { isDirty, date: date || '' },
+      })
+    );
+  }, [isDirty, date]);
 
-  const handleSave = async () => {
+  // Handle save and navigate
+  const handleSaveAndNavigate = async () => {
     if (!date || !timesheet) return;
 
+    const notificationId = 'saving';
     notifications.show({
-      id: 'saving',
+      id: notificationId,
       title: 'Сохранение...',
       message: 'Сохраняем табель...',
       loading: true,
@@ -269,14 +302,82 @@ const TimesheetEditor = () => {
     });
 
     try {
-      await saveMutation.mutateAsync({
+      const result = await saveMutation.mutateAsync({
         ...timesheet,
-        rows,
+        rows: recalculateAll(),
         version: timesheet.version,
       });
 
+      initialRowsRef.current = result.rows;
+      setIsDirty(false);
+
       notifications.update({
-        id: 'saving',
+        id: notificationId,
+        
+        title: 'Сохранено',
+        message: navigator.onLine
+          ? 'Табель успешно сохранен на сервере'
+          : 'Табель сохранен локально (нет сети)',
+        color: 'green',
+        loading: false,
+        autoClose: 3000,
+      });
+
+      // Navigate back after save
+      navigate(-1);
+    } catch (error: any) {
+      if (error.status === 409) {
+        setConflictError(error);
+        openConflictModal();
+        notifications.update({
+        id: notificationId,
+        
+          title: 'Конфликт версий',
+          message: 'Обнаружен более новая версия табеля на сервере',
+          color: 'orange',
+          loading: false,
+          autoClose: 5000,
+        });
+      } else {
+        notifications.update({
+        id: notificationId,
+        
+          title: 'Ошибка сохранения',
+          message: 'Не удалось сохранить табель',
+          color: 'red',
+          loading: false,
+          autoClose: 5000,
+        });
+      }
+    }
+  };
+
+  // Handle save only
+  const handleSave = async () => {
+    if (!date || !timesheet) return;
+
+    const notificationId = 'saving';
+    notifications.show({
+      id: notificationId,
+      title: 'Сохранение...',
+      message: 'Сохраняем табель...',
+      loading: true,
+      autoClose: false,
+    });
+
+    try {
+      const result = await saveMutation.mutateAsync({
+        ...timesheet,
+        rows: recalculateAll(),
+        version: timesheet.version,
+      });
+
+      initialRowsRef.current = result.rows;
+      setIsDirty(false);
+
+      notifications.update({
+        id: notificationId,
+        
         title: 'Сохранено',
         message: navigator.onLine
           ? 'Табель успешно сохранен на сервере'
@@ -290,7 +391,8 @@ const TimesheetEditor = () => {
         setConflictError(error);
         openConflictModal();
         notifications.update({
-          id: 'saving',
+        id: notificationId,
+        
           title: 'Конфликт версий',
           message: 'Обнаружен более новая версия табеля на сервере',
           color: 'orange',
@@ -299,7 +401,8 @@ const TimesheetEditor = () => {
         });
       } else {
         notifications.update({
-          id: 'saving',
+        id: notificationId,
+        
           title: 'Ошибка сохранения',
           message: 'Не удалось сохранить табель',
           color: 'red',
@@ -310,17 +413,46 @@ const TimesheetEditor = () => {
     }
   };
 
+  // Handle copy timesheet
+  const handleCopy = async () => {
+    if (!timesheet) return;
+
+    // Create a copy with today's date
+    const today = new Date().toISOString().split('T')[0];
+    recalculateAll().map((row: TimesheetRow) => ({
+      ...row,
+      id: `row_${Date.now()}_${Math.random()}`,
+    }));
+
+    notifications.show({
+      title: 'Копия создана',
+      message: `Табель скопирован на ${today}. Откройте редактор для редактирования.`,
+      color: 'blue',
+      autoClose: 3000,
+    });
+
+    // Navigate to today's timesheet
+    navigate(`/timesheet/${today}`);
+  };
+
+  // Handle cancel with dirty check
+  const handleCancel = () => {
+    navigate(-1);
+  };
+
+  // Handle duplicate save (overwrite server)
   const handleOverwriteServer = async () => {
     if (!date || !timesheet) return;
 
     try {
-      // Force save with incremented version
       await saveMutation.mutateAsync({
         ...timesheet,
-        rows,
+        rows: recalculateAll(),
         version: timesheet.version + 1,
       });
 
+      initialRowsRef.current = timesheet.rows;
+      setIsDirty(false);
       closeConflictModal();
       notifications.show({
         title: 'Перезаписано',
@@ -338,28 +470,53 @@ const TimesheetEditor = () => {
     }
   };
 
+  // Handle update from server
   const handleUpdateFromServer = async () => {
-    // In a real app, we would fetch the latest version from server
-    // For mock, we'll just close the modal
+    if (!date) return;
+
     closeConflictModal();
-    notifications.show({
-      title: 'Обновлено',
-      message: 'Данные обновлены с сервера',
-      color: 'blue',
-      autoClose: 3000,
-    });
+    try {
+      await refetchTimesheet();
+      notifications.show({
+        title: 'Обновлено',
+        message: 'Данные обновлены с сервера',
+        color: 'blue',
+        autoClose: 3000,
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Ошибка',
+        message: 'Не удалось загрузить latest данные с сервера',
+        color: 'red',
+        autoClose: 3000,
+      });
+    }
   };
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
-    const activeIndex = rows.findIndex((row: any) => row.id === active.id);
-    const overIndex = rows.findIndex((row: any) => row.id === over.id);
+    const activeIndex = rows.findIndex((row: TimesheetRow) => row.id === active.id);
+    const overIndex = rows.findIndex((row: TimesheetRow) => row.id === over.id);
 
     if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
       moveRow(activeIndex, overIndex);
     }
+  };
+
+  const handleAddRow = () => {
+    const lastRow = rows[rows.length - 1];
+    const startTime = lastRow ? lastRow.endTime : '09:00';
+
+    addRow({
+      taskId: '',
+      date: date || new Date().toISOString().split('T')[0],
+      startTime,
+      endTime: '10:00',
+      duration: 60,
+      description: '',
+    });
   };
 
   if (tasksLoading || timesheetLoading) {
@@ -368,33 +525,72 @@ const TimesheetEditor = () => {
 
   return (
     <Container size="lg">
-      <Paper shadow="sm" p="md" mb="lg">
-        <Group justify="space-between" mb="md">
+      {/* Toolbar (Command Panel) */}
+      <Paper shadow="sm" p="md" mb="md" style={{ position: 'sticky', top: 0, zIndex: 100 }}>
+        <Group justify="space-between">
           <Title order={2}>
             Табель за {date}
             <Badge ml="sm" color={navigator.onLine ? 'green' : 'yellow'}>
               {navigator.onLine ? 'Онлайн' : 'Офлайн'}
             </Badge>
           </Title>
-          <Group>
-            <Button onClick={handleAddRow} leftSection={<IconPlus size={18} />}>
-              Добавить строку
+          <Group gap="xs">
+            <Button
+              variant="light"
+              onClick={handleCopy}
+              leftSection={<IconCopy size={18} />}
+              title="Скопировать табель на сегодня"
+            >
+              Копировать
             </Button>
-            <Button onClick={handleSave} leftSection={<IconDeviceFloppy size={18} />} loading={saveMutation.isPending}>
-              Сохранить
+            <Button
+              variant="subtle"
+              onClick={handleCancel}
+              leftSection={<IconArrowLeft size={18} />}
+            >
+              Отмена
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSave}
+              leftSection={<IconFileText size={18} />}
+              loading={saveMutation.isPending}
+            >
+              Записать
+            </Button>
+            <Button
+              onClick={handleSaveAndNavigate}
+              leftSection={<IconDeviceFloppy size={18} />}
+              loading={saveMutation.isPending}
+            >
+              Записать и закрыть
             </Button>
           </Group>
+        </Group>
+      </Paper>
+
+      <Paper shadow="sm" p="md">
+        {/* Toolbar for adding rows */}
+        <Group justify="space-between" mb="md">
+          <Button onClick={handleAddRow} leftSection={<IconPlus size={18} />}>
+            Добавить строку
+          </Button>
+          {isDirty && (
+            <Text c="orange" fw={500}>
+              Есть несохраненные изменения
+            </Text>
+          )}
         </Group>
 
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext
-            items={rows.map((row: any) => row.id)}
+            items={rows.map((row: TimesheetRow) => row.id)}
             strategy={verticalListSortingStrategy}
           >
             {isMobile ? (
               // Mobile view - scrollable list of cards
               <ScrollArea mah={600} type="scroll">
-                {rows.map((row: any, index: number) => (
+                {rows.map((row: TimesheetRow, index: number) => (
                   <MobileRow
                     key={row.id}
                     row={row}
@@ -406,33 +602,33 @@ const TimesheetEditor = () => {
                 ))}
               </ScrollArea>
             ) : (
-              // Desktop view - table with horizontal scroll for smaller screens
+              // Desktop view - table with horizontal scroll
               <ScrollArea type="scroll">
                 <Table highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th style={{ width: '40px' }}></Table.Th>
-                    <Table.Th>Задача</Table.Th>
-                    <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
-                    <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
-                    <Table.Th style={{ width: '120px' }}>Длительность (часы)</Table.Th>
-                    <Table.Th>Описание</Table.Th>
-                    <Table.Th style={{ width: '60px' }}></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {rows.map((row: any, index: number) => (
-                    <SortableRow
-                      key={row.id}
-                      row={row}
-                      index={index}
-                      groupedTasks={groupedTasks}
-                      updateRow={updateRow}
-                      removeRow={removeRow}
-                    />
-                  ))}
-                </Table.Tbody>
-              </Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th style={{ width: '40px' }}></Table.Th>
+                      <Table.Th>Задача</Table.Th>
+                      <Table.Th style={{ width: '120px' }}>Начало</Table.Th>
+                      <Table.Th style={{ width: '120px' }}>Окончание</Table.Th>
+                      <Table.Th style={{ width: '120px' }}>Длительность (часы)</Table.Th>
+                      <Table.Th>Описание</Table.Th>
+                      <Table.Th style={{ width: '60px' }}></Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {rows.map((row: TimesheetRow, index: number) => (
+                      <SortableRow
+                        key={row.id}
+                        row={row}
+                        index={index}
+                        groupedTasks={groupedTasks}
+                        updateRow={updateRow}
+                        removeRow={removeRow}
+                      />
+                    ))}
+                  </Table.Tbody>
+                </Table>
               </ScrollArea>
             )}
           </SortableContext>

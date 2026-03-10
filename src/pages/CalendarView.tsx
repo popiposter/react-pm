@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 import { Schedule } from '@mantine/schedule';
 import { Container, Title, Text, Badge, Grid, Box, Paper } from '@mantine/core';
@@ -33,7 +33,7 @@ const MobileMonthView = ({
   return (
     <Box>
       {/* Weekday headers */}
-      <Grid gutter="xs">
+      <Grid gap="xs">
         {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day) => (
           <Grid.Col span={1.7} key={day}>
             <Paper p={4} ta="center" fw={700} bg="gray.1">
@@ -44,7 +44,7 @@ const MobileMonthView = ({
       </Grid>
 
       {/* Calendar grid */}
-      <Grid gutter="xs">
+      <Grid gap="xs">
         {/* Empty slots at the beginning of the month */}
         {emptySlots.map((_, index) => (
           <Grid.Col span={1.7} key={`empty-${index}`}>
@@ -116,6 +116,7 @@ const CalendarView = () => {
     start: new Date(timesheet.date),
     end: new Date(timesheet.date),
     description: timesheet.rows.slice(0, 2).map((row) => row.description || 'Без описания').join(', '),
+    color: 'blue',
   }));
 
   return (

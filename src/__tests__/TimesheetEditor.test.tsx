@@ -97,6 +97,9 @@ vi.mock('@tabler/icons-react', () => ({
   IconAlertTriangle: () => <svg data-icon="alert" />,
   IconPlus: () => <svg data-icon="plus" />,
   IconDeviceFloppy: () => <svg data-icon="diskette" />,
+  IconCopy: () => <svg data-icon="copy" />,
+  IconArrowLeft: () => <svg data-icon="arrow-left" />,
+  IconFileText: () => <svg data-icon="file-text" />,
 }));
 
 // Mock custom hooks
@@ -124,6 +127,8 @@ vi.mock('../hooks/useTimesheet', () => ({
 vi.mock('../hooks/useTimesheetCalculator', () => ({
   useTimesheetCalculator: () => ({
     rows: [],
+    isDirty: false,
+    setIsDirty: vi.fn(),
     updateRow: vi.fn(),
     addRow: vi.fn(),
     removeRow: vi.fn(),
@@ -172,7 +177,7 @@ describe('TimesheetEditor Component', () => {
 
   it('should render save button', () => {
     customRender(<TimesheetEditor />);
-    expect(screen.getByText('Сохранить')).toBeInTheDocument();
+    expect(screen.getByText('Записать')).toBeInTheDocument();
   });
 
   it('should show online indicator', () => {
