@@ -14,6 +14,7 @@ import {
   Trash2,
   Wifi,
   WifiOff,
+  ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Task, TimesheetRow } from '../api/mockBackend';
@@ -38,7 +39,8 @@ interface RowEditorProps {
   index: number;
   taskGroups: GroupedTasks[];
   updateRow: (index: number, row: Partial<TimesheetRow>) => void;
-  removeRow: (index: number) => void;
+  requestRemoveRow: (index: number) => void;
+  validationErrors: string[];
 }
 
 const formatEditorDate = (date: string) =>
@@ -61,6 +63,20 @@ const minutesToHours = (minutes: number): string => {
 
 const createRowId = () =>
   `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const getRowValidationErrors = (row: TimesheetRow): string[] => {
+  const errors: string[] = [];
+
+  if (!row.taskId) {
+    errors.push('Выберите задачу');
+  }
+
+  if (row.duration <= 0) {
+    errors.push('Укажите длительность больше 0');
+  }
+
+  return errors;
+};
 
 const TaskSelect = ({
   value,
@@ -168,7 +184,8 @@ const SortableDesktopRow = ({
   index,
   taskGroups,
   updateRow,
-  removeRow,
+  requestRemoveRow,
+  validationErrors,
 }: RowEditorProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
@@ -182,7 +199,10 @@ const SortableDesktopRow = ({
         transition,
         opacity: isDragging ? 0.55 : 1,
       }}
-      className="border-t border-white/10 bg-white/[0.02] align-top transition hover:bg-sky-400/[0.04]"
+      className={cn(
+        'border-t border-white/10 bg-white/[0.02] align-top transition hover:bg-sky-400/[0.04]',
+        validationErrors.length > 0 && 'bg-amber-400/[0.04]'
+      )}
     >
       <td className="px-4 py-3 text-center">
         <button
@@ -226,12 +246,17 @@ const SortableDesktopRow = ({
       <td className="px-4 py-3 text-right">
         <button
           type="button"
-          onClick={() => removeRow(index)}
+          onClick={() => requestRemoveRow(index)}
           className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-200 transition hover:bg-rose-400/20"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
         </button>
+        {validationErrors.length > 0 && (
+          <div className="mt-3 text-left text-xs text-amber-200">
+            {validationErrors.join(' • ')}
+          </div>
+        )}
       </td>
     </tr>
   );
@@ -242,7 +267,8 @@ const SortableMobileRow = ({
   index,
   taskGroups,
   updateRow,
-  removeRow,
+  requestRemoveRow,
+  validationErrors,
 }: RowEditorProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
@@ -256,7 +282,10 @@ const SortableMobileRow = ({
         transition,
         opacity: isDragging ? 0.55 : 1,
       }}
-      className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4"
+      className={cn(
+        'rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4',
+        validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.06]'
+      )}
     >
       <div className="flex items-center justify-between gap-3">
         <button
@@ -270,7 +299,7 @@ const SortableMobileRow = ({
         </button>
         <button
           type="button"
-          onClick={() => removeRow(index)}
+          onClick={() => requestRemoveRow(index)}
           className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-200"
           aria-label="Удалить строку"
         >
@@ -316,6 +345,12 @@ const SortableMobileRow = ({
             onChange={(value) => updateRow(index, { description: value })}
           />
         </div>
+
+        {validationErrors.length > 0 && (
+          <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
+            {validationErrors.join(' • ')}
+          </div>
+        )}
       </div>
     </article>
   );
@@ -335,6 +370,8 @@ export default function TimesheetEditor() {
   const navigate = useNavigate();
   const [conflictModalOpened, setConflictModalOpened] = useState(false);
   const [conflictError, setConflictError] = useState<{ message: string } | null>(null);
+  const [rowPendingDelete, setRowPendingDelete] = useState<number | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   const {
@@ -364,6 +401,30 @@ export default function TimesheetEditor() {
     }, [] as GroupedTasks[]);
   }, [tasks]);
 
+  const rowsWithValidation = useMemo(
+    () =>
+      rows.map((row) => ({
+        id: row.id,
+        errors: getRowValidationErrors(row),
+      })),
+    [rows]
+  );
+
+  const invalidRowsCount = rowsWithValidation.filter((row) => row.errors.length > 0).length;
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     if (timesheet?.rows) {
       setIsDirty(false);
@@ -378,15 +439,15 @@ export default function TimesheetEditor() {
     );
   }, [date, isDirty]);
 
-  const showSaveSuccess = () => {
+  const showSaveSuccess = useCallback(() => {
     toast.success('Сохранено', {
       id: 'saving',
-      description: navigator.onLine
+      description: isOnline
         ? 'Табель успешно сохранен на сервере'
         : 'Табель сохранен локально (нет сети)',
       duration: 3000,
     });
-  };
+  }, [isOnline]);
 
   const showConflictState = () => {
     toast.warning('Конфликт версий', {
@@ -407,6 +468,15 @@ export default function TimesheetEditor() {
   const handleSave = useCallback(
     async (shouldNavigateBack = false) => {
       if (!date || !timesheet) return;
+      const hasValidationErrors = rows.some((row) => getRowValidationErrors(row).length > 0);
+
+      if (hasValidationErrors) {
+        toast.error('Нужно проверить строки табеля', {
+          description: 'Заполните задачу и длительность во всех проблемных строках перед сохранением.',
+          duration: 5000,
+        });
+        return;
+      }
 
       toast.loading('Сохранение...', {
         id: 'saving',
@@ -438,7 +508,7 @@ export default function TimesheetEditor() {
         showSaveError();
       }
     },
-    [date, navigate, recalculateAll, saveMutation, setIsDirty, timesheet]
+    [date, navigate, recalculateAll, rows, saveMutation, setIsDirty, showSaveSuccess, timesheet]
   );
 
   useEffect(() => {
@@ -549,6 +619,21 @@ export default function TimesheetEditor() {
     });
   };
 
+  const handleRequestRemoveRow = (index: number) => {
+    setRowPendingDelete(index);
+  };
+
+  const handleConfirmRemoveRow = () => {
+    if (rowPendingDelete === null) return;
+
+    removeRow(rowPendingDelete);
+    setRowPendingDelete(null);
+    toast.success('Строка удалена', {
+      description: 'Табель пересчитан с учетом оставшихся записей.',
+      duration: 2500,
+    });
+  };
+
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -587,17 +672,22 @@ export default function TimesheetEditor() {
               <span
                 className={cn(
                   'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium',
-                  navigator.onLine
+                  isOnline
                     ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
                     : 'border-amber-300/20 bg-amber-400/10 text-amber-100'
                 )}
               >
-                {navigator.onLine ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-                {navigator.onLine ? 'Онлайн' : 'Офлайн'}
+                {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+                {isOnline ? 'Онлайн' : 'Офлайн'}
               </span>
               {isDirty && (
                 <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-100">
                   Есть несохраненные изменения
+                </span>
+              )}
+              {invalidRowsCount > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-3 py-1 text-xs font-medium text-rose-100">
+                  Проблемных строк: {invalidRowsCount}
                 </span>
               )}
             </div>
@@ -652,6 +742,43 @@ export default function TimesheetEditor() {
         </div>
       </div>
 
+      <div
+        className={cn(
+          'rounded-[1.5rem] border px-5 py-4',
+          isOnline
+            ? 'border-emerald-300/20 bg-emerald-400/10'
+            : 'border-amber-300/20 bg-amber-400/10'
+        )}
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                'rounded-2xl p-2',
+                isOnline ? 'bg-emerald-400/15 text-emerald-200' : 'bg-amber-400/15 text-amber-100'
+              )}
+            >
+              {isOnline ? <Wifi className="h-5 w-5" /> : <WifiOff className="h-5 w-5" />}
+            </div>
+            <div>
+              <p className="font-medium text-white">
+                {isOnline ? 'Синхронизация доступна' : 'Вы сейчас работаете офлайн'}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-300">
+                {isOnline
+                  ? 'Изменения сохраняются локально и могут быть отправлены на сервер сразу.'
+                  : 'Можно продолжать редактирование: табель сохранится локально и синхронизируется позже.'}
+              </p>
+            </div>
+          </div>
+          {invalidRowsCount > 0 && (
+            <div className="rounded-2xl border border-rose-300/20 bg-slate-950/30 px-4 py-3 text-sm text-rose-100">
+              Перед сохранением проверьте строки с незаполненной задачей или нулевой длительностью.
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-4 shadow-[0_25px_80px_-50px_rgba(15,23,42,0.95)] backdrop-blur sm:p-6">
         <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -687,14 +814,22 @@ export default function TimesheetEditor() {
               <>
                 <div className="mt-6 space-y-4 xl:hidden">
                   {rows.map((row, index) => (
+                    (() => {
+                      const validationErrors =
+                        rowsWithValidation.find((item) => item.id === row.id)?.errors || [];
+
+                      return (
                     <SortableMobileRow
                       key={row.id}
                       row={row}
                       index={index}
                       taskGroups={taskGroups}
                       updateRow={updateRow}
-                      removeRow={removeRow}
+                      requestRemoveRow={handleRequestRemoveRow}
+                      validationErrors={validationErrors}
                     />
+                      );
+                    })()
                   ))}
                 </div>
 
@@ -713,14 +848,22 @@ export default function TimesheetEditor() {
                     </thead>
                     <tbody>
                       {rows.map((row, index) => (
+                        (() => {
+                          const validationErrors =
+                            rowsWithValidation.find((item) => item.id === row.id)?.errors || [];
+
+                          return (
                         <SortableDesktopRow
                           key={row.id}
                           row={row}
                           index={index}
                           taskGroups={taskGroups}
                           updateRow={updateRow}
-                          removeRow={removeRow}
+                          requestRemoveRow={handleRequestRemoveRow}
+                          validationErrors={validationErrors}
                         />
+                          );
+                        })()
                       ))}
                     </tbody>
                   </table>
@@ -771,6 +914,44 @@ export default function TimesheetEditor() {
                 className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
               >
                 Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rowPendingDelete !== null && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 p-3 text-rose-200">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-white">Удалить строку?</h3>
+                <p className="text-sm leading-6 text-slate-300">
+                  Строка будет удалена, а время в следующих записях пересчитается автоматически.
+                </p>
+                <p className="text-sm leading-6 text-slate-400">
+                  Это полезно для защиты от случайного удаления при работе с drag-and-drop и на мобильных устройствах.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setRowPendingDelete(null)}
+                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRemoveRow}
+                className="inline-flex items-center justify-center rounded-2xl bg-rose-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
+              >
+                Удалить строку
               </button>
             </div>
           </div>
