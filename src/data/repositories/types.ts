@@ -26,6 +26,11 @@ export interface SyncStatus {
   lastQueuedAt: string | null;
 }
 
+export interface SyncRunResult extends SyncStatus {
+  syncedCount: number;
+  failedCount: number;
+}
+
 export interface TaskRepository {
   getTasks(): Promise<Task[]>;
 }
@@ -38,7 +43,7 @@ export interface TimesheetRepository {
 
 export interface SyncRepository {
   getStatus(): Promise<SyncStatus>;
-  runSync(): Promise<SyncStatus>;
+  runSync(): Promise<SyncRunResult>;
 }
 
 export interface AppRepository {

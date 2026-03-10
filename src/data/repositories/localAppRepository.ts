@@ -5,6 +5,7 @@ import type {
   AppRepository,
   SaveTimesheetError,
   SyncQueueItem,
+  SyncRunResult,
   SyncStatus,
   TimesheetSyncState,
 } from './types';
@@ -108,6 +109,16 @@ const getSyncStatusSnapshot = (syncQueue: SyncQueueItem[]): SyncStatus => {
   };
 };
 
+const getSyncRunSnapshot = (
+  syncQueue: SyncQueueItem[],
+  syncedCount: number,
+  failedCount: number
+): SyncRunResult => ({
+  ...getSyncStatusSnapshot(syncQueue),
+  syncedCount,
+  failedCount,
+});
+
 const createDraftTimesheet = (date: string): Timesheet => ({
   id: `ts_${date}`,
   date,
@@ -207,17 +218,19 @@ const localSyncRepository = {
     return getSyncStatusSnapshot(syncQueue);
   },
 
-  async runSync(): Promise<SyncStatus> {
+  async runSync(): Promise<SyncRunResult> {
     const syncQueue = await getSyncQueue();
 
     if (syncQueue.length === 0) {
-      return getSyncStatusSnapshot(syncQueue);
+      return getSyncRunSnapshot(syncQueue, 0, 0);
     }
 
     const allTimesheets = await getStoredTimesheets();
     const syncState = await getTimesheetSyncState();
     const remainingQueue: SyncQueueItem[] = [];
     const updatedSyncState = { ...syncState };
+    let syncedCount = 0;
+    let failedCount = 0;
 
     for (const item of syncQueue) {
       const timesheet = allTimesheets[item.entityId];
@@ -227,21 +240,29 @@ const localSyncRepository = {
       }
 
       try {
-        await localSyncTransport.pushTimesheet(timesheet, item.operation);
-        updatedSyncState[item.entityId] = {
-          timesheetId: item.entityId,
-          status: 'synced',
-          updatedAt: new Date().toISOString(),
-        };
+        const result = await localSyncTransport.pushTimesheet(timesheet, item.operation);
+
+        if (result.ok) {
+          updatedSyncState[item.entityId] = {
+            timesheetId: item.entityId,
+            status: 'synced',
+            updatedAt: new Date().toISOString(),
+          };
+          syncedCount += 1;
+        } else {
+          remainingQueue.push(item);
+          failedCount += 1;
+        }
       } catch {
         remainingQueue.push(item);
+        failedCount += 1;
       }
     }
 
     await set(SYNC_QUEUE_KEY, remainingQueue);
     await set(TIMESHEET_SYNC_STATE_KEY, updatedSyncState);
 
-    return getSyncStatusSnapshot(remainingQueue);
+    return getSyncRunSnapshot(remainingQueue, syncedCount, failedCount);
   },
 };
 

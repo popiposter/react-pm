@@ -9,5 +9,10 @@ export const localSyncTransport: SyncTransport = {
     void timesheet;
     void operation;
     await delay(180);
+
+    return {
+      ok: true,
+      remoteVersion: timesheet.version,
+    };
   },
 };

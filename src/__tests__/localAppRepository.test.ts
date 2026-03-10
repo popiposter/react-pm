@@ -101,6 +101,8 @@ describe('localAppRepository', () => {
     const status = await localAppRepository.sync.runSync();
 
     expect(status.pendingCount).toBe(0);
+    expect(status.syncedCount).toBe(1);
+    expect(status.failedCount).toBe(0);
     expect(set).toHaveBeenCalledWith('local-repository:sync-queue', []);
   });
 });

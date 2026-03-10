@@ -54,9 +54,11 @@ export default function Layout({ children }: LayoutProps) {
       toast.success('Синхронизация завершена', {
         id: 'sync-runner',
         description:
-          result.pendingCount > 0
-            ? `Осталось в очереди: ${result.pendingCount}`
-            : 'Очередь синхронизации пуста',
+          result.failedCount > 0
+            ? `Синхронизировано: ${result.syncedCount}, осталось: ${result.failedCount}`
+            : result.pendingCount > 0
+              ? `Осталось в очереди: ${result.pendingCount}`
+              : `Синхронизировано: ${result.syncedCount}, очередь пуста`,
         duration: 3000,
       });
     } catch {
