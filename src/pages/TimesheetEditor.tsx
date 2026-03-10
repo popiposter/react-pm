@@ -399,6 +399,7 @@ export default function TimesheetEditor() {
   const [conflictError, setConflictError] = useState<{ message: string } | null>(null);
   const [rowPendingDelete, setRowPendingDelete] = useState<number | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
 
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   const {
@@ -450,6 +451,22 @@ export default function TimesheetEditor() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleMobileChromeChange = (event: Event) => {
+      const chromeEvent = event as CustomEvent<{ hidden?: boolean }>;
+      setIsMobileChromeHidden(Boolean(chromeEvent.detail?.hidden));
+    };
+
+    setIsMobileChromeHidden(document.documentElement.dataset.mobileChrome === 'hidden');
+    window.addEventListener('mobile-chrome-change', handleMobileChromeChange as EventListener);
+
+    return () =>
+      window.removeEventListener(
+        'mobile-chrome-change',
+        handleMobileChromeChange as EventListener
+      );
   }, []);
 
   useEffect(() => {
@@ -909,14 +926,19 @@ export default function TimesheetEditor() {
         </DndContext>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/96 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur xl:hidden">
+      <div
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/96 px-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
+          isMobileChromeHidden && 'translate-y-full'
+        )}
+      >
         <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
           <Button
             onClick={() =>
               navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
             }
             variant="secondary"
-            className="h-11 rounded-2xl text-[var(--text-soft)]"
+            className="h-10 rounded-2xl text-[var(--text-soft)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Назад
@@ -924,7 +946,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={handleAddRow}
             variant="secondary"
-            className="h-11 rounded-2xl"
+            className="h-10 rounded-2xl"
           >
             <Plus className="h-4 w-4" />
             Строка
@@ -932,7 +954,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={() => void handleSave(false)}
             disabled={saveMutation.isPending}
-            className="h-11 rounded-2xl"
+            className="h-10 rounded-2xl"
           >
             <Save className="h-4 w-4" />
             Сохранить

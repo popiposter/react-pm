@@ -49,8 +49,10 @@ export default function Layout({ children }: LayoutProps) {
     return window.localStorage.getItem('timesheets:sidebar-collapsed') === 'true';
   });
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
   const { data: syncStatus } = useSyncStatus();
   const runSyncMutation = useRunSync();
+  const isEditorRoute = location.pathname.startsWith('/timesheet/');
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -72,6 +74,70 @@ export default function Layout({ children }: LayoutProps) {
 
     window.localStorage.setItem('timesheets:sidebar-collapsed', String(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    const updateChrome = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
+
+      if (currentScrollY <= 24 || delta < -8) {
+        setIsMobileChromeHidden(false);
+      } else if (delta > 10) {
+        setIsMobileChromeHidden(true);
+      }
+
+      lastScrollY = currentScrollY;
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (window.innerWidth >= 1280) {
+        if (isMobileChromeHidden) {
+          setIsMobileChromeHidden(false);
+        }
+        return;
+      }
+
+      if (!ticking) {
+        window.requestAnimationFrame(updateChrome);
+        ticking = true;
+      }
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1280) {
+        setIsMobileChromeHidden(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isMobileChromeHidden]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    document.documentElement.dataset.mobileChrome = isMobileChromeHidden ? 'hidden' : 'visible';
+    window.dispatchEvent(
+      new CustomEvent('mobile-chrome-change', {
+        detail: { hidden: isMobileChromeHidden },
+      })
+    );
+  }, [isMobileChromeHidden]);
 
   const userInitials = auth.session?.user.displayName
     ? auth.session.user.displayName
@@ -224,17 +290,22 @@ export default function Layout({ children }: LayoutProps) {
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="app-surface-strong sticky top-0 z-40 border-b">
-            <div className="flex items-center justify-between px-4 py-3 sm:px-5 xl:px-8">
+          <header
+            className={cn(
+              'app-surface-strong sticky top-0 z-40 border-b transition-transform duration-300 ease-out',
+              isMobileChromeHidden && '-translate-y-full xl:translate-y-0'
+            )}
+          >
+            <div className="flex items-center justify-between px-4 py-2.5 sm:px-5 xl:px-8 xl:py-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
-                  <Clock3 className="h-5 w-5" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
+                  <Clock3 className="h-4.5 w-4.5" />
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
                     Offline-first workspace
                   </p>
-                  <h2 className="text-base font-semibold sm:text-lg">Учет рабочего времени</h2>
+                  <h2 className="text-sm font-semibold sm:text-base xl:text-lg">Учет рабочего времени</h2>
                 </div>
               </div>
 
@@ -246,7 +317,7 @@ export default function Layout({ children }: LayoutProps) {
                   <button
                     type="button"
                     onClick={() => setIsThemeMenuOpen((value) => !value)}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
                     aria-label="Переключить тему"
                   >
                     <CurrentThemeIcon className="h-4 w-4" />
@@ -290,7 +361,7 @@ export default function Layout({ children }: LayoutProps) {
                         ? 'Сервер доступен'
                         : 'Оффлайн-режим'
                   }
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                 >
                   {isOnline ? (
                     <Wifi
@@ -308,13 +379,13 @@ export default function Layout({ children }: LayoutProps) {
                 <button
                   type="button"
                   onClick={() => void handleLogout()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                   aria-label="Выйти"
                   title={`Выйти (${auth.session?.user.displayName || 'Пользователь'})`}
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950">
                   {userInitials || 'П'}
                 </div>
               </div>
@@ -322,12 +393,25 @@ export default function Layout({ children }: LayoutProps) {
 
           </header>
 
-          <main className="flex-1 px-4 py-5 pb-24 sm:px-5 xl:px-8 xl:py-6 xl:pb-6">{children}</main>
+          <main
+            className={cn(
+              'flex-1 px-4 py-5 sm:px-5 xl:px-8 xl:py-6 xl:pb-6',
+              isEditorRoute ? 'pb-24' : 'pb-20'
+            )}
+          >
+            {children}
+          </main>
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur xl:hidden">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-3">
+      {!isEditorRoute && (
+        <nav
+          className={cn(
+            'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
+            isMobileChromeHidden && 'translate-y-full'
+          )}
+        >
+          <div className="mx-auto flex max-w-md items-center justify-between gap-2.5">
           <Link
             to="/timesheets"
             search={{
@@ -336,13 +420,13 @@ export default function Layout({ children }: LayoutProps) {
               q: '',
             }}
             className={cn(
-              'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition',
+              'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] font-medium transition',
               location.pathname.startsWith('/timesheets')
                 ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                 : 'text-[var(--text-muted)]'
             )}
           >
-            <FileSpreadsheet className="h-5 w-5" />
+            <FileSpreadsheet className="h-4.5 w-4.5" />
             <span>Табели</span>
           </Link>
           <button
@@ -354,17 +438,18 @@ export default function Layout({ children }: LayoutProps) {
               })
             }
             className={cn(
-              'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition',
+              'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] font-medium transition',
               location.pathname.startsWith('/timesheet/')
                 ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                 : 'text-[var(--text-muted)]'
             )}
           >
-            <FolderClock className="h-5 w-5" />
+            <FolderClock className="h-4.5 w-4.5" />
             <span>Сегодня</span>
           </button>
         </div>
-      </nav>
+        </nav>
+      )}
     </div>
   );
 }
