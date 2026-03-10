@@ -691,7 +691,7 @@ export default function TimesheetEditor() {
   }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4 pb-24 xl:pb-0">
       <div className="app-surface overflow-hidden rounded-[1.25rem]">
         <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-start xl:justify-between xl:px-6">
           <div className="space-y-3">
@@ -733,7 +733,7 @@ export default function TimesheetEditor() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2.5 xl:max-w-2xl xl:justify-end">
+          <div className="hidden flex-wrap gap-2.5 xl:flex xl:max-w-2xl xl:justify-end">
             <Button
               onClick={handleCopy}
               variant="secondary"
@@ -907,6 +907,37 @@ export default function TimesheetEditor() {
             )}
           </SortableContext>
         </DndContext>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/96 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur xl:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
+          <Button
+            onClick={() =>
+              navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
+            }
+            variant="secondary"
+            className="h-11 rounded-2xl text-[var(--text-soft)]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Назад
+          </Button>
+          <Button
+            onClick={handleAddRow}
+            variant="secondary"
+            className="h-11 rounded-2xl"
+          >
+            <Plus className="h-4 w-4" />
+            Строка
+          </Button>
+          <Button
+            onClick={() => void handleSave(false)}
+            disabled={saveMutation.isPending}
+            className="h-11 rounded-2xl"
+          >
+            <Save className="h-4 w-4" />
+            Сохранить
+          </Button>
+        </div>
       </div>
 
       {conflictModalOpened && (
