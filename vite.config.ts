@@ -1,11 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
+
+const appBasePath = process.env.VITE_APP_BASE_PATH || '/';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: appBasePath,
   plugins: [
+    TanStackRouterVite({
+      target: 'react',
+      routesDirectory: './src/routes',
+    }),
     react(),
+    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
@@ -16,16 +26,18 @@ export default defineConfig({
         short_name: 'Табели',
         description: 'Offline-first приложение для учета рабочего времени',
         theme_color: '#ffffff',
+        start_url: appBasePath,
+        scope: appBasePath,
         icons: [
           {
-            src: 'src/assets/icon-192.png',
+            src: 'src/assets/icon.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: 'src/assets/icon-512.png',
+            src: 'src/assets/icon.svg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/svg+xml'
           }
         ]
       },

@@ -1,0 +1,14 @@
+import { createFileRoute, lazyRouteComponent } from '@tanstack/react-router';
+import { TimesheetEditorSkeleton } from '../../components/pending/TimesheetEditorSkeleton';
+import { tasksQueryOptions, timesheetQueryOptions } from '../../data/queryOptions';
+
+export const Route = createFileRoute('/_authenticated/timesheet/$date')({
+  loader: async ({ context, params }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(tasksQueryOptions()),
+      context.queryClient.ensureQueryData(timesheetQueryOptions(params.date)),
+    ]);
+  },
+  pendingComponent: TimesheetEditorSkeleton,
+  component: lazyRouteComponent(() => import('../../pages/TimesheetEditor')),
+});
