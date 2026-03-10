@@ -13,6 +13,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useTimesheets } from '../hooks/useTimesheets';
+import { useSyncStatus } from '../hooks/useSyncStatus';
 import type { Timesheet } from '../api/mockBackend';
 import { cn } from '../lib/utils';
 
@@ -127,6 +128,7 @@ export default function TimesheetsList() {
   const [statusFilter, setStatusFilter] = useState<TimesheetStatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { data: timesheets = [], isLoading } = useTimesheets(selectedMonth);
+  const { data: syncStatus } = useSyncStatus();
 
   const filteredTimesheets = useMemo(() => {
     return [...timesheets]
@@ -155,6 +157,11 @@ export default function TimesheetsList() {
                 Здесь остается только то, что действительно важно для ежедневной работы:
                 открыть день, завести часы и быстро вернуться к нужному табелю.
               </p>
+              {syncStatus && syncStatus.pendingCount > 0 && (
+                <div className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                  Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <button

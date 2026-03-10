@@ -1,9 +1,17 @@
 import { get, set } from 'idb-keyval';
 import type { Task, Timesheet } from '../../api/mockBackend';
-import type { AppRepository, SaveTimesheetError } from './types';
+import type {
+  AppRepository,
+  SaveTimesheetError,
+  SyncQueueItem,
+  SyncStatus,
+  TimesheetSyncState,
+} from './types';
 
 const TASKS_KEY = 'local-repository:tasks';
 const TIMESHEETS_KEY = 'local-repository:timesheets';
+const SYNC_QUEUE_KEY = 'local-repository:sync-queue';
+const TIMESHEET_SYNC_STATE_KEY = 'local-repository:timesheet-sync-state';
 const LEGACY_TASKS_KEY = 'mock_tasks';
 const LEGACY_TIMESHEETS_KEY = 'mock_timesheets';
 
@@ -76,6 +84,14 @@ const getStoredTimesheets = async (): Promise<Record<string, Timesheet>> => {
   return legacyTimesheets;
 };
 
+const getSyncQueue = async (): Promise<SyncQueueItem[]> => {
+  return (await get<SyncQueueItem[]>(SYNC_QUEUE_KEY)) ?? [];
+};
+
+const getTimesheetSyncState = async (): Promise<Record<string, TimesheetSyncState>> => {
+  return (await get<Record<string, TimesheetSyncState>>(TIMESHEET_SYNC_STATE_KEY)) ?? {};
+};
+
 const createDraftTimesheet = (date: string): Timesheet => ({
   id: `ts_${date}`,
   date,
@@ -116,6 +132,8 @@ const localTimesheetsRepository = {
   async saveTimesheet(timesheet: Timesheet) {
     await delay(NETWORK_DELAY_MS.save);
     const allTimesheets = await getStoredTimesheets();
+    const syncQueue = await getSyncQueue();
+    const syncState = await getTimesheetSyncState();
     const existingTimesheet = allTimesheets[timesheet.id];
 
     if (existingTimesheet && timesheet.version < existingTimesheet.version) {
@@ -136,13 +154,57 @@ const localTimesheetsRepository = {
       [savedTimesheet.id]: savedTimesheet,
     };
 
+    const queuedAt = new Date().toISOString();
+    const nextQueueItem: SyncQueueItem = {
+      id: `sync_${savedTimesheet.id}`,
+      entityId: savedTimesheet.id,
+      entityType: 'timesheet',
+      operation: 'save_timesheet',
+      queuedAt,
+    };
+
+    const updatedQueue = [
+      ...syncQueue.filter((item) => item.id !== nextQueueItem.id),
+      nextQueueItem,
+    ];
+
+    const updatedSyncState: Record<string, TimesheetSyncState> = {
+      ...syncState,
+      [savedTimesheet.id]: {
+        timesheetId: savedTimesheet.id,
+        status: 'pending_sync',
+        updatedAt: queuedAt,
+      },
+    };
+
     await set(TIMESHEETS_KEY, updatedTimesheets);
+    await set(SYNC_QUEUE_KEY, updatedQueue);
+    await set(TIMESHEET_SYNC_STATE_KEY, updatedSyncState);
 
     return savedTimesheet;
+  },
+};
+
+const localSyncRepository = {
+  async getStatus(): Promise<SyncStatus> {
+    const syncQueue = await getSyncQueue();
+    const lastQueuedAt = syncQueue.reduce<string | null>((latest, item) => {
+      if (!latest || item.queuedAt > latest) {
+        return item.queuedAt;
+      }
+
+      return latest;
+    }, null);
+
+    return {
+      pendingCount: syncQueue.length,
+      lastQueuedAt,
+    };
   },
 };
 
 export const localAppRepository: AppRepository = {
   tasks: localTasksRepository,
   timesheets: localTimesheetsRepository,
+  sync: localSyncRepository,
 };

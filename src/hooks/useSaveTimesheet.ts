@@ -13,6 +13,7 @@ export const useSaveTimesheet = () => {
 
       // Invalidate timesheets list to refresh
       queryClient.invalidateQueries({ queryKey: ['timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['sync-status'] });
     },
     onError: (error: SaveTimesheetError) => {
       // Pass error through for conflict handling

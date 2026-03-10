@@ -51,4 +51,27 @@ describe('localAppRepository', () => {
       },
     });
   });
+
+  it('adds saved timesheets to the sync queue status', async () => {
+    vi.mocked(get)
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({});
+
+    await localAppRepository.timesheets.saveTimesheet({
+      id: 'ts_2026-03-11',
+      date: '2026-03-11',
+      userId: 'user-1',
+      version: 1,
+      rows: [],
+      status: 'draft',
+    });
+
+    const syncQueueCall = vi.mocked(set).mock.calls.find(
+      ([key]) => key === 'local-repository:sync-queue'
+    );
+
+    expect(syncQueueCall).toBeDefined();
+    expect((syncQueueCall?.[1] as Array<{ entityId: string }>)[0].entityId).toBe('ts_2026-03-11');
+  });
 });

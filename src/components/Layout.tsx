@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Clock3, FileSpreadsheet, Menu, Wifi, WifiOff, X } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useSyncStatus } from '../hooks/useSyncStatus';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: syncStatus } = useSyncStatus();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -109,6 +111,11 @@ export default function Layout({ children }: LayoutProps) {
                 <p className="text-sm text-slate-400">
                   {isOnline ? 'Синхронизация доступна' : 'Данные сохраняются локально'}
                 </p>
+                {syncStatus && syncStatus.pendingCount > 0 && (
+                  <p className="mt-1 text-sm text-amber-200">
+                    Ожидают синхронизации: {syncStatus.pendingCount}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -143,6 +150,11 @@ export default function Layout({ children }: LayoutProps) {
                   )}
                   <span>{isOnline ? 'Сервер доступен' : 'Работаем локально'}</span>
                 </div>
+                {syncStatus && syncStatus.pendingCount > 0 && (
+                  <div className="hidden rounded-full border border-amber-300/20 bg-amber-400/10 px-4 py-2 text-sm text-amber-100 lg:flex lg:items-center lg:gap-2">
+                    <span>Pending sync: {syncStatus.pendingCount}</span>
+                  </div>
+                )}
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950">
                   П
                 </div>

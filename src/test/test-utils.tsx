@@ -1,5 +1,6 @@
 import { render as rtlRender, screen, waitFor, fireEvent, queries } from '@testing-library/react';
 import type { RenderOptions, RenderResult } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock localStorage for tests
 const localStorageMock = (() => {
@@ -49,7 +50,18 @@ export function render(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, 'queries'>
 ): RenderResult {
-  return rtlRender(ui, options);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+  return rtlRender(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, options);
 }
 
 // Re-export testing library exports
