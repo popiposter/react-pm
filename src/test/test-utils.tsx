@@ -1,5 +1,4 @@
 import { render as rtlRender, screen, waitFor, fireEvent, queries } from '@testing-library/react';
-import { MantineProvider } from '@mantine/core';
 import type { RenderOptions, RenderResult } from '@testing-library/react';
 
 // Mock localStorage for tests
@@ -27,7 +26,7 @@ Object.defineProperty(window, 'localStorage', {
   writable: true
 });
 
-// Mock matchMedia for Mantine
+// Mock matchMedia for responsive hooks and browser APIs
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
@@ -50,10 +49,7 @@ export function render(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, 'queries'>
 ): RenderResult {
-  return rtlRender(
-    <MantineProvider>{ui}</MantineProvider>,
-    options
-  );
+  return rtlRender(ui, options);
 }
 
 // Re-export testing library exports

@@ -1,6 +1,4 @@
 @import 'tailwindcss';
-@import '@mantine/core/styles.css';
-@import '@mantine/notifications/styles.css';
 
 :root {
   color-scheme: light;

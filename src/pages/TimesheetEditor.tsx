@@ -15,7 +15,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { notifications } from '@mantine/notifications';
+import { toast } from 'sonner';
 import type { Task, TimesheetRow } from '../api/mockBackend';
 import { useSaveTimesheet } from '../hooks/useSaveTimesheet';
 import { useTasks } from '../hooks/useTasks';
@@ -379,37 +379,28 @@ export default function TimesheetEditor() {
   }, [date, isDirty]);
 
   const showSaveSuccess = () => {
-    notifications.update({
+    toast.success('Сохранено', {
       id: 'saving',
-      title: 'Сохранено',
-      message: navigator.onLine
+      description: navigator.onLine
         ? 'Табель успешно сохранен на сервере'
         : 'Табель сохранен локально (нет сети)',
-      color: 'green',
-      loading: false,
-      autoClose: 3000,
+      duration: 3000,
     });
   };
 
   const showConflictState = () => {
-    notifications.update({
+    toast.warning('Конфликт версий', {
       id: 'saving',
-      title: 'Конфликт версий',
-      message: 'На сервере обнаружена более новая версия табеля',
-      color: 'orange',
-      loading: false,
-      autoClose: 5000,
+      description: 'На сервере обнаружена более новая версия табеля',
+      duration: 5000,
     });
   };
 
   const showSaveError = () => {
-    notifications.update({
+    toast.error('Ошибка сохранения', {
       id: 'saving',
-      title: 'Ошибка сохранения',
-      message: 'Не удалось сохранить табель',
-      color: 'red',
-      loading: false,
-      autoClose: 5000,
+      description: 'Не удалось сохранить табель',
+      duration: 5000,
     });
   };
 
@@ -417,12 +408,9 @@ export default function TimesheetEditor() {
     async (shouldNavigateBack = false) => {
       if (!date || !timesheet) return;
 
-      notifications.show({
+      toast.loading('Сохранение...', {
         id: 'saving',
-        title: 'Сохранение...',
-        message: 'Сохраняем табель...',
-        loading: true,
-        autoClose: false,
+        description: 'Сохраняем табель...',
       });
 
       try {
@@ -472,12 +460,9 @@ export default function TimesheetEditor() {
       date: today,
     }));
 
-    notifications.show({
+    toast.loading('Создаем копию...', {
       id: 'copying',
-      title: 'Создаем копию...',
-      message: 'Подготавливаем табель на сегодня',
-      loading: true,
-      autoClose: false,
+      description: 'Подготавливаем табель на сегодня',
     });
 
     try {
@@ -490,24 +475,18 @@ export default function TimesheetEditor() {
         status: 'draft',
       });
 
-      notifications.update({
+      toast.success('Копия создана', {
         id: 'copying',
-        title: 'Копия создана',
-        message: `Табель на ${formatEditorDate(today)} готов к редактированию`,
-        color: 'blue',
-        loading: false,
-        autoClose: 3000,
+        description: `Табель на ${formatEditorDate(today)} готов к редактированию`,
+        duration: 3000,
       });
 
       navigate(`/timesheet/${today}`);
     } catch {
-      notifications.update({
+      toast.error('Ошибка', {
         id: 'copying',
-        title: 'Ошибка',
-        message: 'Не удалось создать копию табеля',
-        color: 'red',
-        loading: false,
-        autoClose: 4000,
+        description: 'Не удалось создать копию табеля',
+        duration: 4000,
       });
     }
   };
@@ -525,18 +504,14 @@ export default function TimesheetEditor() {
       setIsDirty(false);
       setConflictModalOpened(false);
 
-      notifications.show({
-        title: 'Перезаписано',
-        message: 'Локальная версия перезаписана на сервере',
-        color: 'green',
-        autoClose: 3000,
+      toast.success('Перезаписано', {
+        description: 'Локальная версия перезаписана на сервере',
+        duration: 3000,
       });
     } catch {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Не удалось перезаписать табель',
-        color: 'red',
-        autoClose: 3000,
+      toast.error('Ошибка', {
+        description: 'Не удалось перезаписать табель',
+        duration: 3000,
       });
     }
   };
@@ -548,18 +523,14 @@ export default function TimesheetEditor() {
 
     try {
       await refetchTimesheet();
-      notifications.show({
-        title: 'Обновлено',
-        message: 'Данные загружены с сервера',
-        color: 'blue',
-        autoClose: 3000,
+      toast.success('Обновлено', {
+        description: 'Данные загружены с сервера',
+        duration: 3000,
       });
     } catch {
-      notifications.show({
-        title: 'Ошибка',
-        message: 'Не удалось загрузить актуальные данные с сервера',
-        color: 'red',
-        autoClose: 3000,
+      toast.error('Ошибка', {
+        description: 'Не удалось загрузить актуальные данные с сервера',
+        duration: 3000,
       });
     }
   };

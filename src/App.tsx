@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MantineProvider } from '@mantine/core';
-import { DatesProvider } from '@mantine/dates';
-import { Notifications } from '@mantine/notifications';
+import React, { useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createIDBPersister } from './utils/idbPersister';
 import { Routes, Route, useBlocker, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import { AppToaster } from './components/ui/sonner';
 import TimesheetEditor from './pages/TimesheetEditor';
 import TimesheetsList from './pages/TimesheetsList';
 
@@ -45,55 +43,26 @@ const BlockerModal = ({
   if (!opened) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '24px',
-          borderRadius: '8px',
-          maxWidth: '400px',
-          width: '100%',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-        }}
-      >
-        <h3 style={{ marginTop: 0 }}>У вас есть несохраненные изменения</h3>
-        <p>Если вы уйдете со страницы, изменения будут потеряны.</p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
+        <div className="space-y-3">
+          <h3 className="text-xl font-semibold text-white">У вас есть несохраненные изменения</h3>
+          <p className="text-sm leading-6 text-slate-300">
+            Если вы уйдете со страницы, изменения будут потеряны. Можно сначала сохранить табель и затем продолжить переход.
+          </p>
+        </div>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
           <button
+            type="button"
             onClick={onCancel}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '4px',
-              border: '1px solid #ced4da',
-              backgroundColor: 'white',
-              cursor: 'pointer',
-            }}
+            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
           >
             Отмена
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '4px',
-              border: 'none',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              cursor: 'pointer',
-            }}
+            className="inline-flex items-center justify-center rounded-2xl bg-sky-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300"
           >
             Сохранить и уйти
           </button>
@@ -162,46 +131,44 @@ const NavigationBlocker = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <MantineProvider defaultColorScheme="light">
-      <DatesProvider settings={{ locale: 'ru' }}>
-        <Notifications />
-        {persister ? (
-          <PersistQueryClientProvider
-            client={queryClient}
-            persistOptions={{
-              persister,
-              maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-            }}
-          >
-            <NavigationBlocker>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<TimesheetsList />} />
-                  <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
-                  <Route path="/timesheets" element={<TimesheetsList />} />
-                  <Route path="/timesheet/:date" element={<TimesheetEditor />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Layout>
-            </NavigationBlocker>
-          </PersistQueryClientProvider>
-        ) : (
-          <QueryClientProvider client={queryClient}>
-            <NavigationBlocker>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<TimesheetsList />} />
-                  <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
-                  <Route path="/timesheets" element={<TimesheetsList />} />
-                  <Route path="/timesheet/:date" element={<TimesheetEditor />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Layout>
-            </NavigationBlocker>
-          </QueryClientProvider>
-        )}
-      </DatesProvider>
-    </MantineProvider>
+    <>
+      <AppToaster />
+      {persister ? (
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister,
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+          }}
+        >
+          <NavigationBlocker>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<TimesheetsList />} />
+                <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
+                <Route path="/timesheets" element={<TimesheetsList />} />
+                <Route path="/timesheet/:date" element={<TimesheetEditor />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Layout>
+          </NavigationBlocker>
+        </PersistQueryClientProvider>
+      ) : (
+        <QueryClientProvider client={queryClient}>
+          <NavigationBlocker>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<TimesheetsList />} />
+                <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
+                <Route path="/timesheets" element={<TimesheetsList />} />
+                <Route path="/timesheet/:date" element={<TimesheetEditor />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Layout>
+          </NavigationBlocker>
+        </QueryClientProvider>
+      )}
+    </>
   );
 }
 
