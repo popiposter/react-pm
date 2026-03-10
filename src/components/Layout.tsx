@@ -199,6 +199,9 @@ export default function Layout({ children }: LayoutProps) {
               </div>
 
               <div className="flex items-center gap-3">
+                <div className="hidden rounded-full border border-sky-300/20 bg-sky-400/10 px-4 py-2 text-sm text-sky-100 lg:flex lg:items-center lg:gap-2">
+                  <span>Public demo</span>
+                </div>
                 <div className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 sm:flex sm:items-center sm:gap-2">
                   {isOnline ? (
                     <Wifi className="h-4 w-4 text-emerald-300" />

@@ -43,4 +43,12 @@ describe('LoginPage', () => {
 
     expect(screen.getByText('Не удалось обновить сессию')).toBeInTheDocument();
   });
+
+  it('shows public demo warning and default credentials', () => {
+    render(<LoginPage />);
+
+    expect(screen.getByText('Public demo')).toBeInTheDocument();
+    expect(screen.getByText(/Это публичная демо-страница/)).toBeInTheDocument();
+    expect(screen.getByText(/demo\.user \/ demo/)).toBeInTheDocument();
+  });
 });

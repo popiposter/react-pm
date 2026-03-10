@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
-import { AlertTriangle, ArrowRight, DatabaseZap, LockKeyhole, Sparkles } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  DatabaseZap,
+  Globe2,
+  LockKeyhole,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../features/auth/auth';
 import { useSeedDemoData } from '../hooks/useSeedDemoData';
@@ -92,10 +99,16 @@ export function LoginPage({
       <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-12 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_30px_120px_-48px_rgba(15,23,42,0.95)] backdrop-blur">
-            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-200">
-              <LockKeyhole className="h-3.5 w-3.5" />
-              Protected workspace
-            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-200">
+                <LockKeyhole className="h-3.5 w-3.5" />
+                Protected workspace
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-emerald-200">
+                <Globe2 className="h-3.5 w-3.5" />
+                Public demo
+              </span>
+            </div>
             <div className="mt-6 space-y-4">
               <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-white">
                 Вход в офлайн-first рабочее место табелей.
@@ -104,6 +117,11 @@ export function LoginPage({
                 Здесь сразу закладываем ту же схему, которая позже пойдет в 1С: экран логина,
                 защищенные маршруты, локальная сессия для демо и готовность к токенам.
               </p>
+            </div>
+            <div className="mt-6 rounded-[1.5rem] border border-sky-300/15 bg-slate-950/45 p-4 text-sm leading-6 text-slate-300">
+              Это публичная демо-страница для показа UX и offline-first сценариев.
+              Не вводите реальные пароли, персональные данные или чувствительную служебную
+              информацию.
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/50 p-5">
@@ -133,6 +151,20 @@ export function LoginPage({
               <p className="text-sm leading-6 text-slate-400">
                 Пока это локальная demo-сессия, но интерфейс и маршруты уже построены под будущий
                 password + token flow.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Demo access</p>
+              <p className="mt-2 text-sm text-slate-200">
+                Для входа можно использовать значения по умолчанию:
+                <span className="ml-2 rounded-full border border-white/10 bg-slate-950/60 px-2 py-1 text-xs text-sky-200">
+                  demo.user / demo
+                </span>
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Demo auth transport принимает любую непустую пару логин/пароль, но для
+                предсказуемого сценария лучше оставлять стандартные значения.
               </p>
             </div>
 

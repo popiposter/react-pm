@@ -17,6 +17,10 @@ npm run preview
 
 Приложение можно публиковать на GitHub Pages как project site.
 
+Текущий ожидаемый URL:
+
+- [https://popiposter.github.io/react-pm/](https://popiposter.github.io/react-pm/)
+
 Для этого в проекте заложены:
 
 - поддержка `VITE_APP_BASE_PATH`
