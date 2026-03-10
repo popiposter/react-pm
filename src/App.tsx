@@ -143,12 +143,11 @@ function App() {
         >
           <NavigationBlocker>
             <Layout>
-              <Routes>
-                <Route path="/" element={<TimesheetsList />} />
-                <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
-                <Route path="/timesheets" element={<TimesheetsList />} />
-                <Route path="/timesheet/:date" element={<TimesheetEditor />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Routes>
+                  <Route path="/" element={<TimesheetsList />} />
+                  <Route path="/timesheets" element={<TimesheetsList />} />
+                  <Route path="/timesheet/:date" element={<TimesheetEditor />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
           </NavigationBlocker>
@@ -159,7 +158,6 @@ function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<TimesheetsList />} />
-                <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
                 <Route path="/timesheets" element={<TimesheetsList />} />
                 <Route path="/timesheet/:date" element={<TimesheetEditor />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
