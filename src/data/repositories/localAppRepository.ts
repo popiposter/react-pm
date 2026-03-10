@@ -3,6 +3,7 @@ import type { Task, Timesheet } from '../../api/mockBackend';
 import { createSyncTransport } from '../sync';
 import type {
   AppRepository,
+  DemoResetResult,
   DemoSeedResult,
   SaveTimesheetError,
   SyncQueueItem,
@@ -453,6 +454,20 @@ const localDemoRepository = {
     return {
       tasksCount: defaultTasks.length,
       timesheetsCount: Object.keys(demoTimesheets).length,
+    };
+  },
+
+  async resetDemoData(): Promise<DemoResetResult> {
+    const currentTimesheets = await getStoredTimesheets();
+
+    await set(TASKS_KEY, defaultTasks);
+    await set(TIMESHEETS_KEY, {});
+    await set(SYNC_QUEUE_KEY, []);
+    await set(TIMESHEET_SYNC_STATE_KEY, {});
+
+    return {
+      tasksCount: defaultTasks.length,
+      clearedTimesheetsCount: Object.keys(currentTimesheets).length,
     };
   },
 };

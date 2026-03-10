@@ -135,4 +135,24 @@ describe('localAppRepository', () => {
     expect(Object.keys(persistedTimesheets)).toHaveLength(result.timesheetsCount);
     expect(Object.values(persistedTimesheets)[0]?.rows).toBeInstanceOf(Array);
   });
+
+  it('resets demo data and clears local timesheets', async () => {
+    vi.mocked(get).mockResolvedValueOnce({
+      'ts_2026-03-10': {
+        id: 'ts_2026-03-10',
+        date: '2026-03-10',
+        userId: 'user-1',
+        version: 1,
+        rows: [],
+        status: 'draft',
+      },
+    });
+
+    const result = await localAppRepository.demo.resetDemoData();
+
+    expect(result.tasksCount).toBeGreaterThan(0);
+    expect(result.clearedTimesheetsCount).toBe(1);
+    expect(set).toHaveBeenCalledWith('local-repository:timesheets', {});
+    expect(set).toHaveBeenCalledWith('local-repository:sync-queue', []);
+  });
 });

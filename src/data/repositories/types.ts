@@ -36,6 +36,11 @@ export interface DemoSeedResult {
   timesheetsCount: number;
 }
 
+export interface DemoResetResult {
+  tasksCount: number;
+  clearedTimesheetsCount: number;
+}
+
 export interface TaskRepository {
   getTasks(): Promise<Task[]>;
 }
@@ -53,6 +58,7 @@ export interface SyncRepository {
 
 export interface DemoRepository {
   seedDemoData(): Promise<DemoSeedResult>;
+  resetDemoData(): Promise<DemoResetResult>;
 }
 
 export interface AppRepository {

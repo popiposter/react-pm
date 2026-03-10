@@ -48,6 +48,49 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           }
+        ],
+        screenshots: [
+          {
+            src: 'screenshot-desktop.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Журнал табелей и demo onboarding'
+          },
+          {
+            src: 'screenshot-mobile.png',
+            sizes: '720x1280',
+            type: 'image/png',
+            label: 'Мобильный сценарий редактора табеля'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Табели',
+            short_name: 'Табели',
+            description: 'Открыть журнал табелей',
+            url: `${appBasePath}timesheets`,
+            icons: [
+              {
+                src: 'icon-192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              }
+            ]
+          },
+          {
+            name: 'Табель на сегодня',
+            short_name: 'Логин',
+            description: 'Открыть экран входа в демо',
+            url: `${appBasePath}login`,
+            icons: [
+              {
+                src: 'icon-192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              }
+            ]
+          }
         ]
       },
       workbox: {

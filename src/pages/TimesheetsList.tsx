@@ -1,20 +1,27 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   ArrowRight,
   CalendarRange,
   CircleCheckBig,
   Clock3,
+  DatabaseZap,
   FileSearch,
   FileSpreadsheet,
   Filter,
+  FolderClock,
   NotebookPen,
   Plus,
+  RefreshCcw,
   Search,
+  Sparkles,
+  WifiOff,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
+import { useResetDemoData } from '../hooks/useResetDemoData';
 import { useSeedDemoData } from '../hooks/useSeedDemoData';
 import type { Timesheet } from '../api/mockBackend';
 import { cn } from '../lib/utils';
@@ -69,6 +76,7 @@ const statusFilterOptions: Array<{
 ];
 
 const startOfToday = () => new Date().toISOString().split('T')[0];
+const DEMO_ONBOARDING_KEY = 'timesheets:dismiss-demo-onboarding';
 
 const matchesSearch = (timesheet: Timesheet, query: string) => {
   const normalizedQuery = query.trim().toLowerCase();
@@ -130,6 +138,14 @@ export default function TimesheetsList() {
   const { data: timesheets = [], isLoading } = useTimesheets(selectedMonth);
   const { data: syncStatus } = useSyncStatus();
   const seedDemoData = useSeedDemoData();
+  const resetDemoData = useResetDemoData();
+  const [showDemoOnboarding, setShowDemoOnboarding] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    return window.localStorage.getItem(DEMO_ONBOARDING_KEY) !== 'dismissed';
+  });
 
   const filteredTimesheets = useMemo(() => {
     return [...timesheets]
@@ -141,6 +157,20 @@ export default function TimesheetsList() {
   const activeSummary = useMemo(() => summaryCards(filteredTimesheets), [filteredTimesheets]);
   const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim().length > 0;
   const isEmptyMonth = !isLoading && filteredTimesheets.length === 0 && !hasActiveFilters;
+  const hasAnyTimesheets = timesheets.length > 0;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (showDemoOnboarding) {
+      window.localStorage.removeItem(DEMO_ONBOARDING_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(DEMO_ONBOARDING_KEY, 'dismissed');
+  }, [showDemoOnboarding]);
 
   const handleSeedDemoData = async () => {
     toast.loading('Заполняем демо-базу...', { id: 'seed-demo-list' });
@@ -154,6 +184,35 @@ export default function TimesheetsList() {
     } catch {
       toast.error('Не удалось заполнить демо-базу', {
         id: 'seed-demo-list',
+        description: 'Попробуйте повторить действие еще раз.',
+      });
+    }
+  };
+
+  const handleResetDemoData = async () => {
+    const shouldReset =
+      typeof window === 'undefined'
+        ? true
+        : window.confirm(
+            'Сбросить демо-базу? Все локальные табели и очередь синхронизации будут очищены.'
+          );
+
+    if (!shouldReset) {
+      return;
+    }
+
+    toast.loading('Сбрасываем демо-базу...', { id: 'reset-demo-list' });
+
+    try {
+      const result = await resetDemoData.mutateAsync();
+      toast.success('Демо-база очищена', {
+        id: 'reset-demo-list',
+        description: `Удалено табелей: ${result.clearedTimesheetsCount}. Справочник задач оставлен для нового старта.`,
+      });
+      setShowDemoOnboarding(true);
+    } catch {
+      toast.error('Не удалось сбросить демо-базу', {
+        id: 'reset-demo-list',
         description: 'Попробуйте повторить действие еще раз.',
       });
     }
@@ -180,6 +239,123 @@ export default function TimesheetsList() {
 
   return (
     <section className="space-y-8">
+      {showDemoOnboarding && (
+        <div className="overflow-hidden rounded-[2rem] border border-sky-300/20 bg-sky-400/10 shadow-[0_24px_80px_-52px_rgba(56,189,248,0.7)]">
+          <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-slate-950/35 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-100">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Demo onboarding
+                </span>
+                <div>
+                  <h2 className="text-2xl font-semibold text-white">
+                    Три быстрых сценария, чтобы показать приложение за пару минут.
+                  </h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-sky-50/85">
+                    Это публичное демо. Можно наполнить локальную базу, пройтись по журналу,
+                    открыть редактор и проверить offline-first поведение без реального backend.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDemoOnboarding(false)}
+                className="inline-flex h-11 w-11 items-center justify-center self-start rounded-2xl border border-white/10 bg-slate-950/30 text-sky-50 transition hover:bg-slate-950/50"
+                aria-label="Скрыть onboarding"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              <article className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-2xl bg-emerald-400/15 p-3 text-emerald-200">
+                    <DatabaseZap className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.22em] text-sky-100/65">Шаг 1</p>
+                    <h3 className="text-lg font-semibold text-white">Подготовить базу</h3>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-slate-200/80">
+                  Заполните локальное хранилище готовыми задачами и табелями, чтобы сразу
+                  показать рабочий журнал и статусы.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleSeedDemoData()}
+                  disabled={seedDemoData.isPending}
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <DatabaseZap className="h-4 w-4" />
+                  Заполнить демо-данными
+                </button>
+              </article>
+
+              <article className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-2xl bg-sky-400/15 p-3 text-sky-100">
+                    <FolderClock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.22em] text-sky-100/65">Шаг 2</p>
+                    <h3 className="text-lg font-semibold text-white">Открыть рабочий день</h3>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-slate-200/80">
+                  Перейдите в табель за сегодня или откройте существующую запись и посмотрите
+                  редактор, пересчет времени и локальное сохранение.
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void navigate({
+                      to: '/timesheet/$date',
+                      params: { date: startOfToday() },
+                    })
+                  }
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-sky-300/20 bg-sky-400/10 px-4 py-3 text-sm font-medium text-sky-100 transition hover:bg-sky-400/20"
+                >
+                  <Plus className="h-4 w-4" />
+                  Открыть табель на сегодня
+                </button>
+              </article>
+
+              <article className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-2xl bg-amber-400/15 p-3 text-amber-100">
+                    <WifiOff className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.22em] text-sky-100/65">Шаг 3</p>
+                    <h3 className="text-lg font-semibold text-white">Проверить offline flow</h3>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-slate-200/80">
+                  Отключите сеть в DevTools или на устройстве, сохраните изменения и затем
+                  вернитесь в онлайн, чтобы показать pending sync и ручной запуск синка.
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    toast('Как показать offline-first', {
+                      description:
+                        'Отключите сеть в DevTools или на устройстве, сохраните табель и затем вернитесь в онлайн, чтобы показать pending sync и ручной запуск синхронизации.',
+                    })
+                  }
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm font-medium text-amber-100 transition hover:bg-amber-400/20"
+                >
+                  <WifiOff className="h-4 w-4" />
+                  Показать подсказку
+                </button>
+              </article>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_30px_120px_-48px_rgba(15,23,42,0.95)]">
         <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.5fr_0.9fr] lg:px-8 lg:py-10">
           <div className="space-y-5">
@@ -241,6 +417,15 @@ export default function TimesheetsList() {
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Заполнить демо-данными
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleResetDemoData()}
+                disabled={resetDemoData.isPending || (!hasAnyTimesheets && !syncStatus?.pendingCount)}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-5 py-3 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Сбросить демо-базу
               </button>
             </div>
           </div>
