@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import type { PersistedClient } from '@tanstack/react-query-persist-client';
 import { createIDBPersister } from './utils/idbPersister';
 import { Routes, Route, useBlocker, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -24,10 +25,18 @@ const queryClient = new QueryClient({
   },
 });
 
+type DirtyChangeEvent = CustomEvent<{ isDirty: boolean; date: string }>;
+
+type Persistor = {
+  persistClient: (client: PersistedClient) => Promise<void>;
+  restoreClient: () => Promise<PersistedClient | undefined>;
+  removeClient: () => Promise<void>;
+};
+
 // Create IDB persister for offline storage
-let persister: any;
+let persister: Persistor | undefined;
 if (typeof window !== 'undefined') {
-  persister = createIDBPersister();
+  persister = createIDBPersister() as Persistor;
 }
 
 // Modal for blocking navigation with unsaved changes
@@ -76,21 +85,22 @@ const BlockerModal = ({
 const NavigationBlocker = ({ children }: { children: React.ReactNode }) => {
   const [isDirty, setIsDirty] = useState(false);
   const currentTimesheetRef = useRef<string | null>(null);
-  const blockerRef = useRef<any>(null);
+  const blockerRef = useRef<ReturnType<typeof useBlocker> | null>(null);
 
   // Track dirty state - this will be set by TimesheetEditor via window event
   useEffect(() => {
-    const handleDirtyChange = (e: any) => {
-      setIsDirty(e.detail.isDirty);
-      if (e.detail.isDirty && e.detail.date) {
-        currentTimesheetRef.current = e.detail.date;
-      } else if (!e.detail.isDirty) {
+    const handleDirtyChange = (e: Event) => {
+      const customEvent = e as DirtyChangeEvent;
+      setIsDirty(customEvent.detail.isDirty);
+      if (customEvent.detail.isDirty && customEvent.detail.date) {
+        currentTimesheetRef.current = customEvent.detail.date;
+      } else if (!customEvent.detail.isDirty) {
         currentTimesheetRef.current = null;
       }
     };
 
-    window.addEventListener('timesheet-dirty-change', handleDirtyChange as any);
-    return () => window.removeEventListener('timesheet-dirty-change', handleDirtyChange as any);
+    window.addEventListener('timesheet-dirty-change', handleDirtyChange);
+    return () => window.removeEventListener('timesheet-dirty-change', handleDirtyChange);
   }, []);
 
   // Block navigation when dirty
@@ -99,11 +109,15 @@ const NavigationBlocker = ({ children }: { children: React.ReactNode }) => {
   const handleConfirm = () => {
     // Force save by dispatching a custom event
     window.dispatchEvent(new CustomEvent('timesheet-save-and-navigate'));
-    blockerRef.current?.proceed();
+    if (blockerRef.current?.proceed) {
+      blockerRef.current.proceed();
+    }
   };
 
   const handleCancel = () => {
-    blockerRef.current?.reset();
+    if (blockerRef.current?.reset) {
+      blockerRef.current.reset();
+    }
   };
 
   // Store blocker in ref for access in handlers
