@@ -1,16 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { saveTimesheet, Timesheet } from '../api/mockBackend';
-
-interface SaveTimesheetError {
-  status?: number;
-  message?: string;
-}
+import { Timesheet } from '../api/mockBackend';
+import { appRepository, type SaveTimesheetError } from '../data/repositories';
 
 export const useSaveTimesheet = () => {
   const queryClient = useQueryClient();
 
   return useMutation<Timesheet, SaveTimesheetError, Timesheet>({
-    mutationFn: saveTimesheet,
+    mutationFn: (timesheet) => appRepository.timesheets.saveTimesheet(timesheet),
     onSuccess: (savedTimesheet) => {
       // Update the timesheet in cache
       queryClient.setQueryData(['timesheet', savedTimesheet.date], savedTimesheet);

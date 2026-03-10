@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTasks, Task } from '../api/mockBackend';
+import { Task } from '../api/mockBackend';
+import { appRepository } from '../data/repositories';
 
 export const useTasks = () => {
   return useQuery<Task[], Error>({
     queryKey: ['tasks'],
-    queryFn: getTasks,
+    queryFn: () => appRepository.tasks.getTasks(),
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
 };
