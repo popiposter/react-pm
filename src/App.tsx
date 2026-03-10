@@ -3,6 +3,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { RouterProvider } from '@tanstack/react-router';
 import { AppToaster } from './components/ui/sonner';
 import { AuthProvider, useAuth } from './features/auth/auth';
+import { ThemeProvider } from './features/theme/theme';
 import { persister, queryClient } from './store/queryClient';
 import { router } from './router';
 
@@ -45,8 +46,10 @@ function AppProviders() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppProviders />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppProviders />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
