@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import {
   Clock3,
   FileSpreadsheet,
+  FolderClock,
   LogOut,
-  Menu,
   MonitorCog,
   MoonStar,
   PanelLeftClose,
@@ -12,7 +12,6 @@ import {
   SunMedium,
   Wifi,
   WifiOff,
-  X,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -34,13 +33,14 @@ const navigation = [
   },
 ];
 
+const startOfToday = () => new Date().toISOString().split('T')[0];
+
 export default function Layout({ children }: LayoutProps) {
   const auth = useAuth();
   const { themeMode, setThemeMode } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') {
       return false;
@@ -64,10 +64,6 @@ export default function Layout({ children }: LayoutProps) {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -219,7 +215,7 @@ export default function Layout({ children }: LayoutProps) {
               <button
                 type="button"
                 onClick={() => void handleRunSync()}
-                className="inline-flex items-center justify-center rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm font-medium text-amber-100 transition hover:bg-amber-400/20"
+                className="inline-flex items-center justify-center rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm font-medium text-[var(--warning-text)] transition hover:bg-amber-400/20"
               >
                 Pending sync: {syncStatus.pendingCount}
               </button>
@@ -231,14 +227,9 @@ export default function Layout({ children }: LayoutProps) {
           <header className="app-surface-strong sticky top-0 z-40 border-b">
             <div className="flex items-center justify-between px-4 py-3 sm:px-5 xl:px-8">
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen((value) => !value)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)] xl:hidden"
-                  aria-label={isMobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-                >
-                  {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
+                  <Clock3 className="h-5 w-5" />
+                </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
                     Offline-first workspace
@@ -247,21 +238,21 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="hidden rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1.5 text-sm text-sky-100 lg:flex lg:items-center lg:gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="hidden rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1.5 text-sm text-[var(--accent)] lg:flex lg:items-center lg:gap-2">
                   <span>Public demo</span>
                 </div>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setIsThemeMenuOpen((value) => !value)}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
                     aria-label="Переключить тему"
                   >
                     <CurrentThemeIcon className="h-4 w-4" />
                   </button>
                   {isThemeMenuOpen && (
-                    <div className="app-surface-strong absolute right-0 top-12 z-50 min-w-44 rounded-xl p-1 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.5)]">
+                    <div className="app-surface-strong absolute right-0 top-12 z-50 min-w-44 rounded-2xl p-1 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
                       {themeOptions.map((option) => {
                         const Icon = option.icon;
                         const isActive = option.value === themeMode;
@@ -305,11 +296,13 @@ export default function Layout({ children }: LayoutProps) {
                     <Wifi
                       className={cn(
                         'h-4 w-4',
-                        syncStatus?.pendingCount ? 'text-amber-300' : 'text-emerald-300'
+                        syncStatus?.pendingCount
+                          ? 'text-[var(--warning-text)]'
+                          : 'text-[var(--success-text)]'
                       )}
                     />
                   ) : (
-                    <WifiOff className="h-4 w-4 text-amber-300" />
+                    <WifiOff className="h-4 w-4 text-[var(--warning-text)]" />
                   )}
                 </button>
                 <button
@@ -327,45 +320,51 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             </div>
 
-            {isMobileMenuOpen && (
-              <nav className="border-t border-[var(--panel-border)] px-4 py-4 sm:px-6 xl:hidden">
-                <div className="space-y-3">
-                  {navigation.map((item) => {
-                    const isActive =
-                      (item.href === '/timesheets' && location.pathname === '/') ||
-                      location.pathname === item.href ||
-                      (item.href !== '/' && location.pathname.startsWith(item.href));
-                    const Icon = item.icon;
-
-                    return (
-                      <Link
-                        key={item.href}
-                        to={item.href}
-                        className={cn(
-                          'flex items-start gap-3 rounded-xl border px-4 py-3 transition',
-                          isActive
-                            ? 'border-[var(--accent)]/30 bg-[var(--accent-soft)]'
-                            : 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
-                        )}
-                      >
-                        <Icon className="mt-0.5 h-5 w-5 shrink-0" />
-                        <div>
-                          <p className="font-medium">{item.label}</p>
-                          <p className="mt-1 text-sm text-[var(--text-muted)]">
-                            {item.description}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </nav>
-            )}
           </header>
 
-          <main className="flex-1 px-4 py-5 sm:px-5 xl:px-8 xl:py-6">{children}</main>
+          <main className="flex-1 px-4 py-5 pb-24 sm:px-5 xl:px-8 xl:py-6 xl:pb-6">{children}</main>
         </div>
       </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur xl:hidden">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-3">
+          <Link
+            to="/timesheets"
+            search={{
+              month: new Date().toISOString().slice(0, 7),
+              status: 'all',
+              q: '',
+            }}
+            className={cn(
+              'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition',
+              location.pathname.startsWith('/timesheets')
+                ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                : 'text-[var(--text-muted)]'
+            )}
+          >
+            <FileSpreadsheet className="h-5 w-5" />
+            <span>Табели</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() =>
+              void navigate({
+                to: '/timesheet/$date',
+                params: { date: startOfToday() },
+              })
+            }
+            className={cn(
+              'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition',
+              location.pathname.startsWith('/timesheet/')
+                ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                : 'text-[var(--text-muted)]'
+            )}
+          >
+            <FolderClock className="h-5 w-5" />
+            <span>Сегодня</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

@@ -20,6 +20,15 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TimesheetsDesktopTable } from '../components/timesheets/TimesheetsDesktopTable';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import { useResetDemoData } from '../hooks/useResetDemoData';
@@ -54,15 +63,15 @@ const getTotalHours = (rows: Timesheet['rows']): number => {
 const statusConfig: Record<Timesheet['status'], { label: string; className: string }> = {
   draft: {
     label: 'Черновик',
-    className: 'border-slate-400/20 bg-slate-400/10 text-slate-200',
+    className: 'border-slate-400/20 bg-slate-400/10 text-[var(--neutral-text)]',
   },
   submitted: {
     label: 'Отправлен',
-    className: 'border-sky-300/20 bg-sky-400/15 text-sky-200',
+    className: 'border-sky-300/20 bg-sky-400/15 text-[var(--accent)]',
   },
   approved: {
     label: 'Утвержден',
-    className: 'border-emerald-300/20 bg-emerald-400/15 text-emerald-200',
+    className: 'border-emerald-300/20 bg-emerald-400/15 text-[var(--success-text)]',
   },
 };
 
@@ -239,165 +248,164 @@ export default function TimesheetsList() {
   };
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-5 xl:space-y-6">
       {showDemoOnboarding && (
-        <div className="overflow-hidden rounded-[2rem] border border-sky-300/20 bg-sky-400/10 shadow-[0_24px_80px_-52px_rgba(56,189,248,0.7)]">
-          <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
+        <div className="app-surface overflow-hidden rounded-[1.5rem] border-sky-300/20 bg-[linear-gradient(135deg,var(--accent-soft),transparent_72%)]">
+          <div className="flex flex-col gap-5 px-4 py-5 sm:px-5 lg:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-slate-950/35 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-100">
+                <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-[var(--panel-bg-strong)] px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
                   <Sparkles className="h-3.5 w-3.5" />
                   Demo onboarding
                 </span>
                 <div>
-                  <h2 className="text-2xl font-semibold text-white">
+                  <h2 className="text-2xl font-semibold">
                     Три быстрых сценария, чтобы показать приложение за пару минут.
                   </h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-7 text-sky-50/85">
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
                     Это публичное демо. Можно наполнить локальную базу, пройтись по журналу,
                     открыть редактор и проверить offline-first поведение без реального backend.
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
+              <Button
                 onClick={() => setShowDemoOnboarding(false)}
-                className="inline-flex h-11 w-11 items-center justify-center self-start rounded-2xl border border-white/10 bg-slate-950/30 text-sky-50 transition hover:bg-slate-950/50"
+                variant="secondary"
+                size="icon"
+                className="h-11 w-11 self-start rounded-2xl"
                 aria-label="Скрыть onboarding"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-3">
-              <article className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
+            <div className="grid gap-3 lg:grid-cols-3">
+              <article className="app-surface-strong rounded-[1.25rem] p-5">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-emerald-400/15 p-3 text-emerald-200">
+                  <div className="rounded-2xl bg-emerald-400/15 p-3 text-[var(--success-text)]">
                     <DatabaseZap className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm uppercase tracking-[0.22em] text-sky-100/65">Шаг 1</p>
-                    <h3 className="text-lg font-semibold text-white">Подготовить базу</h3>
+                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--text-muted)]">Шаг 1</p>
+                    <h3 className="text-lg font-semibold">Подготовить базу</h3>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-200/80">
+                <p className="mt-4 text-sm leading-6 text-[var(--text-soft)]">
                   Заполните локальное хранилище готовыми задачами и табелями, чтобы сразу
                   показать рабочий журнал и статусы.
                 </p>
-                <button
-                  type="button"
+                <Button
                   onClick={() => void handleSeedDemoData()}
                   disabled={seedDemoData.isPending}
-                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+                  variant="secondary"
+                  className="mt-5 border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
                 >
                   <DatabaseZap className="h-4 w-4" />
                   Заполнить демо-данными
-                </button>
+                </Button>
               </article>
 
-              <article className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
+              <article className="app-surface-strong rounded-[1.25rem] p-5">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-sky-400/15 p-3 text-sky-100">
+                  <div className="rounded-2xl bg-sky-400/15 p-3 text-[var(--accent)]">
                     <FolderClock className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm uppercase tracking-[0.22em] text-sky-100/65">Шаг 2</p>
-                    <h3 className="text-lg font-semibold text-white">Открыть рабочий день</h3>
+                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--text-muted)]">Шаг 2</p>
+                    <h3 className="text-lg font-semibold">Открыть рабочий день</h3>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-200/80">
+                <p className="mt-4 text-sm leading-6 text-[var(--text-soft)]">
                   Перейдите в табель за сегодня или откройте существующую запись и посмотрите
                   редактор, пересчет времени и локальное сохранение.
                 </p>
-                <button
-                  type="button"
+                <Button
                   onClick={() =>
                     void navigate({
                       to: '/timesheet/$date',
                       params: { date: startOfToday() },
                     })
                   }
-                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-sky-300/20 bg-sky-400/10 px-4 py-3 text-sm font-medium text-sky-100 transition hover:bg-sky-400/20"
+                  variant="secondary"
+                  className="mt-5 border-sky-300/20 bg-sky-400/10 text-[var(--accent)] hover:bg-sky-400/20"
                 >
                   <Plus className="h-4 w-4" />
                   Открыть табель на сегодня
-                </button>
+                </Button>
               </article>
 
-              <article className="rounded-[1.5rem] border border-white/10 bg-slate-950/35 p-5">
+              <article className="app-surface-strong rounded-[1.25rem] p-5">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-amber-400/15 p-3 text-amber-100">
+                  <div className="rounded-2xl bg-amber-400/15 p-3 text-[var(--warning-text)]">
                     <WifiOff className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm uppercase tracking-[0.22em] text-sky-100/65">Шаг 3</p>
-                    <h3 className="text-lg font-semibold text-white">Проверить offline flow</h3>
+                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--text-muted)]">Шаг 3</p>
+                    <h3 className="text-lg font-semibold">Проверить offline flow</h3>
                   </div>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-200/80">
+                <p className="mt-4 text-sm leading-6 text-[var(--text-soft)]">
                   Отключите сеть в DevTools или на устройстве, сохраните изменения и затем
                   вернитесь в онлайн, чтобы показать pending sync и ручной запуск синка.
                 </p>
-                <button
-                  type="button"
+                <Button
                   onClick={() =>
                     toast('Как показать offline-first', {
                       description:
                         'Отключите сеть в DevTools или на устройстве, сохраните табель и затем вернитесь в онлайн, чтобы показать pending sync и ручной запуск синхронизации.',
                     })
                   }
-                  className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm font-medium text-amber-100 transition hover:bg-amber-400/20"
+                  variant="secondary"
+                  className="mt-5 border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)] hover:bg-amber-400/20"
                 >
                   <WifiOff className="h-4 w-4" />
                   Показать подсказку
-                </button>
+                </Button>
               </article>
             </div>
           </div>
         </div>
       )}
 
-      <div className="app-surface overflow-hidden rounded-[1.5rem] shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)]">
-        <div className="grid gap-6 px-5 py-5 xl:grid-cols-[minmax(0,1.7fr)_320px] xl:px-6">
-          <div className="space-y-5">
-            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-200">
+      <div className="app-surface overflow-hidden rounded-[1.25rem]">
+        <div className="grid gap-5 px-4 py-4 sm:px-5 xl:grid-cols-[minmax(0,1.7fr)_320px] xl:px-6">
+          <div className="space-y-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
               <CalendarRange className="h-3.5 w-3.5" />
               Главный экран табелей
             </span>
-            <div className="space-y-3">
-              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight xl:text-[2rem]">
+            <div className="space-y-2.5">
+              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight xl:text-[1.9rem]">
                 Журнал табелей для ежедневной работы без лишней навигации.
               </h1>
-              <p className="max-w-3xl text-sm leading-7 text-[var(--text-soft)]">
+              <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
                 Здесь остается только то, что действительно важно для ежедневной работы:
                 открыть день, завести часы и быстро вернуться к нужному табелю.
               </p>
               {syncStatus && syncStatus.pendingCount > 0 && (
-                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm text-amber-100">
+                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm text-[var(--warning-text)]">
                   Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
                 </div>
               )}
-              <div className="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2.5 text-sm text-sky-100">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2.5 text-sm text-[var(--accent)]">
                 Публичное демо: можно безопасно исследовать интерфейс и offline flow на
                 локальных данных.
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
+            <div className="flex flex-wrap gap-2.5">
+              <Button
                 onClick={() =>
                   navigate({
                     to: '/timesheet/$date',
                     params: { date: startOfToday() },
                   })
                 }
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                className="bg-white text-slate-950 hover:bg-slate-100"
               >
                 <Plus className="h-4 w-4" />
                 Создать табель на сегодня
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() => {
                   updateSearch({
                     month: getCurrentMonth(),
@@ -405,29 +413,30 @@ export default function TimesheetsList() {
                     q: '',
                   });
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+                variant="secondary"
+                className="text-[var(--text-soft)]"
               >
                 Сбросить фильтры
                 <ArrowRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() => void handleSeedDemoData()}
                 disabled={seedDemoData.isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-4 py-2.5 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+                variant="secondary"
+                className="border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Заполнить демо-данными
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() => void handleResetDemoData()}
                 disabled={resetDemoData.isPending || (!hasAnyTimesheets && !syncStatus?.pendingCount)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                variant="secondary"
+                className="border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20 disabled:opacity-60"
               >
                 <RefreshCcw className="h-4 w-4" />
                 Сбросить демо-базу
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -459,7 +468,7 @@ export default function TimesheetsList() {
         </div>
       </div>
 
-      <div className="app-surface rounded-[1.5rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
+      <div className="app-surface rounded-[1.25rem] p-4 sm:p-5">
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -471,15 +480,15 @@ export default function TimesheetsList() {
             </div>
           </div>
 
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_180px_180px]">
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px] xl:grid-cols-[minmax(0,1fr)_180px_180px]">
             <label className="relative block">
               <span className="sr-only">Поиск по табелям</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-              <input
+              <Input
                 value={searchQuery}
                 onChange={(event) => updateSearch({ q: event.target.value })}
                 placeholder="Поиск по дате или описанию"
-                className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] pl-10 pr-4 text-sm outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+                className="h-11 rounded-xl bg-[var(--panel-muted)] pl-10 pr-4"
               />
             </label>
 
@@ -488,11 +497,11 @@ export default function TimesheetsList() {
                 <CalendarRange className="h-3.5 w-3.5" />
                 Месяц
               </span>
-              <input
+              <Input
                 type="month"
                 value={selectedMonth}
                 onChange={(event) => updateSearch({ month: event.target.value })}
-                className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+                className="h-11 rounded-xl bg-[var(--panel-muted)] [color-scheme:light_dark]"
               />
             </label>
 
@@ -501,19 +510,23 @@ export default function TimesheetsList() {
                 <Filter className="h-3.5 w-3.5" />
                 Статус
               </span>
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(event) =>
-                  updateSearch({ status: event.target.value as TimesheetStatusFilter })
+                onValueChange={(value) =>
+                  updateSearch({ status: value as TimesheetStatusFilter })
                 }
-                className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               >
-                {statusFilterOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger aria-label="Статус" className="h-11 rounded-xl bg-[var(--panel-muted)]">
+                  <SelectValue placeholder="Все статусы" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusFilterOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </label>
           </div>
         </div>
@@ -529,75 +542,73 @@ export default function TimesheetsList() {
           </div>
         ) : filteredTimesheets.length === 0 && hasActiveFilters ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6">
-              <FileSearch className="h-10 w-10 text-slate-400" />
+            <div className="rounded-3xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+              <FileSearch className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-white">Ничего не найдено</h3>
-              <p className="max-w-md text-sm leading-6 text-slate-400">
+              <h3 className="text-xl font-semibold">Ничего не найдено</h3>
+              <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
                 Попробуйте изменить месяц, сбросить статус или убрать поисковый запрос.
               </p>
             </div>
-            <button
-              type="button"
+            <Button
               onClick={() => {
                 updateSearch({
                   status: 'all',
                   q: '',
                 });
               }}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+              variant="secondary"
             >
               Сбросить фильтры
-            </button>
+            </Button>
           </div>
         ) : isEmptyMonth ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6">
-              <FileSpreadsheet className="h-10 w-10 text-slate-400" />
+            <div className="rounded-3xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+              <FileSpreadsheet className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold text-white">Пока нет табелей за этот месяц</h3>
-              <p className="max-w-md text-sm leading-6 text-slate-400">
+              <h3 className="text-xl font-semibold">Пока нет табелей за этот месяц</h3>
+              <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
                 Можно создать первый табель вручную или в один клик заполнить локальную базу
                 реалистичными демо-данными для показа приложения.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
+              <Button
                 onClick={() => void handleSeedDemoData()}
                 disabled={seedDemoData.isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+                variant="secondary"
+                className="border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Заполнить демо-данными
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() =>
                   navigate({
                     to: '/timesheet/$date',
                     params: { date: startOfToday() },
                   })
                 }
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                className="bg-white text-slate-950 hover:bg-slate-100"
               >
                 <Plus className="h-4 w-4" />
                 Создать первый табель
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <>
-            <div className="mt-6 flex items-center justify-between gap-4 text-sm text-slate-400">
+            <div className="mt-5 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
               <span>
-                Найдено табелей: <span className="font-medium text-slate-100">{filteredTimesheets.length}</span>
+                Найдено табелей: <span className="font-medium text-[var(--app-fg)]">{filteredTimesheets.length}</span>
               </span>
               {hasActiveFilters && <span>Показан отфильтрованный список</span>}
             </div>
 
-            <div className="mt-5 grid gap-3 xl:hidden">
+            <div className="mt-4 grid gap-3 xl:hidden">
               {filteredTimesheets.map((timesheet) => (
                 <button
                   type="button"
@@ -608,7 +619,7 @@ export default function TimesheetsList() {
                       params: { date: timesheet.date },
                     })
                   }
-                  className="rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 text-left transition hover:bg-[var(--panel-hover)]"
+                  className="app-surface rounded-[1.25rem] p-4 text-left transition active:scale-[0.99]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>

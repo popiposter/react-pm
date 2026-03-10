@@ -27,15 +27,15 @@ const getTotalHours = (rows: Timesheet['rows']): number => {
 const statusConfig: Record<Timesheet['status'], { label: string; className: string }> = {
   draft: {
     label: 'Черновик',
-    className: 'border-slate-400/20 bg-slate-400/10 text-slate-200',
+    className: 'border-slate-400/20 bg-slate-400/10 text-[var(--neutral-text)]',
   },
   submitted: {
     label: 'Отправлен',
-    className: 'border-sky-300/20 bg-sky-400/15 text-sky-200',
+    className: 'border-sky-300/20 bg-sky-400/15 text-[var(--accent)]',
   },
   approved: {
     label: 'Утвержден',
-    className: 'border-emerald-300/20 bg-emerald-400/15 text-emerald-200',
+    className: 'border-emerald-300/20 bg-emerald-400/15 text-[var(--success-text)]',
   },
 };
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -62,6 +63,28 @@ vi.mock('../hooks/useTimesheets', () => ({
     ],
     isLoading: false,
   }),
+}));
+
+vi.mock('../components/ui/select', () => ({
+  Select: ({
+    value,
+    onValueChange,
+    children,
+  }: {
+    value: string;
+    onValueChange: (value: string) => void;
+    children: ReactNode;
+  }) => (
+    <select aria-label="Статус" value={value} onChange={(event) => onValueChange(event.target.value)}>
+      {children}
+    </select>
+  ),
+  SelectTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
+  SelectValue: ({ placeholder }: { placeholder?: string }) => <>{placeholder}</>,
+  SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
+  SelectItem: ({ value, children }: { value: string; children: ReactNode }) => (
+    <option value={value}>{children}</option>
+  ),
 }));
 
 describe('TimesheetsList', () => {
