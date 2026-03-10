@@ -7,7 +7,6 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createIDBPersister } from './utils/idbPersister';
 import { Routes, Route, useBlocker, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import CalendarView from './pages/CalendarView';
 import TimesheetEditor from './pages/TimesheetEditor';
 import TimesheetsList from './pages/TimesheetsList';
 
@@ -177,8 +176,8 @@ function App() {
             <NavigationBlocker>
               <Layout>
                 <Routes>
-                  <Route path="/" element={<CalendarView />} />
-                  <Route path="/calendar" element={<CalendarView />} />
+                  <Route path="/" element={<TimesheetsList />} />
+                  <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
                   <Route path="/timesheets" element={<TimesheetsList />} />
                   <Route path="/timesheet/:date" element={<TimesheetEditor />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -191,8 +190,8 @@ function App() {
             <NavigationBlocker>
               <Layout>
                 <Routes>
-                  <Route path="/" element={<CalendarView />} />
-                  <Route path="/calendar" element={<CalendarView />} />
+                  <Route path="/" element={<TimesheetsList />} />
+                  <Route path="/calendar" element={<Navigate to="/timesheets" replace />} />
                   <Route path="/timesheets" element={<TimesheetsList />} />
                   <Route path="/timesheet/:date" element={<TimesheetEditor />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
