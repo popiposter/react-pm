@@ -24,9 +24,12 @@ function BlockerModal({
         <div className="space-y-3">
           <h3 className="text-xl font-semibold text-white">У вас есть несохраненные изменения</h3>
           <p className="text-sm leading-6 text-slate-300">
-            Если вы уйдете со страницы, изменения будут потеряны. Можно сначала сохранить табель
-            и затем продолжить переход.
+            Вы собираетесь уйти со страницы редактора. Можно сохранить табель перед переходом,
+            уйти без сохранения или остаться и продолжить редактирование.
           </p>
+          <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm leading-6 text-rose-100">
+            Если выбрать "Уйти без сохранения", все текущие несохраненные правки будут потеряны.
+          </div>
         </div>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
           <button
@@ -41,7 +44,7 @@ function BlockerModal({
             onClick={onDiscard}
             className="inline-flex items-center justify-center rounded-2xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20"
           >
-            Не сохранять
+            Уйти без сохранения
           </button>
           <button
             type="button"
