@@ -6,6 +6,8 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   AlertTriangle,
   ArrowLeft,
+  ChevronDown,
+  ChevronUp,
   Copy,
   GripVertical,
   LoaderCircle,
@@ -93,6 +95,17 @@ const getRowValidationErrors = (row: TimesheetRow): string[] => {
   }
 
   return errors;
+};
+
+const getTaskLabel = (taskGroups: GroupedTasks[], taskId: string): string => {
+  for (const group of taskGroups) {
+    const task = group.items.find((item) => item.value === taskId);
+    if (task) {
+      return task.label;
+    }
+  }
+
+  return 'Задача не выбрана';
 };
 
 const TaskSelect = ({
@@ -324,6 +337,8 @@ const SortableMobileRow = ({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
   });
+  const [isExpanded, setIsExpanded] = useState(validationErrors.length > 0);
+  const taskLabel = getTaskLabel(taskGroups, row.taskId);
 
   return (
     <article
@@ -338,79 +353,116 @@ const SortableMobileRow = ({
         validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.08]'
       )}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start gap-3">
         <Button
           {...attributes}
           {...listeners}
           variant="secondary"
           size="icon"
-          className="h-10 w-10 rounded-lg text-[var(--text-muted)]"
+          className="mt-0.5 h-9 w-9 shrink-0 rounded-xl text-[var(--text-muted)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
         </Button>
+        <button
+          type="button"
+          onClick={() => setIsExpanded((value) => !value)}
+          className="min-w-0 flex-1 rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3 text-left transition active:scale-[0.99]"
+          aria-expanded={isExpanded}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{taskLabel}</p>
+              <div className="mt-1 flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                <span>{row.startTime}</span>
+                <span>&rarr;</span>
+                <span>{row.endTime}</span>
+                <span className="rounded-full bg-[var(--panel-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-soft)]">
+                  {minutesToHours(row.duration)} ч
+                </span>
+              </div>
+              <p className="mt-2 line-clamp-1 text-sm text-[var(--text-soft)]">
+                {row.description || 'Без описания работ'}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              {validationErrors.length > 0 && (
+                <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-[var(--warning-text)]">
+                  {validationErrors.length} проблема
+                </span>
+              )}
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />
+              )}
+            </div>
+          </div>
+        </button>
         <Button
           onClick={() => requestRemoveRow(index)}
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-lg border border-rose-400/20 bg-rose-400/10 text-rose-200 hover:bg-rose-400/20 hover:text-rose-100"
+          className="mt-0.5 h-9 w-9 shrink-0 rounded-xl border border-rose-400/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="mt-4 space-y-4">
-        <NativeTaskSelect
-          value={row.taskId}
-          onChange={(value) => updateRow(index, { taskId: value })}
-          taskGroups={taskGroups}
-        />
+      {isExpanded && (
+        <div className="mt-4 space-y-4 border-t border-[var(--panel-border)] pt-4">
+          <NativeTaskSelect
+            value={row.taskId}
+            onChange={(value) => updateRow(index, { taskId: value })}
+            taskGroups={taskGroups}
+          />
 
-        <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Начало
+              </label>
+              <TimeField
+                value={row.startTime}
+                onChange={(value) => updateRow(index, { startTime: value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Окончание
+              </label>
+              <TimeField value={row.endTime} readOnly />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              Начало
+              Длительность
             </label>
-            <TimeField
-              value={row.startTime}
-              onChange={(value) => updateRow(index, { startTime: value })}
+            <DurationField
+              value={row.duration}
+              onChange={(value) => updateRow(index, { duration: value })}
             />
           </div>
+
           <div className="space-y-2">
             <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              Окончание
+              Описание
             </label>
-            <TimeField value={row.endTime} readOnly />
+            <DescriptionField
+              value={row.description || ''}
+              onChange={(value) => updateRow(index, { description: value })}
+            />
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-            Длительность
-          </label>
-          <DurationField
-            value={row.duration}
-            onChange={(value) => updateRow(index, { duration: value })}
-          />
+          {validationErrors.length > 0 && (
+            <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
+              {validationErrors.join(' • ')}
+            </div>
+          )}
         </div>
-
-        <div className="space-y-2">
-          <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-            Описание
-          </label>
-          <DescriptionField
-            value={row.description || ''}
-            onChange={(value) => updateRow(index, { description: value })}
-          />
-        </div>
-
-        {validationErrors.length > 0 && (
-          <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
-            {validationErrors.join(' • ')}
-          </div>
-        )}
-      </div>
+      )}
     </article>
   );
 };
