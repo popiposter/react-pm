@@ -7,6 +7,19 @@ vi.mock('idb-keyval', () => ({
   set: vi.fn(),
 }));
 
+vi.mock('../data/sync', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../data/sync')>();
+  return {
+    ...actual,
+    createSyncTransport: () => ({
+      pushTimesheet: vi.fn().mockResolvedValue({
+        ok: true,
+        remoteVersion: 1,
+      }),
+    }),
+  };
+});
+
 describe('localAppRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -1,6 +1,6 @@
 import { get, set } from 'idb-keyval';
 import type { Task, Timesheet } from '../../api/mockBackend';
-import { localSyncTransport } from '../sync';
+import { createSyncTransport } from '../sync';
 import type {
   AppRepository,
   SaveTimesheetError,
@@ -23,6 +23,8 @@ const NETWORK_DELAY_MS = {
   timesheets: 200,
   save: 250,
 };
+
+const syncTransport = createSyncTransport();
 
 const defaultTasks: Task[] = [
   { id: 'task1', title: 'Разработка фронтенда', projectId: 'proj1', projectName: 'Внутренний портал' },
@@ -240,7 +242,7 @@ const localSyncRepository = {
       }
 
       try {
-        const result = await localSyncTransport.pushTimesheet(timesheet, item.operation);
+        const result = await syncTransport.pushTimesheet(timesheet, item.operation);
 
         if (result.ok) {
           updatedSyncState[item.entityId] = {
