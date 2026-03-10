@@ -12,8 +12,10 @@ import {
   Plus,
   Search,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
+import { useSeedDemoData } from '../hooks/useSeedDemoData';
 import type { Timesheet } from '../api/mockBackend';
 import { cn } from '../lib/utils';
 import {
@@ -127,6 +129,7 @@ export default function TimesheetsList() {
   const searchQuery = search.q;
   const { data: timesheets = [], isLoading } = useTimesheets(selectedMonth);
   const { data: syncStatus } = useSyncStatus();
+  const seedDemoData = useSeedDemoData();
 
   const filteredTimesheets = useMemo(() => {
     return [...timesheets]
@@ -137,6 +140,24 @@ export default function TimesheetsList() {
 
   const activeSummary = useMemo(() => summaryCards(filteredTimesheets), [filteredTimesheets]);
   const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim().length > 0;
+  const isEmptyMonth = !isLoading && filteredTimesheets.length === 0 && !hasActiveFilters;
+
+  const handleSeedDemoData = async () => {
+    toast.loading('Заполняем демо-базу...', { id: 'seed-demo-list' });
+
+    try {
+      const result = await seedDemoData.mutateAsync();
+      toast.success('Демо-данные готовы', {
+        id: 'seed-demo-list',
+        description: `Добавлено ${result.timesheetsCount} табелей и ${result.tasksCount} задач.`,
+      });
+    } catch {
+      toast.error('Не удалось заполнить демо-базу', {
+        id: 'seed-demo-list',
+        description: 'Попробуйте повторить действие еще раз.',
+      });
+    }
+  };
 
   const updateSearch = (
     patch: Partial<{
@@ -179,6 +200,10 @@ export default function TimesheetsList() {
                   Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
                 </div>
               )}
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/20 bg-sky-400/10 px-4 py-3 text-sm text-sky-100">
+                Публичное демо: можно безопасно исследовать интерфейс и offline flow на
+                локальных данных.
+              </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
@@ -207,6 +232,15 @@ export default function TimesheetsList() {
               >
                 Сбросить фильтры
                 <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSeedDemoData()}
+                disabled={seedDemoData.isPending}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Заполнить демо-данными
               </button>
             </div>
           </div>
@@ -331,7 +365,7 @@ export default function TimesheetsList() {
               Сбросить фильтры
             </button>
           </div>
-        ) : filteredTimesheets.length === 0 ? (
+        ) : isEmptyMonth ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
             <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6">
               <FileSpreadsheet className="h-10 w-10 text-slate-400" />
@@ -339,23 +373,34 @@ export default function TimesheetsList() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-white">Пока нет табелей за этот месяц</h3>
               <p className="max-w-md text-sm leading-6 text-slate-400">
-                Создайте первый табель, и он сразу появится в журнале. Дальше экран станет
-                основной точкой входа в ежедневную работу.
+                Можно создать первый табель вручную или в один клик заполнить локальную базу
+                реалистичными демо-данными для показа приложения.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                navigate({
-                  to: '/timesheet/$date',
-                  params: { date: startOfToday() },
-                })
-              }
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
-            >
-              <Plus className="h-4 w-4" />
-              Создать первый табель
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => void handleSeedDemoData()}
+                disabled={seedDemoData.isPending}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Заполнить демо-данными
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate({
+                    to: '/timesheet/$date',
+                    params: { date: startOfToday() },
+                  })
+                }
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+              >
+                <Plus className="h-4 w-4" />
+                Создать первый табель
+              </button>
+            </div>
           </div>
         ) : (
           <>

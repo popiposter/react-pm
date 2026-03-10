@@ -1,0 +1,47 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="136" fill="url(#bg)" />
+  <rect x="88" y="96" width="336" height="320" rx="56" fill="url(#card)" />
+  <rect x="88" y="96" width="336" height="320" rx="56" stroke="rgba(255,255,255,0.24)" stroke-width="8" />
+  <rect x="88" y="96" width="336" height="88" rx="56" fill="url(#topbar)" />
+  <path d="M176 74C187.046 74 196 82.9543 196 94V132C196 143.046 187.046 152 176 152C164.954 152 156 143.046 156 132V94C156 82.9543 164.954 74 176 74Z" fill="#E0F2FE"/>
+  <path d="M336 74C347.046 74 356 82.9543 356 94V132C356 143.046 347.046 152 336 152C324.954 152 316 143.046 316 132V94C316 82.9543 324.954 74 336 74Z" fill="#E0F2FE"/>
+  <rect x="132" y="220" width="72" height="56" rx="20" fill="#38BDF8" />
+  <rect x="220" y="220" width="72" height="56" rx="20" fill="#7DD3FC" />
+  <rect x="308" y="220" width="72" height="56" rx="20" fill="#38BDF8" />
+  <rect x="132" y="292" width="72" height="56" rx="20" fill="#0F172A" fill-opacity="0.3" />
+  <rect x="220" y="292" width="72" height="56" rx="20" fill="#0F172A" fill-opacity="0.3" />
+  <g filter="url(#shadow)">
+    <circle cx="344" cy="352" r="76" fill="url(#clock)" />
+    <circle cx="344" cy="352" r="72" stroke="rgba(255,255,255,0.35)" stroke-width="8" />
+    <path d="M344 314V352L372 372" stroke="#F8FAFC" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="72" y1="56" x2="444" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="0.55" stop-color="#0B3B66"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="card" x1="112" y1="116" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#BFDBFE"/>
+    </linearGradient>
+    <linearGradient id="topbar" x1="88" y1="96" x2="424" y2="184" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <linearGradient id="clock" x1="286" y1="292" x2="402" y2="414" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <filter id="shadow" x="240" y="256" width="208" height="208" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="10"/>
+      <feGaussianBlur stdDeviation="14"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0313725 0 0 0 0 0.105882 0 0 0 0 0.184314 0 0 0 0.35 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+    </filter>
+  </defs>
+</svg>

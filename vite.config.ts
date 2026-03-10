@@ -25,19 +25,28 @@ export default defineConfig({
         name: 'Проектные табели',
         short_name: 'Табели',
         description: 'Offline-first приложение для учета рабочего времени',
-        theme_color: '#ffffff',
+        theme_color: '#0f172a',
+        background_color: '#020617',
+        display: 'standalone',
+        orientation: 'portrait',
         start_url: appBasePath,
         scope: appBasePath,
         icons: [
           {
-            src: 'src/assets/icon.svg',
+            src: 'icon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: 'src/assets/icon.svg',
+            src: 'icon-512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/png'
+          },
+          {
+            src: 'icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
