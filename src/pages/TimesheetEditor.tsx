@@ -65,6 +65,9 @@ const minutesToHours = (minutes: number): string => {
 const createRowId = () =>
   `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+const desktopFieldClassName =
+  'h-9 rounded-md border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--app-fg)] shadow-none focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15';
+
 const getRowValidationErrors = (row: TimesheetRow): string[] => {
   const errors: string[] = [];
 
@@ -94,7 +97,7 @@ const TaskSelect = ({
     value={value}
     onChange={(event) => onChange(event.target.value)}
     className={cn(
-      'h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-slate-100 outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
+      'h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm text-[var(--app-fg)] outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
       className
     )}
   >
@@ -115,10 +118,12 @@ const TimeField = ({
   value,
   onChange,
   readOnly = false,
+  className,
 }: {
   value: string;
   onChange?: (value: string) => void;
   readOnly?: boolean;
+  className?: string;
 }) => (
   <input
     type="time"
@@ -127,10 +132,11 @@ const TimeField = ({
     readOnly={readOnly}
     onChange={(event) => onChange?.(event.target.value || '00:00')}
     className={cn(
-      'h-11 w-full rounded-xl border px-3 text-sm outline-none transition',
+      'h-10 w-full rounded-lg border px-3 text-sm text-[var(--app-fg)] outline-none transition [color-scheme:light_dark]',
       readOnly
-        ? 'border-white/5 bg-slate-900/80 text-slate-400'
-        : 'border-white/10 bg-slate-950/60 text-slate-100 focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20'
+        ? 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)]'
+        : 'border-[var(--panel-border)] bg-[var(--panel-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
+      className
     )}
   />
 );
@@ -151,9 +157,9 @@ const DurationField = ({
       step={0.5}
       value={minutesToHours(value)}
       onChange={(event) => onChange(hoursToMinutes(event.target.value))}
-      className="h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 pr-10 text-sm text-slate-100 outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+      className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 pr-10 text-sm text-[var(--app-fg)] outline-none transition [color-scheme:light_dark] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
     />
-    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">
       ч
     </span>
   </div>
@@ -174,7 +180,7 @@ const DescriptionField = ({
     onChange={(event) => onChange(event.target.value)}
     placeholder="Описание работ"
     className={cn(
-      'h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
+      'h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm text-[var(--app-fg)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
       className
     )}
   />
@@ -201,60 +207,64 @@ const SortableDesktopRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'border-t border-white/10 bg-white/[0.02] align-top transition hover:bg-sky-400/[0.04]',
-        validationErrors.length > 0 && 'bg-amber-400/[0.04]'
+        'border-t border-[var(--panel-border)] align-top transition hover:bg-[var(--panel-hover)]',
+        validationErrors.length > 0 && 'bg-amber-400/[0.06]'
       )}
     >
-      <td className="px-4 py-3 text-center">
+      <td className="px-2 py-2 text-center">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
         </button>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-2">
         <TaskSelect
           value={row.taskId}
           onChange={(value) => updateRow(index, { taskId: value })}
           taskGroups={taskGroups}
+          className={desktopFieldClassName}
         />
       </td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-2">
         <TimeField
           value={row.startTime}
           onChange={(value) => updateRow(index, { startTime: value })}
+          className={desktopFieldClassName}
         />
       </td>
-      <td className="px-4 py-3">
-        <TimeField value={row.endTime} readOnly />
+      <td className="px-2 py-2">
+        <TimeField value={row.endTime} readOnly className={desktopFieldClassName} />
       </td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-2">
         <DurationField
           value={row.duration}
           onChange={(value) => updateRow(index, { duration: value })}
+          className="[&_input]:h-9 [&_input]:rounded-md [&_input]:border-[var(--panel-border)] [&_input]:bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-2">
         <DescriptionField
           value={row.description || ''}
           onChange={(value) => updateRow(index, { description: value })}
+          className={desktopFieldClassName}
         />
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="px-2 py-2 text-right">
         <button
           type="button"
           onClick={() => requestRemoveRow(index)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-200 transition hover:bg-rose-400/20"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-400/20 bg-rose-400/10 text-rose-200 transition hover:bg-rose-400/20"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
         </button>
         {validationErrors.length > 0 && (
-          <div className="mt-3 text-left text-xs text-amber-200">
+          <div className="mt-2 text-left text-xs text-amber-200">
             {validationErrors.join(' • ')}
           </div>
         )}
@@ -284,8 +294,8 @@ const SortableMobileRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4',
-        validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.06]'
+        'rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4',
+        validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.08]'
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -293,7 +303,7 @@ const SortableMobileRow = ({
           type="button"
           {...attributes}
           {...listeners}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -301,7 +311,7 @@ const SortableMobileRow = ({
         <button
           type="button"
           onClick={() => requestRemoveRow(index)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-200"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-rose-400/20 bg-rose-400/10 text-rose-200"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
@@ -317,20 +327,24 @@ const SortableMobileRow = ({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.22em] text-slate-500">Начало</label>
+            <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+              Начало
+            </label>
             <TimeField
               value={row.startTime}
               onChange={(value) => updateRow(index, { startTime: value })}
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.22em] text-slate-500">Окончание</label>
+            <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+              Окончание
+            </label>
             <TimeField value={row.endTime} readOnly />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs uppercase tracking-[0.22em] text-slate-500">
+          <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
             Длительность
           </label>
           <DurationField
@@ -340,7 +354,9 @@ const SortableMobileRow = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs uppercase tracking-[0.22em] text-slate-500">Описание</label>
+          <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+            Описание
+          </label>
           <DescriptionField
             value={row.description || ''}
             onChange={(value) => updateRow(index, { description: value })}
@@ -359,7 +375,7 @@ const SortableMobileRow = ({
 
 const LoadingState = () => (
   <div className="flex min-h-[50vh] items-center justify-center">
-    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-slate-200">
+    <div className="app-surface flex items-center gap-3 rounded-lg px-5 py-4">
       <LoaderCircle className="h-5 w-5 animate-spin" />
       <span>Загрузка табеля...</span>
     </div>
@@ -657,7 +673,7 @@ export default function TimesheetEditor() {
   if (!date || !timesheet) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-5 text-center text-slate-300">
+        <div className="app-surface rounded-xl px-6 py-5 text-center text-[var(--text-soft)]">
           Не удалось открыть табель.
         </div>
       </div>
@@ -665,17 +681,17 @@ export default function TimesheetEditor() {
   }
 
   return (
-    <section className="space-y-6">
-      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
-        <div className="flex flex-col gap-6 px-6 py-7 lg:flex-row lg:items-start lg:justify-between lg:px-8">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-sky-200">
+    <section className="space-y-4">
+      <div className="app-surface overflow-hidden rounded-[1.25rem]">
+        <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-start xl:justify-between xl:px-6">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-sky-200">
                 Табель
               </span>
               <span
                 className={cn(
-                  'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium',
+                  'inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
                   isOnline
                     ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
                     : 'border-amber-300/20 bg-amber-400/10 text-amber-100'
@@ -685,33 +701,33 @@ export default function TimesheetEditor() {
                 {isOnline ? 'Онлайн' : 'Офлайн'}
               </span>
               {isDirty && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-100">
-                  Есть несохраненные изменения
+                <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-100">
+                  Черновик не сохранен
                 </span>
               )}
               {invalidRowsCount > 0 && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-3 py-1 text-xs font-medium text-rose-100">
+                <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-2.5 py-1 text-[11px] font-medium text-rose-100">
                   Проблемных строк: {invalidRowsCount}
                 </span>
               )}
             </div>
 
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-white">
+            <div className="space-y-1.5">
+              <h1 className="text-2xl font-semibold tracking-tight xl:text-[1.75rem]">
                 Табель за {formatEditorDate(date)}
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-slate-300">
-                Редактируйте строки, меняйте порядок drag-and-drop и сохраняйте табель в
-                несколько кликов. Пересчет времени остается автоматическим.
+              <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
+                Рабочий экран для ввода часов, перестановки строк и быстрого сохранения без
+                лишних переходов.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:max-w-xl lg:justify-end">
+          <div className="flex flex-wrap gap-2.5 xl:max-w-2xl xl:justify-end">
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3.5 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
             >
               <Copy className="h-4 w-4" />
               Копировать на сегодня
@@ -721,7 +737,7 @@ export default function TimesheetEditor() {
               onClick={() =>
                 navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
               }
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3.5 py-2 text-sm font-medium text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
             >
               <ArrowLeft className="h-4 w-4" />
               К списку
@@ -730,7 +746,7 @@ export default function TimesheetEditor() {
               type="button"
               onClick={() => void handleSave(false)}
               disabled={saveMutation.isPending}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <Save className="h-4 w-4" />
               Сохранить
@@ -739,7 +755,7 @@ export default function TimesheetEditor() {
               type="button"
               onClick={() => void handleSave(true)}
               disabled={saveMutation.isPending}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-sky-400 px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <Save className="h-4 w-4" />
               Сохранить и закрыть
@@ -748,53 +764,61 @@ export default function TimesheetEditor() {
         </div>
       </div>
 
-      <div
-        className={cn(
-          'rounded-[1.5rem] border px-5 py-4',
-          isOnline
-            ? 'border-emerald-300/20 bg-emerald-400/10'
-            : 'border-amber-300/20 bg-amber-400/10'
-        )}
-      >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div
-              className={cn(
-                'rounded-2xl p-2',
-                isOnline ? 'bg-emerald-400/15 text-emerald-200' : 'bg-amber-400/15 text-amber-100'
-              )}
-            >
-              {isOnline ? <Wifi className="h-5 w-5" /> : <WifiOff className="h-5 w-5" />}
-            </div>
-            <div>
-              <p className="font-medium text-white">
-                {isOnline ? 'Синхронизация доступна' : 'Вы сейчас работаете офлайн'}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-slate-300">
-                {isOnline
-                  ? 'Изменения сохраняются локально и могут быть отправлены на сервер сразу.'
-                  : 'Можно продолжать редактирование: табель сохранится локально и синхронизируется позже.'}
-              </p>
-            </div>
-          </div>
-          {invalidRowsCount > 0 && (
-            <div className="rounded-2xl border border-rose-300/20 bg-slate-950/30 px-4 py-3 text-sm text-rose-100">
-              Перед сохранением проверьте строки с незаполненной задачей или нулевой длительностью.
-            </div>
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div
+          className={cn(
+            'app-surface flex items-start gap-3 rounded-[1rem] px-4 py-3',
+            !isOnline && 'border-amber-300/20 bg-amber-400/[0.08]'
           )}
+        >
+          <div
+            className={cn(
+              'rounded-md p-2',
+              isOnline
+                ? 'bg-emerald-400/12 text-emerald-200'
+                : 'bg-amber-400/15 text-amber-100'
+            )}
+          >
+            {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">
+              {isOnline ? 'Сохранение и синхронизация доступны' : 'Офлайн-режим активен'}
+            </p>
+            <p className="text-sm leading-6 text-[var(--text-soft)]">
+              {isOnline
+                ? 'Изменения можно сразу отправлять на сервер или хранить локально до ручного sync.'
+                : 'Продолжайте работу: изменения сохранятся локально и попадут в очередь синхронизации.'}
+            </p>
+          </div>
+        </div>
+        <div className="app-surface flex items-start gap-3 rounded-[1rem] px-4 py-3">
+          <div className="rounded-md bg-rose-400/10 p-2 text-rose-200">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Проверка перед сохранением</p>
+            <p className="text-sm leading-6 text-[var(--text-soft)]">
+              {invalidRowsCount > 0
+                ? 'Исправьте строки без задачи или с нулевой длительностью перед сохранением.'
+                : 'Все строки выглядят корректно. Можно сохранять табель или продолжать редактирование.'}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-4 shadow-[0_25px_80px_-50px_rgba(15,23,42,0.95)] backdrop-blur sm:p-6">
-        <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="app-surface rounded-[1.25rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
+        <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Строки табеля</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Рабочие записи за день</h2>
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+              Строки табеля
+            </p>
+            <h2 className="mt-1 text-lg font-semibold">Рабочие записи за день</h2>
           </div>
           <button
             type="button"
             onClick={handleAddRow}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3.5 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
           >
             <Plus className="h-4 w-4" />
             Добавить строку
@@ -805,12 +829,12 @@ export default function TimesheetEditor() {
           <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
             {rows.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-                <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6">
-                  <Plus className="h-8 w-8 text-slate-400" />
+                <div className="rounded-2xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+                  <Plus className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-white">Записей пока нет</h3>
-                  <p className="max-w-md text-sm leading-6 text-slate-400">
+                  <h3 className="text-xl font-semibold">Записей пока нет</h3>
+                  <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
                     Добавьте первую строку, и калькулятор автоматически подхватит начало,
                     окончание и каскадный пересчет следующих записей.
                   </p>
@@ -818,7 +842,7 @@ export default function TimesheetEditor() {
               </div>
             ) : (
               <>
-                <div className="mt-6 space-y-4 xl:hidden">
+                <div className="mt-5 space-y-3 xl:hidden">
                   {rows.map((row, index) => (
                     (() => {
                       const validationErrors =
@@ -839,17 +863,17 @@ export default function TimesheetEditor() {
                   ))}
                 </div>
 
-                <div className="mt-6 hidden overflow-x-auto rounded-[1.5rem] border border-white/10 xl:block">
+                <div className="mt-4 hidden overflow-x-auto rounded-[0.9rem] border border-[var(--panel-border)] xl:block">
                   <table className="min-w-[1100px] w-full border-collapse">
-                    <thead className="bg-white/[0.04] text-left text-xs uppercase tracking-[0.22em] text-slate-500">
+                    <thead className="bg-[var(--panel-muted)] text-left text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
                       <tr>
-                        <th className="px-4 py-4">Порядок</th>
-                        <th className="px-4 py-4">Задача</th>
-                        <th className="px-4 py-4">Начало</th>
-                        <th className="px-4 py-4">Окончание</th>
-                        <th className="px-4 py-4">Длительность</th>
-                        <th className="px-4 py-4">Описание</th>
-                        <th className="px-4 py-4 text-right">Действие</th>
+                        <th className="px-2 py-2.5">Порядок</th>
+                        <th className="px-2 py-2.5">Задача</th>
+                        <th className="px-2 py-2.5">Начало</th>
+                        <th className="px-2 py-2.5">Окончание</th>
+                        <th className="px-2 py-2.5">Длительность</th>
+                        <th className="px-2 py-2.5">Описание</th>
+                        <th className="px-2 py-2.5 text-right">Действие</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -882,17 +906,17 @@ export default function TimesheetEditor() {
 
       {conflictModalOpened && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
+          <div className="app-surface-strong w-full max-w-lg rounded-[1.5rem] p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
             <div className="flex items-start gap-4">
-              <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 p-3 text-amber-200">
+              <div className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-amber-200">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Конфликт версий</h3>
-                <p className="text-sm leading-6 text-slate-300">
+                <h3 className="text-xl font-semibold">Конфликт версий</h3>
+                <p className="text-sm leading-6 text-[var(--text-soft)]">
                   {conflictError?.message || 'На сервере уже есть более новая версия табеля.'}
                 </p>
-                <p className="text-sm leading-6 text-slate-400">
+                <p className="text-sm leading-6 text-[var(--text-muted)]">
                   Выберите, что делать дальше: загрузить актуальные данные или перезаписать
                   сервер локальной версией.
                 </p>
@@ -903,21 +927,21 @@ export default function TimesheetEditor() {
               <button
                 type="button"
                 onClick={handleUpdateFromServer}
-                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
               >
                 Обновить с сервера
               </button>
               <button
                 type="button"
                 onClick={handleOverwriteServer}
-                className="inline-flex items-center justify-center rounded-2xl bg-rose-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
+                className="inline-flex items-center justify-center rounded-lg bg-rose-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
               >
                 Перезаписать сервер
               </button>
               <button
                 type="button"
                 onClick={() => setConflictModalOpened(false)}
-                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
               >
                 Закрыть
               </button>
@@ -928,17 +952,17 @@ export default function TimesheetEditor() {
 
       {rowPendingDelete !== null && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
+          <div className="app-surface-strong w-full max-w-lg rounded-[1.5rem] p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
             <div className="flex items-start gap-4">
-              <div className="rounded-2xl border border-rose-300/20 bg-rose-400/10 p-3 text-rose-200">
+              <div className="rounded-xl border border-rose-300/20 bg-rose-400/10 p-3 text-rose-200">
                 <ShieldAlert className="h-5 w-5" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Удалить строку?</h3>
-                <p className="text-sm leading-6 text-slate-300">
+                <h3 className="text-xl font-semibold">Удалить строку?</h3>
+                <p className="text-sm leading-6 text-[var(--text-soft)]">
                   Строка будет удалена, а время в следующих записях пересчитается автоматически.
                 </p>
-                <p className="text-sm leading-6 text-slate-400">
+                <p className="text-sm leading-6 text-[var(--text-muted)]">
                   Это полезно для защиты от случайного удаления при работе с drag-and-drop и на мобильных устройствах.
                 </p>
               </div>
@@ -948,14 +972,14 @@ export default function TimesheetEditor() {
               <button
                 type="button"
                 onClick={() => setRowPendingDelete(null)}
-                className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
               >
                 Отмена
               </button>
               <button
                 type="button"
                 onClick={handleConfirmRemoveRow}
-                className="inline-flex items-center justify-center rounded-2xl bg-rose-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
+                className="inline-flex items-center justify-center rounded-lg bg-rose-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
               >
                 Удалить строку
               </button>
