@@ -38,6 +38,7 @@ export interface TimesheetRepository {
 
 export interface SyncRepository {
   getStatus(): Promise<SyncStatus>;
+  runSync(): Promise<SyncStatus>;
 }
 
 export interface AppRepository {

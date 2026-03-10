@@ -74,4 +74,33 @@ describe('localAppRepository', () => {
     expect(syncQueueCall).toBeDefined();
     expect((syncQueueCall?.[1] as Array<{ entityId: string }>)[0].entityId).toBe('ts_2026-03-11');
   });
+
+  it('clears the queue after successful sync run', async () => {
+    const queueItem = {
+      id: 'sync_ts_2026-03-12',
+      entityId: 'ts_2026-03-12',
+      entityType: 'timesheet' as const,
+      operation: 'save_timesheet' as const,
+      queuedAt: '2026-03-12T09:00:00.000Z',
+    };
+
+    vi.mocked(get)
+      .mockResolvedValueOnce([queueItem])
+      .mockResolvedValueOnce({
+        'ts_2026-03-12': {
+          id: 'ts_2026-03-12',
+          date: '2026-03-12',
+          userId: 'user-1',
+          version: 1,
+          rows: [],
+          status: 'draft',
+        },
+      })
+      .mockResolvedValueOnce({});
+
+    const status = await localAppRepository.sync.runSync();
+
+    expect(status.pendingCount).toBe(0);
+    expect(set).toHaveBeenCalledWith('local-repository:sync-queue', []);
+  });
 });

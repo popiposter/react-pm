@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Clock3, FileSpreadsheet, Menu, Wifi, WifiOff, X } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { toast } from 'sonner';
+import { useRunSync } from '../hooks/useRunSync';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 
 interface LayoutProps {
@@ -22,6 +24,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: syncStatus } = useSyncStatus();
+  const runSyncMutation = useRunSync();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -39,6 +42,31 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const handleRunSync = async () => {
+    toast.loading('Синхронизация...', {
+      id: 'sync-runner',
+      description: 'Пробуем отправить локальные изменения',
+    });
+
+    try {
+      const result = await runSyncMutation.mutateAsync();
+      toast.success('Синхронизация завершена', {
+        id: 'sync-runner',
+        description:
+          result.pendingCount > 0
+            ? `Осталось в очереди: ${result.pendingCount}`
+            : 'Очередь синхронизации пуста',
+        duration: 3000,
+      });
+    } catch {
+      toast.error('Не удалось синхронизировать изменения', {
+        id: 'sync-runner',
+        description: 'Попробуйте снова, когда сеть и backend будут доступны.',
+        duration: 4000,
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -112,9 +140,18 @@ export default function Layout({ children }: LayoutProps) {
                   {isOnline ? 'Синхронизация доступна' : 'Данные сохраняются локально'}
                 </p>
                 {syncStatus && syncStatus.pendingCount > 0 && (
-                  <p className="mt-1 text-sm text-amber-200">
-                    Ожидают синхронизации: {syncStatus.pendingCount}
-                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <p className="text-sm text-amber-200">
+                      Ожидают синхронизации: {syncStatus.pendingCount}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void handleRunSync()}
+                      className="rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-100 transition hover:bg-amber-400/20"
+                    >
+                      Синкнуть
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -153,6 +190,13 @@ export default function Layout({ children }: LayoutProps) {
                 {syncStatus && syncStatus.pendingCount > 0 && (
                   <div className="hidden rounded-full border border-amber-300/20 bg-amber-400/10 px-4 py-2 text-sm text-amber-100 lg:flex lg:items-center lg:gap-2">
                     <span>Pending sync: {syncStatus.pendingCount}</span>
+                    <button
+                      type="button"
+                      onClick={() => void handleRunSync()}
+                      className="rounded-full border border-amber-300/20 bg-slate-950/30 px-3 py-1 text-xs font-medium text-amber-100 transition hover:bg-slate-950/50"
+                    >
+                      Run sync
+                    </button>
                   </div>
                 )}
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950">

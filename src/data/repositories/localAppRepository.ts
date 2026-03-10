@@ -1,5 +1,6 @@
 import { get, set } from 'idb-keyval';
 import type { Task, Timesheet } from '../../api/mockBackend';
+import { localSyncTransport } from '../sync';
 import type {
   AppRepository,
   SaveTimesheetError,
@@ -90,6 +91,21 @@ const getSyncQueue = async (): Promise<SyncQueueItem[]> => {
 
 const getTimesheetSyncState = async (): Promise<Record<string, TimesheetSyncState>> => {
   return (await get<Record<string, TimesheetSyncState>>(TIMESHEET_SYNC_STATE_KEY)) ?? {};
+};
+
+const getSyncStatusSnapshot = (syncQueue: SyncQueueItem[]): SyncStatus => {
+  const lastQueuedAt = syncQueue.reduce<string | null>((latest, item) => {
+    if (!latest || item.queuedAt > latest) {
+      return item.queuedAt;
+    }
+
+    return latest;
+  }, null);
+
+  return {
+    pendingCount: syncQueue.length,
+    lastQueuedAt,
+  };
 };
 
 const createDraftTimesheet = (date: string): Timesheet => ({
@@ -188,18 +204,44 @@ const localTimesheetsRepository = {
 const localSyncRepository = {
   async getStatus(): Promise<SyncStatus> {
     const syncQueue = await getSyncQueue();
-    const lastQueuedAt = syncQueue.reduce<string | null>((latest, item) => {
-      if (!latest || item.queuedAt > latest) {
-        return item.queuedAt;
+    return getSyncStatusSnapshot(syncQueue);
+  },
+
+  async runSync(): Promise<SyncStatus> {
+    const syncQueue = await getSyncQueue();
+
+    if (syncQueue.length === 0) {
+      return getSyncStatusSnapshot(syncQueue);
+    }
+
+    const allTimesheets = await getStoredTimesheets();
+    const syncState = await getTimesheetSyncState();
+    const remainingQueue: SyncQueueItem[] = [];
+    const updatedSyncState = { ...syncState };
+
+    for (const item of syncQueue) {
+      const timesheet = allTimesheets[item.entityId];
+
+      if (!timesheet) {
+        continue;
       }
 
-      return latest;
-    }, null);
+      try {
+        await localSyncTransport.pushTimesheet(timesheet, item.operation);
+        updatedSyncState[item.entityId] = {
+          timesheetId: item.entityId,
+          status: 'synced',
+          updatedAt: new Date().toISOString(),
+        };
+      } catch {
+        remainingQueue.push(item);
+      }
+    }
 
-    return {
-      pendingCount: syncQueue.length,
-      lastQueuedAt,
-    };
+    await set(SYNC_QUEUE_KEY, remainingQueue);
+    await set(TIMESHEET_SYNC_STATE_KEY, updatedSyncState);
+
+    return getSyncStatusSnapshot(remainingQueue);
   },
 };
 
