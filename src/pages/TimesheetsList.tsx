@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { TimesheetsDesktopTable } from '../components/timesheets/TimesheetsDesktopTable';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import { useResetDemoData } from '../hooks/useResetDemoData';
@@ -356,32 +357,32 @@ export default function TimesheetsList() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-[0_30px_120px_-48px_rgba(15,23,42,0.95)]">
-        <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.5fr_0.9fr] lg:px-8 lg:py-10">
+      <div className="app-surface overflow-hidden rounded-[1.5rem] shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)]">
+        <div className="grid gap-6 px-5 py-5 xl:grid-cols-[minmax(0,1.7fr)_320px] xl:px-6">
           <div className="space-y-5">
             <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-200">
               <CalendarRange className="h-3.5 w-3.5" />
               Главный экран табелей
             </span>
             <div className="space-y-3">
-              <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Красивый и быстрый журнал табелей без лишней навигации.
+              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight xl:text-[2rem]">
+                Журнал табелей для ежедневной работы без лишней навигации.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-300">
+              <p className="max-w-3xl text-sm leading-7 text-[var(--text-soft)]">
                 Здесь остается только то, что действительно важно для ежедневной работы:
                 открыть день, завести часы и быстро вернуться к нужному табелю.
               </p>
               {syncStatus && syncStatus.pendingCount > 0 && (
-                <div className="inline-flex items-center gap-2 rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm text-amber-100">
                   Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
                 </div>
               )}
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-sky-300/20 bg-sky-400/10 px-4 py-3 text-sm text-sky-100">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2.5 text-sm text-sky-100">
                 Публичное демо: можно безопасно исследовать интерфейс и offline flow на
                 локальных данных.
               </div>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() =>
@@ -390,7 +391,7 @@ export default function TimesheetsList() {
                     params: { date: startOfToday() },
                   })
                 }
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
               >
                 <Plus className="h-4 w-4" />
                 Создать табель на сегодня
@@ -404,7 +405,7 @@ export default function TimesheetsList() {
                     q: '',
                   });
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
               >
                 Сбросить фильтры
                 <ArrowRight className="h-4 w-4" />
@@ -413,7 +414,7 @@ export default function TimesheetsList() {
                 type="button"
                 onClick={() => void handleSeedDemoData()}
                 disabled={seedDemoData.isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-4 py-2.5 text-sm font-medium text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Заполнить демо-данными
@@ -422,7 +423,7 @@ export default function TimesheetsList() {
                 type="button"
                 onClick={() => void handleResetDemoData()}
                 disabled={resetDemoData.isPending || (!hasAnyTimesheets && !syncStatus?.pendingCount)}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-300/20 bg-rose-400/10 px-5 py-3 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-300/20 bg-rose-400/10 px-4 py-2.5 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <RefreshCcw className="h-4 w-4" />
                 Сбросить демо-базу
@@ -430,7 +431,7 @@ export default function TimesheetsList() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
             {activeSummary.map((item) => {
               const Icon = item.icon;
 
@@ -438,16 +439,16 @@ export default function TimesheetsList() {
                 <div
                   key={item.label}
                   className={cn(
-                    'rounded-[1.75rem] border border-white/10 bg-gradient-to-br p-5',
+                    'rounded-[1rem] border border-[var(--panel-border)] bg-gradient-to-br p-4',
                     item.accent
                   )}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm text-slate-300">{item.label}</p>
-                      <p className="mt-3 text-3xl font-semibold text-white">{item.value}</p>
+                      <p className="text-sm text-[var(--text-soft)]">{item.label}</p>
+                      <p className="mt-2 text-3xl font-semibold">{item.value}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-3 text-slate-100">
+                    <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-3">
                       <Icon className="h-5 w-5" />
                     </div>
                   </div>
@@ -458,32 +459,32 @@ export default function TimesheetsList() {
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-4 shadow-[0_25px_80px_-50px_rgba(15,23,42,0.95)] backdrop-blur sm:p-6">
-        <div className="flex flex-col gap-4 border-b border-white/10 pb-5">
+      <div className="app-surface rounded-[1.5rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
+        <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Журнал</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Табели за рабочий период</h2>
+              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">Журнал</p>
+              <h2 className="mt-1 text-xl font-semibold">Табели за рабочий период</h2>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+            <div className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
               Период: {formatMonthLabel(selectedMonth)}
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[1.1fr_0.55fr_0.55fr]">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_180px_180px]">
             <label className="relative block">
               <span className="sr-only">Поиск по табелям</span>
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
               <input
                 value={searchQuery}
                 onChange={(event) => updateSearch({ q: event.target.value })}
                 placeholder="Поиск по дате или описанию"
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 pl-10 pr-4 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+                className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] pl-10 pr-4 text-sm outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-slate-500">
+              <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 <CalendarRange className="h-3.5 w-3.5" />
                 Месяц
               </span>
@@ -491,12 +492,12 @@ export default function TimesheetsList() {
                 type="month"
                 value={selectedMonth}
                 onChange={(event) => updateSearch({ month: event.target.value })}
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-slate-100 outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+                className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-slate-500">
+              <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 <Filter className="h-3.5 w-3.5" />
                 Статус
               </span>
@@ -505,7 +506,7 @@ export default function TimesheetsList() {
                 onChange={(event) =>
                   updateSearch({ status: event.target.value as TimesheetStatusFilter })
                 }
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-slate-100 outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+                className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               >
                 {statusFilterOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -522,7 +523,7 @@ export default function TimesheetsList() {
             {[0, 1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="h-32 animate-pulse rounded-[1.5rem] border border-white/10 bg-white/5"
+                className="h-32 animate-pulse rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)]"
               />
             ))}
           </div>
@@ -596,7 +597,7 @@ export default function TimesheetsList() {
               {hasActiveFilters && <span>Показан отфильтрованный список</span>}
             </div>
 
-            <div className="mt-6 grid gap-4 xl:hidden">
+            <div className="mt-5 grid gap-3 xl:hidden">
               {filteredTimesheets.map((timesheet) => (
                 <button
                   type="button"
@@ -607,14 +608,14 @@ export default function TimesheetsList() {
                       params: { date: timesheet.date },
                     })
                   }
-                  className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 text-left transition hover:border-sky-300/30 hover:bg-sky-400/10"
+                  className="rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 text-left transition hover:bg-[var(--panel-hover)]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-lg font-semibold text-white">
+                      <p className="text-lg font-semibold">
                         {formatTimesheetDate(timesheet.date)}
                       </p>
-                      <p className="mt-2 text-sm text-slate-400">
+                      <p className="mt-2 text-sm text-[var(--text-muted)]">
                         {timesheet.rows.length} строк, {getTotalHours(timesheet.rows)} ч
                       </p>
                     </div>
@@ -627,7 +628,7 @@ export default function TimesheetsList() {
                       {statusConfig[timesheet.status].label}
                     </span>
                   </div>
-                  <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
+                  <div className="mt-4 flex items-center justify-between text-sm text-[var(--text-soft)]">
                     <span className="line-clamp-1">
                       {timesheet.rows[0]?.description || 'Без описания работ'}
                     </span>
@@ -637,62 +638,15 @@ export default function TimesheetsList() {
               ))}
             </div>
 
-            <div className="mt-6 hidden overflow-hidden rounded-[1.5rem] border border-white/10 xl:block">
-              <table className="min-w-full divide-y divide-white/10">
-                <thead className="bg-white/[0.04] text-left text-sm text-slate-400">
-                  <tr>
-                    <th className="px-6 py-4 font-medium">Дата</th>
-                    <th className="px-6 py-4 font-medium">Статус</th>
-                    <th className="px-6 py-4 font-medium">Строк</th>
-                    <th className="px-6 py-4 font-medium">Часы</th>
-                    <th className="px-6 py-4 font-medium">Последняя заметка</th>
-                    <th className="px-6 py-4" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10 text-sm text-slate-200">
-                  {filteredTimesheets.map((timesheet) => (
-                    <tr
-                      key={timesheet.id}
-                      className="bg-white/[0.02] transition hover:bg-sky-400/[0.07]"
-                    >
-                      <td className="px-6 py-4 font-medium text-white">
-                        {formatTimesheetDate(timesheet.date)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={cn(
-                            'rounded-full border px-3 py-1 text-xs font-medium',
-                            statusConfig[timesheet.status].className
-                          )}
-                        >
-                          {statusConfig[timesheet.status].label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">{timesheet.rows.length}</td>
-                      <td className="px-6 py-4">{getTotalHours(timesheet.rows)} ч</td>
-                      <td className="px-6 py-4 text-slate-400">
-                        {timesheet.rows[0]?.description || 'Без описания работ'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate({
-                              to: '/timesheet/$date',
-                              params: { date: timesheet.date },
-                            })
-                          }
-                          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-medium text-white transition hover:border-sky-300/30 hover:bg-sky-400/10"
-                        >
-                          Открыть
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <TimesheetsDesktopTable
+              timesheets={filteredTimesheets}
+              onOpenTimesheet={(date) =>
+                navigate({
+                  to: '/timesheet/$date',
+                  params: { date },
+                })
+              }
+            />
           </>
         )}
       </div>
