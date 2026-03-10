@@ -8,130 +8,118 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-
-const AUTH_STORAGE_KEY = 'timesheets:auth-session';
-
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: 'Bearer';
-  expiresAt: string;
-}
-
-export interface AuthUser {
-  id: string;
-  username: string;
-  displayName: string;
-}
-
-export interface AuthSession {
-  user: AuthUser;
-  tokens: AuthTokens;
-  issuedAt: string;
-  authStrategy: 'demo-password' | 'password-token';
-}
-
-export interface LoginPayload {
-  username: string;
-  password: string;
-}
+import { authService } from './auth-service';
+import type { AuthSession, LoginPayload, LogoutReason } from './types';
 
 export interface AuthContextValue {
   session: AuthSession | null;
   isAuthenticated: boolean;
+  isRefreshing: boolean;
+  logoutReason: LogoutReason | null;
   login: (payload: LoginPayload) => Promise<AuthSession>;
-  logout: () => void;
+  refreshSession: () => Promise<AuthSession | null>;
+  logout: (reason?: LogoutReason) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const readStoredSession = (): AuthSession | null => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const rawSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!rawSession) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawSession) as AuthSession;
-  } catch {
-    return null;
-  }
-};
-
-const buildDisplayName = (username: string) => {
-  const normalized = username.trim();
-  if (!normalized) {
-    return 'Пользователь';
-  }
-
-  return normalized
-    .split(/[.\s_-]+/)
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase() + part.slice(1))
-    .join(' ');
-};
-
-const addHours = (date: Date, hours: number) => new Date(date.getTime() + hours * 60 * 60 * 1000);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(() => readStoredSession());
+  const [session, setSession] = useState<AuthSession | null>(() => authService.restoreSession());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [logoutReason, setLogoutReason] = useState<LogoutReason | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!session) {
+      authService.clearSession();
       return;
     }
 
-    if (session) {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    authService.persistSession(session);
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) {
       return;
     }
 
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    if (authService.isSessionExpired(session)) {
+      setSession(null);
+      setLogoutReason('expired');
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!session || !authService.shouldRefreshSession(session)) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const runRefresh = async () => {
+      setIsRefreshing(true);
+
+      try {
+        const refreshedSession = await authService.refreshSession(session);
+        if (!cancelled) {
+          setSession(refreshedSession);
+        }
+      } catch {
+        if (!cancelled) {
+          setSession(null);
+          setLogoutReason('refresh-failed');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRefreshing(false);
+        }
+      }
+    };
+
+    void runRefresh();
+
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
-      isAuthenticated: session !== null,
-      async login({ username, password }) {
-        const normalizedUsername = username.trim();
-
-        if (!normalizedUsername || !password.trim()) {
-          throw new Error('Введите логин и пароль');
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 400));
-
-        const issuedAt = new Date();
-
-        const nextSession: AuthSession = {
-          user: {
-            id: `demo-${normalizedUsername.toLowerCase()}`,
-            username: normalizedUsername,
-            displayName: buildDisplayName(normalizedUsername),
-          },
-          tokens: {
-            accessToken: `demo-access-${normalizedUsername.toLowerCase()}`,
-            refreshToken: `demo-refresh-${normalizedUsername.toLowerCase()}`,
-            tokenType: 'Bearer',
-            expiresAt: addHours(issuedAt, 8).toISOString(),
-          },
-          issuedAt: issuedAt.toISOString(),
-          authStrategy: 'demo-password',
-        };
-
+      isAuthenticated: session !== null && !authService.isSessionExpired(session),
+      isRefreshing,
+      logoutReason,
+      async login(payload) {
+        const nextSession = await authService.login(payload);
         setSession(nextSession);
+        setLogoutReason(null);
         return nextSession;
       },
-      logout() {
+      async refreshSession() {
+        if (!session) {
+          return null;
+        }
+
+        setIsRefreshing(true);
+
+        try {
+          const refreshedSession = await authService.refreshSession(session);
+          setSession(refreshedSession);
+          setLogoutReason(null);
+          return refreshedSession;
+        } catch {
+          setSession(null);
+          setLogoutReason('refresh-failed');
+          return null;
+        } finally {
+          setIsRefreshing(false);
+        }
+      },
+      logout(reason = 'manual') {
         setSession(null);
+        setLogoutReason(reason);
       },
     }),
-    [session]
+    [isRefreshing, logoutReason, session]
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;
@@ -146,3 +134,5 @@ export function useAuth(): AuthContextValue {
 
   return context;
 }
+
+export type * from './types';
