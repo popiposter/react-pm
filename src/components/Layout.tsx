@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Clock3, FileSpreadsheet, Menu, Wifi, WifiOff, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { Clock3, FileSpreadsheet, LogOut, Menu, Wifi, WifiOff, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { useRunSync } from '../hooks/useRunSync';
 import { useSyncStatus } from '../hooks/useSyncStatus';
+import { useAuth } from '../features/auth/auth';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,7 +21,9 @@ const navigation = [
 ];
 
 export default function Layout({ children }: LayoutProps) {
+  const auth = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: syncStatus } = useSyncStatus();
@@ -42,6 +45,14 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const userInitials = auth.session?.displayName
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   const handleRunSync = async () => {
     toast.loading('Синхронизация...', {
@@ -68,6 +79,11 @@ export default function Layout({ children }: LayoutProps) {
         duration: 4000,
       });
     }
+  };
+
+  const handleLogout = async () => {
+    auth.logout();
+    await navigate({ to: '/login', search: { redirect: undefined } });
   };
 
   return (
@@ -102,7 +118,7 @@ export default function Layout({ children }: LayoutProps) {
               const Icon = item.icon;
 
               return (
-                <Link
+                  <Link
                   key={item.href}
                   to={item.href}
                   className={cn(
@@ -201,8 +217,17 @@ export default function Layout({ children }: LayoutProps) {
                     </button>
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={() => void handleLogout()}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-100 transition hover:bg-white/10"
+                  aria-label="Выйти"
+                  title={`Выйти (${auth.session?.displayName || 'Пользователь'})`}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950">
-                  П
+                  {userInitials || 'П'}
                 </div>
               </div>
             </div>

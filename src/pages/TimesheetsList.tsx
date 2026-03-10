@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import {
   ArrowRight,
   CalendarRange,
@@ -166,7 +166,12 @@ export default function TimesheetsList() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => navigate(`/timesheet/${startOfToday()}`)}
+                onClick={() =>
+                  navigate({
+                    to: '/timesheet/$date',
+                    params: { date: startOfToday() },
+                  })
+                }
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
               >
                 <Plus className="h-4 w-4" />
@@ -317,13 +322,18 @@ export default function TimesheetsList() {
             </div>
             <button
               type="button"
-              onClick={() => navigate(`/timesheet/${startOfToday()}`)}
+              onClick={() =>
+                navigate({
+                  to: '/timesheet/$date',
+                  params: { date: startOfToday() },
+                })
+              }
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
             >
               <Plus className="h-4 w-4" />
-              Создать первый табель
-            </button>
-          </div>
+                Создать первый табель
+              </button>
+            </div>
         ) : (
           <>
             <div className="mt-6 flex items-center justify-between gap-4 text-sm text-slate-400">
@@ -338,7 +348,12 @@ export default function TimesheetsList() {
                 <button
                   type="button"
                   key={timesheet.id}
-                  onClick={() => navigate(`/timesheet/${timesheet.date}`)}
+                  onClick={() =>
+                    navigate({
+                      to: '/timesheet/$date',
+                      params: { date: timesheet.date },
+                    })
+                  }
                   className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5 text-left transition hover:border-sky-300/30 hover:bg-sky-400/10"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -408,7 +423,12 @@ export default function TimesheetsList() {
                       <td className="px-6 py-4 text-right">
                         <button
                           type="button"
-                          onClick={() => navigate(`/timesheet/${timesheet.date}`)}
+                          onClick={() =>
+                            navigate({
+                              to: '/timesheet/$date',
+                              params: { date: timesheet.date },
+                            })
+                          }
                           className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-medium text-white transition hover:border-sky-300/30 hover:bg-sky-400/10"
                         >
                           Открыть

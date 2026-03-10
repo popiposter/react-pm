@@ -118,4 +118,21 @@ describe('localAppRepository', () => {
     expect(status.failedCount).toBe(0);
     expect(set).toHaveBeenCalledWith('local-repository:sync-queue', []);
   });
+
+  it('seeds demo data into the local repository', async () => {
+    const result = await localAppRepository.demo.seedDemoData();
+    const persistedTimesheetsCall = vi
+      .mocked(set)
+      .mock.calls.find(([key]) => key === 'local-repository:timesheets');
+    const persistedTimesheets = persistedTimesheetsCall?.[1] as Record<
+      string,
+      { rows: unknown[] }
+    >;
+
+    expect(result.tasksCount).toBeGreaterThan(0);
+    expect(result.timesheetsCount).toBeGreaterThan(0);
+    expect(persistedTimesheetsCall).toBeDefined();
+    expect(Object.keys(persistedTimesheets)).toHaveLength(result.timesheetsCount);
+    expect(Object.values(persistedTimesheets)[0]?.rows).toBeInstanceOf(Array);
+  });
 });

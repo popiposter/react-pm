@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -366,7 +366,7 @@ const LoadingState = () => (
 );
 
 export default function TimesheetEditor() {
-  const { date } = useParams<{ date: string }>();
+  const { date } = useParams({ from: '/_authenticated/timesheet/$date' });
   const navigate = useNavigate();
   const [conflictModalOpened, setConflictModalOpened] = useState(false);
   const [conflictError, setConflictError] = useState<{ message: string } | null>(null);
@@ -494,7 +494,7 @@ export default function TimesheetEditor() {
         showSaveSuccess();
 
         if (shouldNavigateBack) {
-          navigate('/timesheets');
+          await navigate({ to: '/timesheets' });
         }
       } catch (error: unknown) {
         const conflict = error as { status?: number; message?: string };
@@ -551,7 +551,10 @@ export default function TimesheetEditor() {
         duration: 3000,
       });
 
-      navigate(`/timesheet/${today}`);
+      await navigate({
+        to: '/timesheet/$date',
+        params: { date: today },
+      });
     } catch {
       toast.error('Ошибка', {
         id: 'copying',
@@ -714,7 +717,7 @@ export default function TimesheetEditor() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/timesheets')}
+              onClick={() => navigate({ to: '/timesheets' })}
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
             >
               <ArrowLeft className="h-4 w-4" />

@@ -31,6 +31,11 @@ export interface SyncRunResult extends SyncStatus {
   failedCount: number;
 }
 
+export interface DemoSeedResult {
+  tasksCount: number;
+  timesheetsCount: number;
+}
+
 export interface TaskRepository {
   getTasks(): Promise<Task[]>;
 }
@@ -46,8 +51,13 @@ export interface SyncRepository {
   runSync(): Promise<SyncRunResult>;
 }
 
+export interface DemoRepository {
+  seedDemoData(): Promise<DemoSeedResult>;
+}
+
 export interface AppRepository {
   tasks: TaskRepository;
   timesheets: TimesheetRepository;
   sync: SyncRepository;
+  demo: DemoRepository;
 }

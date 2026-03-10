@@ -3,6 +3,7 @@ import type { Task, Timesheet } from '../../api/mockBackend';
 import { createSyncTransport } from '../sync';
 import type {
   AppRepository,
+  DemoSeedResult,
   SaveTimesheetError,
   SyncQueueItem,
   SyncRunResult,
@@ -129,6 +130,178 @@ const createDraftTimesheet = (date: string): Timesheet => ({
   rows: [],
   status: 'draft',
 });
+
+const createDemoRows = (
+  date: string,
+  rows: Array<{
+    id: string;
+    taskId: string;
+    startTime: string;
+    endTime: string;
+    duration: number;
+    description: string;
+  }>
+) =>
+  rows.map((row) => ({
+    ...row,
+    date,
+  }));
+
+const buildDemoTimesheets = (): Record<string, Timesheet> => {
+  const now = new Date();
+  const dates = Array.from({ length: 8 }, (_, index) => {
+    const current = new Date(now);
+    current.setDate(now.getDate() - index);
+    return current.toISOString().split('T')[0];
+  });
+
+  const templates: Array<Pick<Timesheet, 'status' | 'rows'>> = [
+    {
+      status: 'draft',
+      rows: createDemoRows(dates[0], [
+        {
+          id: 'demo-row-1',
+          taskId: 'task1',
+          startTime: '09:00',
+          endTime: '11:30',
+          duration: 150,
+          description: 'Подготовка нового экрана списка табелей',
+        },
+        {
+          id: 'demo-row-2',
+          taskId: 'task5',
+          startTime: '11:30',
+          endTime: '13:00',
+          duration: 90,
+          description: 'Проверка интеграционного контракта c 1С',
+        },
+      ]),
+    },
+    {
+      status: 'submitted',
+      rows: createDemoRows(dates[1], [
+        {
+          id: 'demo-row-3',
+          taskId: 'task2',
+          startTime: '10:00',
+          endTime: '12:00',
+          duration: 120,
+          description: 'Подготовка backend adapter и sync transport',
+        },
+        {
+          id: 'demo-row-4',
+          taskId: 'task3',
+          startTime: '12:00',
+          endTime: '14:30',
+          duration: 150,
+          description: 'Регрессия сценариев offline и sync queue',
+        },
+      ]),
+    },
+    {
+      status: 'approved',
+      rows: createDemoRows(dates[2], [
+        {
+          id: 'demo-row-5',
+          taskId: 'task4',
+          startTime: '09:30',
+          endTime: '11:00',
+          duration: 90,
+          description: 'Финализация login flow и визуального сценария входа',
+        },
+        {
+          id: 'demo-row-6',
+          taskId: 'task6',
+          startTime: '11:00',
+          endTime: '12:00',
+          duration: 60,
+          description: 'Подготовка заметок по интеграции с 1С',
+        },
+      ]),
+    },
+    {
+      status: 'draft',
+      rows: createDemoRows(dates[3], [
+        {
+          id: 'demo-row-7',
+          taskId: 'task1',
+          startTime: '09:00',
+          endTime: '10:30',
+          duration: 90,
+          description: 'Рефакторинг журнала табелей под route loaders',
+        },
+      ]),
+    },
+    {
+      status: 'approved',
+      rows: createDemoRows(dates[4], [
+        {
+          id: 'demo-row-8',
+          taskId: 'task5',
+          startTime: '13:00',
+          endTime: '16:00',
+          duration: 180,
+          description: 'Интеграционное тестирование sync runner',
+        },
+      ]),
+    },
+    {
+      status: 'submitted',
+      rows: createDemoRows(dates[5], [
+        {
+          id: 'demo-row-9',
+          taskId: 'task3',
+          startTime: '10:00',
+          endTime: '12:30',
+          duration: 150,
+          description: 'Проверка ручных и автоматических сценариев синхронизации',
+        },
+      ]),
+    },
+    {
+      status: 'draft',
+      rows: createDemoRows(dates[6], [
+        {
+          id: 'demo-row-10',
+          taskId: 'task2',
+          startTime: '09:00',
+          endTime: '11:00',
+          duration: 120,
+          description: 'Подготовка DTO для будущего OneC transport',
+        },
+      ]),
+    },
+    {
+      status: 'approved',
+      rows: createDemoRows(dates[7], [
+        {
+          id: 'demo-row-11',
+          taskId: 'task4',
+          startTime: '15:00',
+          endTime: '17:30',
+          duration: 150,
+          description: 'Сборка mobile-first сценария для редактора',
+        },
+      ]),
+    },
+  ];
+
+  return templates.reduce<Record<string, Timesheet>>((acc, template, index) => {
+    const date = dates[index];
+    const id = `ts_${date}`;
+
+    acc[id] = {
+      id,
+      date,
+      userId: DEFAULT_USER_ID,
+      version: 1,
+      status: template.status,
+      rows: template.rows,
+    };
+
+    return acc;
+  }, {});
+};
 
 const localTasksRepository = {
   async getTasks() {
@@ -268,8 +441,25 @@ const localSyncRepository = {
   },
 };
 
+const localDemoRepository = {
+  async seedDemoData(): Promise<DemoSeedResult> {
+    const demoTimesheets = buildDemoTimesheets();
+
+    await set(TASKS_KEY, defaultTasks);
+    await set(TIMESHEETS_KEY, demoTimesheets);
+    await set(SYNC_QUEUE_KEY, []);
+    await set(TIMESHEET_SYNC_STATE_KEY, {});
+
+    return {
+      tasksCount: defaultTasks.length,
+      timesheetsCount: Object.keys(demoTimesheets).length,
+    };
+  },
+};
+
 export const localAppRepository: AppRepository = {
   tasks: localTasksRepository,
   timesheets: localTimesheetsRepository,
   sync: localSyncRepository,
+  demo: localDemoRepository,
 };
