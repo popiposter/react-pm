@@ -2,6 +2,14 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { AUTH_STORAGE_KEY, authService } from '../features/auth/auth-service';
 import type { AuthSession } from '../features/auth/auth';
 
+vi.mock('../features/auth/transports', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../features/auth/transports')>();
+  return {
+    ...actual,
+    createAuthTransport: () => actual.demoAuthTransport,
+  };
+});
+
 const createSession = (overrides?: Partial<AuthSession>): AuthSession => ({
   user: {
     id: 'demo-user',
