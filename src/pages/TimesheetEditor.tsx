@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Ellipsis,
   GripVertical,
   LoaderCircle,
   Plus,
@@ -343,6 +344,7 @@ const SortableMobileRow = ({
     id: row.id,
   });
   const [isExpanded, setIsExpanded] = useState(validationErrors.length > 0);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
   const taskLabel = getTaskLabel(taskGroups, row.taskId);
 
   return (
@@ -405,13 +407,13 @@ const SortableMobileRow = ({
           </div>
         </button>
         <Button
-          onClick={() => requestRemoveRow(index)}
-          variant="ghost"
+          onClick={() => setIsActionsOpen(true)}
+          variant="secondary"
           size="icon"
-          className="mt-0.5 h-9 w-9 shrink-0 rounded-xl border border-rose-400/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20"
-          aria-label="Удалить строку"
+          className="mt-0.5 h-9 w-9 shrink-0 rounded-xl"
+          aria-label="Действия со строкой"
         >
-          <Trash2 className="h-4 w-4" />
+          <Ellipsis className="h-4 w-4" />
         </Button>
       </div>
 
@@ -475,6 +477,61 @@ const SortableMobileRow = ({
               {validationErrors.join(' • ')}
             </div>
           )}
+        </div>
+      )}
+
+      {isActionsOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-end bg-slate-950/45 backdrop-blur-[2px]">
+          <button
+            type="button"
+            className="absolute inset-0"
+            aria-label="Закрыть меню действий"
+            onClick={() => setIsActionsOpen(false)}
+          />
+          <div className="app-surface-strong relative w-full rounded-t-[1.5rem] border-b-0 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-24px_80px_-48px_var(--shadow-color)]">
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--panel-border)]" />
+            <div className="space-y-2">
+              <div className="px-1 pb-2">
+                <p className="text-sm font-semibold">{taskLabel}</p>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  {row.startTime} - {row.endTime}, {minutesToHours(row.duration)} ч
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  duplicateRow(row);
+                  setIsActionsOpen(false);
+                }}
+                variant="secondary"
+                className="h-11 w-full justify-start rounded-2xl"
+              >
+                <Copy className="h-4 w-4" />
+                Повторить запись
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsExpanded((value) => !value);
+                  setIsActionsOpen(false);
+                }}
+                variant="secondary"
+                className="h-11 w-full justify-start rounded-2xl"
+              >
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {isExpanded ? 'Свернуть детали' : 'Показать детали'}
+              </Button>
+              <Button
+                onClick={() => {
+                  requestRemoveRow(index);
+                  setIsActionsOpen(false);
+                }}
+                variant="secondary"
+                className="h-11 w-full justify-start rounded-2xl border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                Удалить строку
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </article>
