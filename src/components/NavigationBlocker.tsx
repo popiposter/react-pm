@@ -87,8 +87,13 @@ export function NavigationBlocker({ children }: { children: ReactNode }) {
   });
 
   const handleConfirm = () => {
-    window.dispatchEvent(new CustomEvent('timesheet-save-and-navigate'));
-    blocker.proceed?.();
+    const event = new CustomEvent('timesheet-save-and-navigate', {
+      detail: {
+        proceed: () => blocker.proceed?.(),
+        reset: () => blocker.reset?.(),
+      },
+    });
+    window.dispatchEvent(event);
   };
 
   const handleCancel = () => {

@@ -55,6 +55,11 @@ interface RowEditorProps {
   validationErrors: string[];
 }
 
+type SaveAndNavigateEvent = CustomEvent<{
+  proceed?: () => void;
+  reset?: () => void;
+}>;
+
 const formatEditorDate = (date: string) =>
   new Date(date).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -119,6 +124,33 @@ const TaskSelect = ({
       ))}
     </SelectContent>
   </Select>
+);
+
+const NativeTaskSelect = ({
+  value,
+  onChange,
+  taskGroups,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  taskGroups: GroupedTasks[];
+}) => (
+  <select
+    value={value}
+    onChange={(event) => onChange(event.target.value)}
+    className="h-10 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] outline-none [color-scheme:light_dark]"
+  >
+    <option value="">Выберите задачу</option>
+    {taskGroups.map((group) => (
+      <optgroup key={group.group} label={group.group}>
+        {group.items.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.label}
+          </option>
+        ))}
+      </optgroup>
+    ))}
+  </select>
 );
 
 const TimeField = ({
@@ -329,7 +361,7 @@ const SortableMobileRow = ({
       </div>
 
       <div className="mt-4 space-y-4">
-        <TaskSelect
+        <NativeTaskSelect
           value={row.taskId}
           onChange={(value) => updateRow(index, { taskId: value })}
           taskGroups={taskGroups}
@@ -510,7 +542,13 @@ export default function TimesheetEditor() {
   };
 
   const handleSave = useCallback(
-    async (shouldNavigateBack = false) => {
+    async (
+      shouldNavigateBack = false,
+      navigationResolver?: {
+        proceed?: () => void;
+        reset?: () => void;
+      }
+    ) => {
       if (!date || !timesheet) return;
       const hasValidationErrors = rows.some((row) => getRowValidationErrors(row).length > 0);
 
@@ -519,6 +557,7 @@ export default function TimesheetEditor() {
           description: 'Заполните задачу и длительность во всех проблемных строках перед сохранением.',
           duration: 5000,
         });
+        navigationResolver?.reset?.();
         return;
       }
 
@@ -537,6 +576,11 @@ export default function TimesheetEditor() {
         setIsDirty(false);
         showSaveSuccess();
 
+        if (navigationResolver?.proceed) {
+          navigationResolver.proceed();
+          return;
+        }
+
         if (shouldNavigateBack) {
           await navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() });
         }
@@ -546,22 +590,26 @@ export default function TimesheetEditor() {
           setConflictError({ message: conflict.message || 'Конфликт версий табеля.' });
           setConflictModalOpened(true);
           showConflictState();
+          navigationResolver?.reset?.();
           return;
         }
 
         showSaveError();
+        navigationResolver?.reset?.();
       }
     },
     [date, navigate, recalculateAll, rows, saveMutation, setIsDirty, showSaveSuccess, timesheet]
   );
 
   useEffect(() => {
-    const handleSaveAndNavigate = () => {
-      void handleSave(true);
+    const handleSaveAndNavigate = (event: Event) => {
+      const customEvent = event as SaveAndNavigateEvent;
+      void handleSave(false, customEvent.detail);
     };
 
     window.addEventListener('timesheet-save-and-navigate', handleSaveAndNavigate);
-    return () => window.removeEventListener('timesheet-save-and-navigate', handleSaveAndNavigate);
+    return () =>
+      window.removeEventListener('timesheet-save-and-navigate', handleSaveAndNavigate);
   }, [handleSave]);
 
   const handleCopy = async () => {
@@ -709,31 +757,31 @@ export default function TimesheetEditor() {
 
   return (
     <section className="space-y-4 pb-24 xl:pb-0">
-      <div className="app-surface overflow-hidden rounded-[1.25rem]">
+      <div className="app-surface overflow-hidden rounded-[1rem]">
         <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-start xl:justify-between xl:px-6">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-sky-200">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
                 Табель
               </span>
               <span
                 className={cn(
                   'inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
                   isOnline
-                    ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-200'
-                    : 'border-amber-300/20 bg-amber-400/10 text-amber-100'
+                    ? 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
+                    : 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
                 )}
               >
                 {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
                 {isOnline ? 'Онлайн' : 'Офлайн'}
               </span>
               {isDirty && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-100">
+                <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-[var(--warning-text)]">
                   Черновик не сохранен
                 </span>
               )}
               {invalidRowsCount > 0 && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-2.5 py-1 text-[11px] font-medium text-rose-100">
+                <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-2.5 py-1 text-[11px] font-medium text-[var(--danger-text)]">
                   Проблемных строк: {invalidRowsCount}
                 </span>
               )}
@@ -790,7 +838,7 @@ export default function TimesheetEditor() {
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div
           className={cn(
-            'app-surface flex items-start gap-3 rounded-[1rem] px-4 py-3',
+            'app-surface flex items-start gap-3 rounded-[0.9rem] px-4 py-3',
             !isOnline && 'border-amber-300/20 bg-amber-400/[0.08]'
           )}
         >
@@ -798,8 +846,8 @@ export default function TimesheetEditor() {
             className={cn(
               'rounded-md p-2',
               isOnline
-                ? 'bg-emerald-400/12 text-emerald-200'
-                : 'bg-amber-400/15 text-amber-100'
+                ? 'bg-emerald-400/12 text-[var(--success-text)]'
+                : 'bg-amber-400/15 text-[var(--warning-text)]'
             )}
           >
             {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
@@ -815,8 +863,8 @@ export default function TimesheetEditor() {
             </p>
           </div>
         </div>
-        <div className="app-surface flex items-start gap-3 rounded-[1rem] px-4 py-3">
-          <div className="rounded-md bg-rose-400/10 p-2 text-rose-200">
+        <div className="app-surface flex items-start gap-3 rounded-[0.9rem] px-4 py-3">
+          <div className="rounded-md bg-rose-400/10 p-2 text-[var(--danger-text)]">
             <AlertTriangle className="h-4 w-4" />
           </div>
           <div className="space-y-1">
@@ -830,7 +878,7 @@ export default function TimesheetEditor() {
         </div>
       </div>
 
-      <div className="app-surface rounded-[1.25rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
+      <div className="app-surface rounded-[1rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">

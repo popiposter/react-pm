@@ -206,7 +206,28 @@ export default function Layout({ children }: LayoutProps) {
             isSidebarCollapsed ? 'w-20 items-center' : 'w-72'
           )}
         >
-          <div className={cn('flex items-center gap-3', isSidebarCollapsed && 'flex-col gap-4')}>
+          <div
+            className={cn(
+              'flex items-start justify-between gap-3',
+              isSidebarCollapsed && 'w-full flex-col items-center gap-3'
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed((value) => !value)}
+              title={isSidebarCollapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
+              className={cn(
+                'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]',
+                isSidebarCollapsed && 'order-[-1]'
+              )}
+            >
+              {isSidebarCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </button>
+            <div className={cn('flex items-center gap-3', isSidebarCollapsed && 'flex-col gap-3')}>
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-inset ring-[var(--panel-border)]">
               <Clock3 className="h-6 w-6" />
             </div>
@@ -218,10 +239,11 @@ export default function Layout({ children }: LayoutProps) {
                 <h1 className="text-xl font-semibold">Проектные табели</h1>
               </div>
             )}
+            </div>
           </div>
 
           {!isSidebarCollapsed && (
-            <div className="app-surface mt-8 rounded-2xl p-4">
+            <div className="app-surface mt-6 rounded-[1rem] p-4">
               <p className="text-sm text-[var(--text-soft)]">
                 Плотный рабочий интерфейс для ежедневного учета времени без лишнего визуального
                 шума.
@@ -265,18 +287,6 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           <div className={cn('mt-auto flex flex-col gap-2', isSidebarCollapsed && 'items-center')}>
-            <button
-              type="button"
-              onClick={() => setIsSidebarCollapsed((value) => !value)}
-              title={isSidebarCollapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
-            >
-              {isSidebarCollapsed ? (
-                <PanelLeftOpen className="h-4 w-4" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" />
-              )}
-            </button>
             {!isSidebarCollapsed && syncStatus && syncStatus.pendingCount > 0 && (
               <button
                 type="button"
@@ -298,13 +308,10 @@ export default function Layout({ children }: LayoutProps) {
           >
             <div className="flex items-center justify-between px-4 py-2.5 sm:px-5 xl:px-8 xl:py-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
                   <Clock3 className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
-                    Offline-first workspace
-                  </p>
                   <h2 className="text-sm font-semibold sm:text-base xl:text-lg">Учет рабочего времени</h2>
                 </div>
               </div>

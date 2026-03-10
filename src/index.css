@@ -33,14 +33,14 @@
     radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 26%),
     radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 20%),
     linear-gradient(180deg, #f4f7fb 0%, #edf2f7 100%);
-  --app-fg: #172233;
-  --panel-bg: rgba(255, 255, 255, 0.84);
-  --panel-bg-strong: rgba(255, 255, 255, 0.94);
-  --panel-muted: rgba(23, 34, 51, 0.045);
-  --panel-border: rgba(23, 34, 51, 0.1);
-  --panel-hover: rgba(23, 34, 51, 0.065);
-  --text-muted: #66788f;
-  --text-soft: #334155;
+  --app-fg: #122033;
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --panel-bg-strong: rgba(255, 255, 255, 0.97);
+  --panel-muted: rgba(18, 32, 51, 0.055);
+  --panel-border: rgba(18, 32, 51, 0.14);
+  --panel-hover: rgba(18, 32, 51, 0.085);
+  --text-muted: #5b6d85;
+  --text-soft: #24364d;
   --accent: #0f7ae5;
   --accent-soft: rgba(15, 122, 229, 0.1);
   --accent-strong: #0b69c6;
@@ -51,7 +51,7 @@
   --warning-text: #a16207;
   --danger-text: #be123c;
   --neutral-text: #475569;
-  --shadow-color: rgba(15, 23, 42, 0.12);
+  --shadow-color: rgba(15, 23, 42, 0.14);
 }
 
 * {
