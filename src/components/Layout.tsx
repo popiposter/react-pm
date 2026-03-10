@@ -46,13 +46,15 @@ export default function Layout({ children }: LayoutProps) {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const userInitials = auth.session?.displayName
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const userInitials = auth.session?.user.displayName
+    ? auth.session.user.displayName
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : undefined;
 
   const handleRunSync = async () => {
     toast.loading('Синхронизация...', {
@@ -118,7 +120,7 @@ export default function Layout({ children }: LayoutProps) {
               const Icon = item.icon;
 
               return (
-                  <Link
+                <Link
                   key={item.href}
                   to={item.href}
                   className={cn(
@@ -222,7 +224,7 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={() => void handleLogout()}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-100 transition hover:bg-white/10"
                   aria-label="Выйти"
-                  title={`Выйти (${auth.session?.displayName || 'Пользователь'})`}
+                  title={`Выйти (${auth.session?.user.displayName || 'Пользователь'})`}
                 >
                   <LogOut className="h-4 w-4" />
                 </button>

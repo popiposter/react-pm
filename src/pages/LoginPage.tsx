@@ -4,6 +4,7 @@ import { ArrowRight, DatabaseZap, LockKeyhole, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../features/auth/auth';
 import { useSeedDemoData } from '../hooks/useSeedDemoData';
+import { getDefaultTimesheetsSearch } from '../routes/_authenticated/timesheets';
 
 export function LoginPage({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function LoginPage({ redirectTo }: { redirectTo?: string }) {
       return;
     }
 
-    await router.navigate({ to: '/timesheets' });
+    await router.navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() });
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -88,8 +89,9 @@ export function LoginPage({ redirectTo }: { redirectTo?: string }) {
                 <DatabaseZap className="h-5 w-5 text-emerald-300" />
                 <h2 className="mt-4 text-lg font-semibold text-white">Готово к backend</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Data layer уже идет через repository и sync transport, поэтому реальный 1С
-                  backend можно будет подключать без переверстки приложения.
+                  Data layer уже идет через repository и sync transport, а auth session теперь
+                  хранит access/refresh token contract, поэтому реальный 1С backend можно будет
+                  подключать без переверстки приложения.
                 </p>
               </div>
             </div>

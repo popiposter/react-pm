@@ -23,6 +23,7 @@ import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
 import { useTimesheetCalculator } from '../hooks/useTimesheetCalculator';
 import { cn } from '../lib/utils';
+import { getDefaultTimesheetsSearch } from '../routes/_authenticated/timesheets';
 
 interface GroupedTaskOption {
   value: string;
@@ -494,7 +495,7 @@ export default function TimesheetEditor() {
         showSaveSuccess();
 
         if (shouldNavigateBack) {
-          await navigate({ to: '/timesheets' });
+          await navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() });
         }
       } catch (error: unknown) {
         const conflict = error as { status?: number; message?: string };
@@ -717,7 +718,9 @@ export default function TimesheetEditor() {
             </button>
             <button
               type="button"
-              onClick={() => navigate({ to: '/timesheets' })}
+              onClick={() =>
+                navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
+              }
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
             >
               <ArrowLeft className="h-4 w-4" />

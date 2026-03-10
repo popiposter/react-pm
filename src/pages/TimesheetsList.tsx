@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useMemo } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   ArrowRight,
   CalendarRange,
@@ -16,8 +16,10 @@ import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import type { Timesheet } from '../api/mockBackend';
 import { cn } from '../lib/utils';
-
-type TimesheetStatusFilter = 'all' | Timesheet['status'];
+import {
+  getCurrentMonth,
+  type TimesheetStatusFilter,
+} from '../routes/_authenticated/timesheets';
 
 const formatTimesheetDate = (date: string) =>
   new Date(date).toLocaleDateString('ru-RU', {
@@ -63,11 +65,6 @@ const statusFilterOptions: Array<{
   { value: 'submitted', label: 'Отправленные' },
   { value: 'approved', label: 'Утвержденные' },
 ];
-
-const getCurrentMonth = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};
 
 const startOfToday = () => new Date().toISOString().split('T')[0];
 
@@ -124,9 +121,10 @@ const summaryCards = (timesheets: Timesheet[]) => {
 
 export default function TimesheetsList() {
   const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
-  const [statusFilter, setStatusFilter] = useState<TimesheetStatusFilter>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const search = useSearch({ from: '/_authenticated/timesheets' });
+  const selectedMonth = search.month;
+  const statusFilter = search.status;
+  const searchQuery = search.q;
   const { data: timesheets = [], isLoading } = useTimesheets(selectedMonth);
   const { data: syncStatus } = useSyncStatus();
 
@@ -139,6 +137,25 @@ export default function TimesheetsList() {
 
   const activeSummary = useMemo(() => summaryCards(filteredTimesheets), [filteredTimesheets]);
   const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim().length > 0;
+
+  const updateSearch = (
+    patch: Partial<{
+      month: string;
+      status: TimesheetStatusFilter;
+      q: string;
+    }>,
+    replace = true
+  ) => {
+    void navigate({
+      to: '/timesheets',
+      search: {
+        month: patch.month ?? selectedMonth,
+        status: patch.status ?? statusFilter,
+        q: patch.q ?? searchQuery,
+      },
+      replace,
+    });
+  };
 
   return (
     <section className="space-y-8">
@@ -180,9 +197,11 @@ export default function TimesheetsList() {
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedMonth(getCurrentMonth());
-                  setStatusFilter('all');
-                  setSearchQuery('');
+                  updateSearch({
+                    month: getCurrentMonth(),
+                    status: 'all',
+                    q: '',
+                  });
                 }}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/10"
               >
@@ -238,7 +257,7 @@ export default function TimesheetsList() {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => updateSearch({ q: event.target.value })}
                 placeholder="Поиск по дате или описанию"
                 className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 pl-10 pr-4 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               />
@@ -252,7 +271,7 @@ export default function TimesheetsList() {
               <input
                 type="month"
                 value={selectedMonth}
-                onChange={(event) => setSelectedMonth(event.target.value)}
+                onChange={(event) => updateSearch({ month: event.target.value })}
                 className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-slate-100 outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               />
             </label>
@@ -264,7 +283,9 @@ export default function TimesheetsList() {
               </span>
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as TimesheetStatusFilter)}
+                onChange={(event) =>
+                  updateSearch({ status: event.target.value as TimesheetStatusFilter })
+                }
                 className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-slate-100 outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
               >
                 {statusFilterOptions.map((option) => (
@@ -300,8 +321,10 @@ export default function TimesheetsList() {
             <button
               type="button"
               onClick={() => {
-                setStatusFilter('all');
-                setSearchQuery('');
+                updateSearch({
+                  status: 'all',
+                  q: '',
+                });
               }}
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-slate-100 transition hover:bg-white/10"
             >
@@ -331,9 +354,9 @@ export default function TimesheetsList() {
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
             >
               <Plus className="h-4 w-4" />
-                Создать первый табель
-              </button>
-            </div>
+              Создать первый табель
+            </button>
+          </div>
         ) : (
           <>
             <div className="mt-6 flex items-center justify-between gap-4 text-sm text-slate-400">

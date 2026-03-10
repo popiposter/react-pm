@@ -11,11 +11,24 @@ import {
 
 const AUTH_STORAGE_KEY = 'timesheets:auth-session';
 
-export interface AuthSession {
+export interface AuthTokens {
   accessToken: string;
+  refreshToken: string;
+  tokenType: 'Bearer';
+  expiresAt: string;
+}
+
+export interface AuthUser {
+  id: string;
   username: string;
   displayName: string;
+}
+
+export interface AuthSession {
+  user: AuthUser;
+  tokens: AuthTokens;
   issuedAt: string;
+  authStrategy: 'demo-password' | 'password-token';
 }
 
 export interface LoginPayload {
@@ -62,6 +75,8 @@ const buildDisplayName = (username: string) => {
     .join(' ');
 };
 
+const addHours = (date: Date, hours: number) => new Date(date.getTime() + hours * 60 * 60 * 1000);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => readStoredSession());
 
@@ -91,11 +106,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         await new Promise((resolve) => setTimeout(resolve, 400));
 
+        const issuedAt = new Date();
+
         const nextSession: AuthSession = {
-          accessToken: `demo-token-${normalizedUsername.toLowerCase()}`,
-          username: normalizedUsername,
-          displayName: buildDisplayName(normalizedUsername),
-          issuedAt: new Date().toISOString(),
+          user: {
+            id: `demo-${normalizedUsername.toLowerCase()}`,
+            username: normalizedUsername,
+            displayName: buildDisplayName(normalizedUsername),
+          },
+          tokens: {
+            accessToken: `demo-access-${normalizedUsername.toLowerCase()}`,
+            refreshToken: `demo-refresh-${normalizedUsername.toLowerCase()}`,
+            tokenType: 'Bearer',
+            expiresAt: addHours(issuedAt, 8).toISOString(),
+          },
+          issuedAt: issuedAt.toISOString(),
+          authStrategy: 'demo-password',
         };
 
         setSession(nextSession);

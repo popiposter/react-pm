@@ -5,12 +5,18 @@ import { render } from '../test/test-utils';
 import TimesheetsList from '../pages/TimesheetsList';
 
 const navigateMock = vi.fn();
+const useSearchMock = vi.fn(() => ({
+  month: '2026-03',
+  status: 'all',
+  q: '',
+}));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>();
   return {
     ...actual,
     useNavigate: () => navigateMock,
+    useSearch: () => useSearchMock(),
   };
 });
 
@@ -59,23 +65,42 @@ vi.mock('../hooks/useTimesheets', () => ({
 }));
 
 describe('TimesheetsList', () => {
-  it('filters timesheets by search query', async () => {
+  it('writes search query into route search params', async () => {
     const user = userEvent.setup();
     render(<TimesheetsList />);
 
     await user.type(screen.getByPlaceholderText('Поиск по дате или описанию'), 'релиза');
 
-    expect(screen.getAllByText('10 марта 2026 г.').length).toBeGreaterThan(0);
-    expect(screen.queryAllByText('9 марта 2026 г.')).toHaveLength(0);
+    expect(navigateMock).toHaveBeenCalled();
+    expect(navigateMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        to: '/timesheets',
+        replace: true,
+        search: {
+          month: '2026-03',
+          status: 'all',
+          q: 'а',
+        },
+      })
+    );
   });
 
-  it('filters timesheets by status', async () => {
+  it('writes selected status into route search params', async () => {
     const user = userEvent.setup();
     render(<TimesheetsList />);
 
     await user.selectOptions(screen.getByLabelText('Статус'), 'approved');
 
-    expect(screen.getAllByText('9 марта 2026 г.').length).toBeGreaterThan(0);
-    expect(screen.queryAllByText('10 марта 2026 г.')).toHaveLength(0);
+    expect(navigateMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        to: '/timesheets',
+        replace: true,
+        search: {
+          month: '2026-03',
+          status: 'approved',
+          q: '',
+        },
+      })
+    );
   });
 });
