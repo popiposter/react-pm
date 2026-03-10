@@ -18,6 +18,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Task, TimesheetRow } from '../api/mockBackend';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { useSaveTimesheet } from '../hooks/useSaveTimesheet';
 import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
@@ -65,9 +76,6 @@ const minutesToHours = (minutes: number): string => {
 const createRowId = () =>
   `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-const desktopFieldClassName =
-  'h-9 rounded-md border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--app-fg)] shadow-none focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15';
-
 const getRowValidationErrors = (row: TimesheetRow): string[] => {
   const errors: string[] = [];
 
@@ -93,25 +101,24 @@ const TaskSelect = ({
   taskGroups: GroupedTasks[];
   className?: string;
 }) => (
-  <select
-    value={value}
-    onChange={(event) => onChange(event.target.value)}
-    className={cn(
-      'h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm text-[var(--app-fg)] outline-none transition focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
-      className
-    )}
-  >
-    <option value="">Выберите задачу</option>
-    {taskGroups.map((group) => (
-      <optgroup key={group.group} label={group.group}>
-        {group.items.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </optgroup>
-    ))}
-  </select>
+  <Select value={value || '__empty__'} onValueChange={(nextValue) => onChange(nextValue === '__empty__' ? '' : nextValue)}>
+    <SelectTrigger className={cn('h-10 w-full rounded-lg bg-[var(--panel-muted)]', className)}>
+      <SelectValue placeholder="Выберите задачу" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="__empty__">Выберите задачу</SelectItem>
+      {taskGroups.map((group) => (
+        <SelectGroup key={group.group}>
+          <SelectLabel>{group.group}</SelectLabel>
+          {group.items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      ))}
+    </SelectContent>
+  </Select>
 );
 
 const TimeField = ({
@@ -125,17 +132,17 @@ const TimeField = ({
   readOnly?: boolean;
   className?: string;
 }) => (
-  <input
+  <Input
     type="time"
     step={300}
     value={value}
     readOnly={readOnly}
     onChange={(event) => onChange?.(event.target.value || '00:00')}
     className={cn(
-      'h-10 w-full rounded-lg border px-3 text-sm text-[var(--app-fg)] outline-none transition [color-scheme:light_dark]',
+      'h-10 w-full rounded-lg [color-scheme:light_dark]',
       readOnly
         ? 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)]'
-        : 'border-[var(--panel-border)] bg-[var(--panel-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
+        : 'bg-[var(--panel-muted)]',
       className
     )}
   />
@@ -151,13 +158,13 @@ const DurationField = ({
   className?: string;
 }) => (
   <div className={cn('relative', className)}>
-    <input
+    <Input
       type="number"
       min={0}
       step={0.5}
       value={minutesToHours(value)}
       onChange={(event) => onChange(hoursToMinutes(event.target.value))}
-      className="h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 pr-10 text-sm text-[var(--app-fg)] outline-none transition [color-scheme:light_dark] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20"
+      className="h-10 w-full rounded-lg bg-[var(--panel-muted)] pr-10 [color-scheme:light_dark]"
     />
     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">
       ч
@@ -174,13 +181,13 @@ const DescriptionField = ({
   onChange: (value: string) => void;
   className?: string;
 }) => (
-  <input
+  <Input
     type="text"
     value={value}
     onChange={(event) => onChange(event.target.value)}
     placeholder="Описание работ"
     className={cn(
-      'h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm text-[var(--app-fg)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/20',
+      'h-10 w-full rounded-lg bg-[var(--panel-muted)]',
       className
     )}
   />
@@ -227,42 +234,43 @@ const SortableDesktopRow = ({
           value={row.taskId}
           onChange={(value) => updateRow(index, { taskId: value })}
           taskGroups={taskGroups}
-          className={desktopFieldClassName}
+          className="h-9 rounded-md bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2">
         <TimeField
           value={row.startTime}
           onChange={(value) => updateRow(index, { startTime: value })}
-          className={desktopFieldClassName}
+          className="h-9 rounded-md bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2">
-        <TimeField value={row.endTime} readOnly className={desktopFieldClassName} />
+        <TimeField value={row.endTime} readOnly className="h-9 rounded-md bg-[var(--panel-bg)]" />
       </td>
       <td className="px-2 py-2">
         <DurationField
           value={row.duration}
           onChange={(value) => updateRow(index, { duration: value })}
-          className="[&_input]:h-9 [&_input]:rounded-md [&_input]:border-[var(--panel-border)] [&_input]:bg-[var(--panel-bg)]"
+          className="[&_input]:h-9 [&_input]:rounded-md [&_input]:bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2">
         <DescriptionField
           value={row.description || ''}
           onChange={(value) => updateRow(index, { description: value })}
-          className={desktopFieldClassName}
+          className="h-9 rounded-md bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2 text-right">
-        <button
-          type="button"
+        <Button
           onClick={() => requestRemoveRow(index)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-400/20 bg-rose-400/10 text-rose-200 transition hover:bg-rose-400/20"
+          variant="ghost"
+          size="icon"
+          className="border border-rose-400/20 bg-rose-400/10 text-rose-200 hover:bg-rose-400/20 hover:text-rose-100"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
-        </button>
+        </Button>
         {validationErrors.length > 0 && (
           <div className="mt-2 text-left text-xs text-amber-200">
             {validationErrors.join(' • ')}
@@ -299,23 +307,25 @@ const SortableMobileRow = ({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
+        <Button
           {...attributes}
           {...listeners}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)]"
+          variant="secondary"
+          size="icon"
+          className="h-10 w-10 rounded-lg text-[var(--text-muted)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={() => requestRemoveRow(index)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-rose-400/20 bg-rose-400/10 text-rose-200"
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-lg border border-rose-400/20 bg-rose-400/10 text-rose-200 hover:bg-rose-400/20 hover:text-rose-100"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
 
       <div className="mt-4 space-y-4">
@@ -724,42 +734,38 @@ export default function TimesheetEditor() {
           </div>
 
           <div className="flex flex-wrap gap-2.5 xl:max-w-2xl xl:justify-end">
-            <button
-              type="button"
+            <Button
               onClick={handleCopy}
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3.5 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
+              variant="secondary"
             >
               <Copy className="h-4 w-4" />
               Копировать на сегодня
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={() =>
                 navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
               }
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3.5 py-2 text-sm font-medium text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+              variant="secondary"
+              className="text-[var(--text-soft)]"
             >
               <ArrowLeft className="h-4 w-4" />
               К списку
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={() => void handleSave(false)}
               disabled={saveMutation.isPending}
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+              className="border border-white/10 bg-white text-slate-950 hover:bg-slate-100"
             >
               <Save className="h-4 w-4" />
               Сохранить
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={() => void handleSave(true)}
               disabled={saveMutation.isPending}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-sky-400 px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <Save className="h-4 w-4" />
               Сохранить и закрыть
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -815,14 +821,13 @@ export default function TimesheetEditor() {
             </p>
             <h2 className="mt-1 text-lg font-semibold">Рабочие записи за день</h2>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={handleAddRow}
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3.5 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
+            variant="secondary"
           >
             <Plus className="h-4 w-4" />
             Добавить строку
-          </button>
+          </Button>
         </div>
 
         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -924,27 +929,25 @@ export default function TimesheetEditor() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
+              <Button
                 onClick={handleUpdateFromServer}
-                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
+                variant="secondary"
               >
                 Обновить с сервера
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={handleOverwriteServer}
-                className="inline-flex items-center justify-center rounded-lg bg-rose-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
+                variant="destructive"
               >
                 Перезаписать сервер
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() => setConflictModalOpened(false)}
-                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+                variant="secondary"
+                className="text-[var(--text-soft)]"
               >
                 Закрыть
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -969,20 +972,18 @@ export default function TimesheetEditor() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
+              <Button
                 onClick={() => setRowPendingDelete(null)}
-                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
+                variant="secondary"
               >
                 Отмена
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={handleConfirmRemoveRow}
-                className="inline-flex items-center justify-center rounded-lg bg-rose-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-rose-300"
+                variant="destructive"
               >
                 Удалить строку
-              </button>
+              </Button>
             </div>
           </div>
         </div>
