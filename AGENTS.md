@@ -1,69 +1,99 @@
 # Project Context: Offline-first PWA "Проектные табели" (Timesheets)
-Это frontend-приложение для учета рабочего времени. Основная фича: offline-first работа, автоматический пересчет времени в строках табеля, разрешение коллизий при синхронизации с REST API (в будущем 1С, сейчас Mock API).
 
-## Tech Stack
+Это frontend-приложение для учета рабочего времени. Текущий продуктовый scope: login, список табелей, редактор табеля, offline-first сохранение, локальная demo-сессия, outbox/pending sync и foundation под интеграцию с 1С.
+
+## Current Tech Stack
+
 - Framework: React 19 + TypeScript + Vite
-- UI/Components: Mantine Alpha (v7+) `@mantine/core`, `@mantine/hooks`, `@mantine/form`, `@mantine/notifications`, `@mantine/schedule`
-- State & Offline: TanStack Query v5 + `idb-keyval` (IndexedDB)
+- Routing: TanStack Router (file-based)
+- Data: TanStack Query v5
+- UI: Tailwind CSS v4 + локальные UI-компоненты в стиле `shadcn/ui`
+- Notifications: `sonner`
+- Offline storage: `idb-keyval` (IndexedDB)
 - PWA: `vite-plugin-pwa`
-- Testing: Vitest + React Testing Library (RTL)
-- Linting/Formatting: ESLint (Flat Config) + Prettier + TypeScript Strict Mode
+- Testing: Vitest + React Testing Library
+- Drag and drop: `@dnd-kit/*`
 
-## Documentation & API Reference (CRITICAL)
-В проекте используются новые версии библиотек. Базовые знания модели могут быть устаревшими. 
-ОБЯЗАТЕЛЬНО используй актуальную документацию в формате для LLM:
-- Mantine Alpha (v9+): https://alpha.mantine.dev/llms.txt
-- TanStack Query v5: https://tanstack.com/llms.txt
+## Documentation & API Reference
 
-# React 19 & Testing Best Practices
-1. **React 19 Hooks:** Используй новые хуки `use`, `useActionState` (вместо `useFormState`), `useFormStatus` для форм, где это уместно. Не используй старые хаки с `useEffect` для получения данных, если можно использовать TanStack Query.
-2. **Refs:** В React 19 `ref` теперь передается как обычный пропс (`<div ref={ref}>`), больше не нужно использовать `forwardRef`! Обязательно используй этот паттерн.
-3. **Context:** В React 19 вместо `<Context.Provider>` можно использовать просто `<Context>`.
-4. **Тестирование (Testing Library):**
-   - Всегда используй `userEvent.setup()` для взаимодействия с UI (клики, ввод).
-   - Никогда не тестируй внутренний стейт (не проверяй вызовы `setState`), тестируй только то, что видит пользователь на экране (через `screen.getByRole` или `screen.getByText`).
-   - Используй `waitFor` только для реальных асинхронных операций.
+При работе с нестабильными или быстро меняющимися библиотеками сначала сверяйся с актуальной документацией.
+
+Полезные источники:
+
+- TanStack: https://tanstack.com/llms.txt
+- TanStack Router docs: https://tanstack.com/router/latest/docs/framework/react/overview
+- TanStack Query docs: https://tanstack.com/query/latest/docs/framework/react/overview
+- shadcn/ui docs: https://ui.shadcn.com/docs
+- vite-plugin-pwa docs: https://vite-pwa-org.netlify.app/
 
 ## Build & Dev Commands
-- `npm install` - установка зависимостей
-- `npm run dev` - запуск dev-сервера
-- `npm run build` - продакшн сборка (включая генерацию Service Worker)
-- `npm run lint` - запуск ESLint (обязательно запускай после создания новых файлов)
-- `npm run lint:fix` - автоматическое исправление ошибок ESLint и Prettier
-- `npm run test` - запуск тестов Vitest
-- `npm run test:ui` - запуск тестов с UI интерфейсом (для отладки)
 
-## Development & Architecture Rules
+- `npm install`
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
+- `npm run lint`
+- `npm run lint:fix`
+- `npm run test`
+- `npm run test:ui`
 
-### 1. Архитектура и Структура папок
-- `/src/api` - Mock API и типы (позже заменим на реальные запросы к 1С).
-- `/src/hooks` - Кастомные хуки (бизнес-логика).
-- `/src/components` - Переиспользуемые UI компоненты.
-- `/src/pages` - Экраны приложения (Список табелей, Календарь расписания, Редактор табеля).
-- `/src/store` - Настройки TanStack Query, IndexedDB адаптер для кэша.
-- Строго разделяй UI (Mantine компоненты) и бизнес-логику (пересчет времени, синхронизация).
+## Architecture Rules
 
-### 2. Управление состоянием и Offline-First
-- НЕ используй Redux или Zustand для серверных данных. Вся работа с данными табелей и задач — СТРОГО через TanStack Query (`useQuery`, `useMutation`).
-- Используй `PersistQueryClientProvider` для кэширования запросов и мутаций в IndexedDB.
-- Всегда реализуй Optimistic Updates при сохранении или изменении табеля.
-- Обязательно обрабатывай ошибку 409 (Conflict) в мутациях для показа модального окна разрешения коллизий (пользователь решает: перезаписать сервер или обновить локальные данные).
+### 1. Routing
 
-### 3. Формы и Логика пересчета (Core Logic)
-- Логика каскадного пересчета времени (`startTime`, `endTime`, `duration`) при изменении или drag-and-drop строк табеля должна быть вынесена в отдельный чистый хук `useTimesheetCalculator`.
-- Эта логика не должна зависеть от UI компонентов и должна принимать/возвращать чистые массивы объектов `TimesheetRow`.
+- Используй `TanStack Router` routes из `src/routes`
+- Для защищенных страниц полагайся на route guards и auth context
+- Для тяжелых экранов предпочитай lazy loading
+- Для фильтров и shareable UI state используй typed search params
 
-### 4. Тестирование (Vitest)
-- Любая сложная бизнес-логика должна покрываться тестами ДО внедрения в UI (TDD подход).
-- Обязательно напиши unit-тесты для `useTimesheetCalculator`: проверь добавление строки, изменение `duration` (должно сдвигать `endTime` и `startTime` следующих строк), удаление строки, сортировку.
-- Пиши интеграционные тесты для компонента формы табеля с помощью React Testing Library.
+### 2. Data access
 
-### 5. Code Style & Linting
-- Используй TypeScript в Strict Mode. Никаких `any`. Всегда объявляй интерфейсы для API ответов и пропсов компонентов.
-- Используй функциональные компоненты и хуки React 19.
-- Для стилизации используй ТОЛЬКО возможности Mantine (props, `sx` если доступно, или CSS modules). Никакого inline-style хардкода.
-- После написания кода запускай `npm run lint`. Если есть ошибки — исправь их самостоятельно перед тем, как рапортовать о завершении задачи.
+- Не читай и не пиши табели напрямую из компонентов
+- UI должен работать через hooks, query options и `AppRepository`
+- Весь async data flow идет через `TanStack Query`
+- Не добавляй Redux/Zustand для серверных данных
 
-### 6. Взаимодействие с пользователем (Mantine)
-- Широко используй `@mantine/notifications` для обратной связи (успешное сохранение, работа в offline-режиме, ошибки).
-- Интерфейс должен быть Responsive: проверяй, как таблицы и календарь (`@mantine/schedule`) выглядят на мобильном (используй `useMediaQuery`).
+### 3. Offline-first
+
+- Локальное хранилище сейчас идет через IndexedDB
+- Сохранения табелей должны попадать в outbox и помечаться как `pending_sync`
+- Любая будущая интеграция с 1С должна идти через transport/repository abstraction
+- Не вшивай HTTP-логику 1С в экранные компоненты
+
+### 4. Auth
+
+- Основа уже заложена под password + token flow
+- Используй `authService`, `AuthProvider` и transport factory
+- Сейчас режимы auth: `demo|onec`
+- Не делай прямую зависимость UI от конкретной auth-реализации
+
+### 5. UI
+
+- Сохраняй текущий визуальный язык приложения
+- Используй существующие utility classes, а не случайный inline style
+- Для пользовательской обратной связи используй `sonner`
+- Calendar view не возвращай без отдельного product decision
+
+### 6. Testing
+
+- Любую нетривиальную бизнес-логику покрывай тестами
+- Для UI используй React Testing Library и `userEvent.setup()`
+- Тестируй поведение пользователя, а не внутренний state
+
+## Product Constraints
+
+- Приложение пока single-user demo workspace
+- Разделение ролей `admin/manager/user` еще не реализовано
+- Demo login принимает любую непустую пару логин/пароль
+- На форме по умолчанию показываются `demo.user` / `demo`
+
+## Backend Integration Direction
+
+Текущий план интеграции с 1С:
+
+1. `OneCAuthTransport` для login/refresh
+2. user profile и роли
+3. чтение задач и табелей
+4. save/sync contract и versioning
+5. conflict handling
+6. фоновая синхронизация

@@ -1,69 +1,45 @@
-# Project Context: Offline-first PWA "Проектные табели" (Timesheets)
-Это frontend-приложение для учета рабочего времени. Основная фича: offline-first работа, автоматический пересчет времени в строках табеля, разрешение коллизий при синхронизации с REST API (в будущем 1С, сейчас Mock API).
+# Проектные табели: рабочий контекст
 
-## Tech Stack
-- Framework: React 19 + TypeScript + Vite
-- UI/Components: Mantine Alpha (v7+) `@mantine/core`, `@mantine/hooks`, `@mantine/form`, `@mantine/notifications`, `@mantine/schedule`
-- State & Offline: TanStack Query v5 + `idb-keyval` (IndexedDB)
-- PWA: `vite-plugin-pwa`
-- Testing: Vitest + React Testing Library (RTL)
-- Linting/Formatting: ESLint (Flat Config) + Prettier + TypeScript Strict Mode
+## Кратко
 
-## Documentation & API Reference (CRITICAL)
-В проекте используются новые версии библиотек. Базовые знания модели могут быть устаревшими. 
-ОБЯЗАТЕЛЬНО используй актуальную документацию в формате для LLM:
-- Mantine Alpha (v9+): https://alpha.mantine.dev/llms.txt
-- TanStack Query v5: https://tanstack.com/llms.txt
+Это offline-first PWA для учета рабочего времени. Приложение уже переведено на современный web shell с TanStack Router, TanStack Query, локальным data layer, демо-авторизацией и IndexedDB persistence. Основной пользовательский сценарий сейчас: login -> список табелей -> редактор табеля.
 
-# React 19 & Testing Best Practices
-1. **React 19 Hooks:** Используй новые хуки `use`, `useActionState` (вместо `useFormState`), `useFormStatus` для форм, где это уместно. Не используй старые хаки с `useEffect` для получения данных, если можно использовать TanStack Query.
-2. **Refs:** В React 19 `ref` теперь передается как обычный пропс (`<div ref={ref}>`), больше не нужно использовать `forwardRef`! Обязательно используй этот паттерн.
-3. **Context:** В React 19 вместо `<Context.Provider>` можно использовать просто `<Context>`.
-4. **Тестирование (Testing Library):**
-   - Всегда используй `userEvent.setup()` для взаимодействия с UI (клики, ввод).
-   - Никогда не тестируй внутренний стейт (не проверяй вызовы `setState`), тестируй только то, что видит пользователь на экране (через `screen.getByRole` или `screen.getByText`).
-   - Используй `waitFor` только для реальных асинхронных операций.
+## Что есть в продукте
 
-## Build & Dev Commands
-- `npm install` - установка зависимостей
-- `npm run dev` - запуск dev-сервера
-- `npm run build` - продакшн сборка (включая генерацию Service Worker)
-- `npm run lint` - запуск ESLint (обязательно запускай после создания новых файлов)
-- `npm run lint:fix` - автоматическое исправление ошибок ESLint и Prettier
-- `npm run test` - запуск тестов Vitest
-- `npm run test:ui` - запуск тестов с UI интерфейсом (для отладки)
+- защищенные маршруты
+- login page с demo auth
+- журнал табелей с фильтрами в URL
+- редактор табеля с offline сохранением
+- sync queue и ручной запуск синхронизации
+- PWA и installable build
 
-## Development & Architecture Rules
+## Что важно помнить
 
-### 1. Архитектура и Структура папок
-- `/src/api` - Mock API и типы (позже заменим на реальные запросы к 1С).
-- `/src/hooks` - Кастомные хуки (бизнес-логика).
-- `/src/components` - Переиспользуемые UI компоненты.
-- `/src/pages` - Экраны приложения (Список табелей, Календарь расписания, Редактор табеля).
-- `/src/store` - Настройки TanStack Query, IndexedDB адаптер для кэша.
-- Строго разделяй UI (Mantine компоненты) и бизнес-логику (пересчет времени, синхронизация).
+- Mantine runtime больше не используется
+- календарный экран убран из основного сценария
+- данные идут через repository layer
+- auth и sync вынесены в transport factories
+- сейчас backend-поведение эмулируется локально, но контракт уже подготавливается к 1С
 
-### 2. Управление состоянием и Offline-First
-- НЕ используй Redux или Zustand для серверных данных. Вся работа с данными табелей и задач — СТРОГО через TanStack Query (`useQuery`, `useMutation`).
-- Используй `PersistQueryClientProvider` для кэширования запросов и мутаций в IndexedDB.
-- Всегда реализуй Optimistic Updates при сохранении или изменении табеля.
-- Обязательно обрабатывай ошибку 409 (Conflict) в мутациях для показа модального окна разрешения коллизий (пользователь решает: перезаписать сервер или обновить локальные данные).
+## Demo auth
 
-### 3. Формы и Логика пересчета (Core Logic)
-- Логика каскадного пересчета времени (`startTime`, `endTime`, `duration`) при изменении или drag-and-drop строк табеля должна быть вынесена в отдельный чистый хук `useTimesheetCalculator`.
-- Эта логика не должна зависеть от UI компонентов и должна принимать/возвращать чистые массивы объектов `TimesheetRow`.
+- дефолтные значения на форме: `demo.user` / `demo`
+- текущая demo-логика принимает любую непустую пару
+- роли пользователей пока не реализованы
 
-### 4. Тестирование (Vitest)
-- Любая сложная бизнес-логика должна покрываться тестами ДО внедрения в UI (TDD подход).
-- Обязательно напиши unit-тесты для `useTimesheetCalculator`: проверь добавление строки, изменение `duration` (должно сдвигать `endTime` и `startTime` следующих строк), удаление строки, сортировку.
-- Пиши интеграционные тесты для компонента формы табеля с помощью React Testing Library.
+## Главные каталоги
 
-### 5. Code Style & Linting
-- Используй TypeScript в Strict Mode. Никаких `any`. Всегда объявляй интерфейсы для API ответов и пропсов компонентов.
-- Используй функциональные компоненты и хуки React 19.
-- Для стилизации используй ТОЛЬКО возможности Mantine (props, `sx` если доступно, или CSS modules). Никакого inline-style хардкода.
-- После написания кода запускай `npm run lint`. Если есть ошибки — исправь их самостоятельно перед тем, как рапортовать о завершении задачи.
+- `src/routes` — маршруты TanStack Router
+- `src/pages` — экранные компоненты
+- `src/features/auth` — auth provider, service, transports
+- `src/data/repositories` — repository layer
+- `src/data/sync` — sync transports и конфиг
+- `src/hooks` — query hooks и UX hooks
 
-### 6. Взаимодействие с пользователем (Mantine)
-- Широко используй `@mantine/notifications` для обратной связи (успешное сохранение, работа в offline-режиме, ошибки).
-- Интерфейс должен быть Responsive: проверяй, как таблицы и календарь (`@mantine/schedule`) выглядят на мобильном (используй `useMediaQuery`).
+## Целевой вектор
+
+Не переписывать UI под 1С-интеграцию, а подключить реальный backend через уже выделенные abstraction layers:
+
+- `OneCAuthTransport`
+- `OneCSyncTransport`
+- будущий remote repository/read adapter
