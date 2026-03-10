@@ -54,6 +54,7 @@ interface RowEditorProps {
   taskGroups: GroupedTasks[];
   updateRow: (index: number, row: Partial<TimesheetRow>) => void;
   requestRemoveRow: (index: number) => void;
+  duplicateRow: (row: TimesheetRow) => void;
   validationErrors: string[];
 }
 
@@ -107,6 +108,9 @@ const getTaskLabel = (taskGroups: GroupedTasks[], taskId: string): string => {
 
   return 'Задача не выбрана';
 };
+
+const getTotalHours = (rows: TimesheetRow[]) =>
+  Math.round((rows.reduce((sum, row) => sum + row.duration, 0) / 60) * 10) / 10;
 
 const TaskSelect = ({
   value,
@@ -332,6 +336,7 @@ const SortableMobileRow = ({
   taskGroups,
   updateRow,
   requestRemoveRow,
+  duplicateRow,
   validationErrors,
 }: RowEditorProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -456,6 +461,15 @@ const SortableMobileRow = ({
             />
           </div>
 
+          <Button
+            onClick={() => duplicateRow(row)}
+            variant="secondary"
+            className="h-10 rounded-xl"
+          >
+            <Copy className="h-4 w-4" />
+            Повторить запись в конец
+          </Button>
+
           {validationErrors.length > 0 && (
             <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
               {validationErrors.join(' • ')}
@@ -523,6 +537,7 @@ export default function TimesheetEditor() {
   );
 
   const invalidRowsCount = rowsWithValidation.filter((row) => row.errors.length > 0).length;
+  const totalHours = useMemo(() => getTotalHours(rows), [rows]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -766,6 +781,25 @@ export default function TimesheetEditor() {
     });
   };
 
+  const handleDuplicateRow = (sourceRow: TimesheetRow) => {
+    const lastRow = rows[rows.length - 1];
+    const startTime = lastRow ? lastRow.endTime : sourceRow.startTime || '09:00';
+
+    addRow({
+      taskId: sourceRow.taskId,
+      date: date || new Date().toISOString().split('T')[0],
+      startTime,
+      endTime: sourceRow.endTime,
+      duration: sourceRow.duration,
+      description: sourceRow.description || '',
+    });
+
+    toast.success('Запись добавлена', {
+      description: 'Новая строка создана по образцу и пересчитана в конце табеля.',
+      duration: 2500,
+    });
+  };
+
   const handleRequestRemoveRow = (index: number) => {
     setRowPendingDelete(index);
   };
@@ -930,6 +964,40 @@ export default function TimesheetEditor() {
         </div>
       </div>
 
+      <div className="xl:hidden">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="app-surface min-w-[140px] rounded-[0.9rem] px-3 py-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+              Записей
+            </p>
+            <p className="mt-1 text-lg font-semibold">{rows.length}</p>
+          </div>
+          <div className="app-surface min-w-[140px] rounded-[0.9rem] px-3 py-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+              Часов
+            </p>
+            <p className="mt-1 text-lg font-semibold">{totalHours} ч</p>
+          </div>
+          <div className="app-surface min-w-[160px] rounded-[0.9rem] px-3 py-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+              Состояние
+            </p>
+            <p
+              className={cn(
+                'mt-1 text-sm font-semibold',
+                invalidRowsCount > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--success-text)]'
+              )}
+            >
+              {invalidRowsCount > 0
+                ? `Проблемных строк: ${invalidRowsCount}`
+                : isDirty
+                  ? 'Есть несохраненные правки'
+                  : 'Все изменения сохранены'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="app-surface rounded-[1rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -978,6 +1046,7 @@ export default function TimesheetEditor() {
                       taskGroups={taskGroups}
                       updateRow={updateRow}
                       requestRemoveRow={handleRequestRemoveRow}
+                      duplicateRow={handleDuplicateRow}
                       validationErrors={validationErrors}
                     />
                       );
@@ -1012,6 +1081,7 @@ export default function TimesheetEditor() {
                           taskGroups={taskGroups}
                           updateRow={updateRow}
                           requestRemoveRow={handleRequestRemoveRow}
+                          duplicateRow={handleDuplicateRow}
                           validationErrors={validationErrors}
                         />
                           );
