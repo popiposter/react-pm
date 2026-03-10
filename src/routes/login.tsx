@@ -1,5 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { LoginPage } from '../pages/LoginPage';
+import { createFileRoute, lazyRouteComponent, redirect } from '@tanstack/react-router';
 import { getDefaultTimesheetsSearch } from './_authenticated/timesheets';
 
 const validateSearch = (search: Record<string, unknown>) => ({
@@ -13,11 +12,5 @@ export const Route = createFileRoute('/login')({
       throw redirect({ to: '/timesheets', search: getDefaultTimesheetsSearch() });
     }
   },
-  component: LoginRoute,
+  component: lazyRouteComponent(() => import('../pages/LoginRoutePage')),
 });
-
-function LoginRoute() {
-  const search = Route.useSearch();
-
-  return <LoginPage redirectTo={search.redirect} />;
-}

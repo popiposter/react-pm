@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { createFileRoute } from '@tanstack/react-router';
+import { lazyRouteComponent } from '@tanstack/react-router';
 import { TimesheetsListSkeleton } from '../../components/pending/TimesheetsListSkeleton';
 import { timesheetsQueryOptions } from '../../data/queryOptions';
-import TimesheetsList from '../../pages/TimesheetsList';
 
 export type TimesheetStatusFilter = 'all' | 'draft' | 'submitted' | 'approved';
 
@@ -40,5 +40,5 @@ export const Route = createFileRoute('/_authenticated/timesheets')({
   }),
   loader: ({ context, deps }) => context.queryClient.ensureQueryData(timesheetsQueryOptions(deps.month)),
   pendingComponent: TimesheetsListSkeleton,
-  component: TimesheetsList,
+  component: lazyRouteComponent(() => import('../../pages/TimesheetsList')),
 });
