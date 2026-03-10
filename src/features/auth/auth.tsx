@@ -136,3 +136,13 @@ export function useAuth(): AuthContextValue {
 }
 
 export type * from './types';
+
+export const getAuthRedirectReason = (
+  logoutReason: LogoutReason | null
+): 'auth-required' | 'expired' | 'refresh-failed' => {
+  if (logoutReason === 'expired' || logoutReason === 'refresh-failed') {
+    return logoutReason;
+  }
+
+  return 'auth-required';
+};

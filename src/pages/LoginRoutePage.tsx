@@ -4,5 +4,5 @@ import { LoginPage } from './LoginPage';
 export default function LoginRoutePage() {
   const search = useSearch({ from: '/login' });
 
-  return <LoginPage redirectTo={search.redirect} />;
+  return <LoginPage redirectTo={search.redirect} reason={search.reason} />;
 }

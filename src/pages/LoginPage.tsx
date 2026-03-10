@@ -1,18 +1,47 @@
 import { useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
-import { ArrowRight, DatabaseZap, LockKeyhole, Sparkles } from 'lucide-react';
+import { AlertTriangle, ArrowRight, DatabaseZap, LockKeyhole, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../features/auth/auth';
 import { useSeedDemoData } from '../hooks/useSeedDemoData';
 import { getDefaultTimesheetsSearch } from '../routes/_authenticated/timesheets';
+import type { LoginRedirectReason } from '../routes/login';
 
-export function LoginPage({ redirectTo }: { redirectTo?: string }) {
+const loginReasonContent: Record<
+  LoginRedirectReason,
+  {
+    title: string;
+    description: string;
+  }
+> = {
+  'auth-required': {
+    title: 'Нужен вход в систему',
+    description: 'Эта часть приложения доступна только после авторизации.',
+  },
+  expired: {
+    title: 'Сессия истекла',
+    description: 'Срок действия access token закончился. Войдите снова, чтобы продолжить работу.',
+  },
+  'refresh-failed': {
+    title: 'Не удалось обновить сессию',
+    description: 'Автоматическое продление входа не сработало. Повторите вход вручную.',
+  },
+};
+
+export function LoginPage({
+  redirectTo,
+  reason,
+}: {
+  redirectTo?: string;
+  reason?: LoginRedirectReason;
+}) {
   const router = useRouter();
   const auth = useAuth();
   const seedDemoData = useSeedDemoData();
   const [username, setUsername] = useState('demo.user');
   const [password, setPassword] = useState('demo');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const reasonContent = reason ? loginReasonContent[reason] : null;
 
   const navigateAfterLogin = async () => {
     if (redirectTo?.startsWith('/')) {
@@ -106,6 +135,22 @@ export function LoginPage({ redirectTo }: { redirectTo?: string }) {
                 password + token flow.
               </p>
             </div>
+
+            {reasonContent && (
+              <div className="mt-6 rounded-[1.5rem] border border-amber-300/20 bg-amber-400/10 p-4 text-amber-50">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-slate-950/30 p-2 text-amber-200">
+                    <AlertTriangle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{reasonContent.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-amber-100/80">
+                      {reasonContent.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
               <label className="block space-y-2">

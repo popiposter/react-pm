@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { NavigationBlocker } from '../components/NavigationBlocker';
 import { RoutePending } from '../components/pending/RoutePending';
 import { syncStatusQueryOptions } from '../data/queryOptions';
+import { getAuthRedirectReason } from '../features/auth/auth';
 
 function ProtectedLayout() {
   return (
@@ -21,6 +22,7 @@ export const Route = createFileRoute('/_authenticated')({
         to: '/login',
         search: {
           redirect: location.href,
+          reason: getAuthRedirectReason(context.auth.logoutReason),
         },
       });
     }

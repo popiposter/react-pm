@@ -85,7 +85,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogout = async () => {
     auth.logout();
-    await navigate({ to: '/login', search: { redirect: undefined } });
+    await navigate({ to: '/login', search: { redirect: undefined, reason: undefined } });
   };
 
   return (
