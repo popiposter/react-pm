@@ -9,12 +9,14 @@ import {
   MoonStar,
   PanelLeftClose,
   PanelLeftOpen,
+  Presentation,
   SunMedium,
   Wifi,
   WifiOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import brandLogo from '../assets/brand-logo.svg';
+import { appConfig } from '../config/app-config';
 import { useAuth } from '../features/auth/auth';
 import { usePwaInstallPrompt } from '../features/pwa/usePwaInstallPrompt';
 import { useTheme, type ThemeMode } from '../features/theme/theme';
@@ -26,13 +28,12 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-const navigation = [
-  {
-    href: '/timesheets',
-    label: 'Табели',
-    icon: FileSpreadsheet,
-  },
-];
+interface NavigationItem {
+  href: '/timesheets' | '/demo';
+  label: string;
+  icon: typeof FileSpreadsheet;
+  description?: string;
+}
 
 const startOfToday = () => new Date().toISOString().split('T')[0];
 
@@ -55,6 +56,27 @@ export default function Layout({ children }: LayoutProps) {
   const runSyncMutation = useRunSync();
   const { canInstall, promptInstall } = usePwaInstallPrompt();
   const isEditorRoute = location.pathname.startsWith('/timesheet/');
+  const navigation: NavigationItem[] = React.useMemo(() => {
+    const items: NavigationItem[] = [
+      {
+        href: '/timesheets',
+        label: 'Табели',
+        icon: FileSpreadsheet,
+        description: 'Рабочие документы',
+      },
+    ];
+
+    if (appConfig.isDemoMode && appConfig.features.demoRoute) {
+      items.push({
+        href: '/demo',
+        label: 'Демо-центр',
+        icon: Presentation,
+        description: 'Сценарии и демо-данные',
+      });
+    }
+
+    return items;
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -273,12 +295,17 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </div>
 
-            <nav className={cn('flex flex-1 flex-col gap-1.5 px-2 py-3', isSidebarCollapsed && 'items-center')}>
+            <nav
+              className={cn(
+                'flex flex-1 flex-col gap-1.5 px-2 py-3',
+                isSidebarCollapsed && 'items-center'
+              )}
+            >
               {navigation.map((item) => {
                 const isActive =
                   (item.href === '/timesheets' && location.pathname === '/') ||
                   location.pathname === item.href ||
-                  (item.href !== '/' && location.pathname.startsWith(item.href));
+                  location.pathname.startsWith(item.href);
                 const Icon = item.icon;
 
                 return (
@@ -287,15 +314,32 @@ export default function Layout({ children }: LayoutProps) {
                     to={item.href}
                     title={item.label}
                     className={cn(
-                      'flex items-center border border-transparent text-[var(--text-soft)] transition',
-                      isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-11 gap-3 px-3.5',
+                      'group relative flex items-center border border-transparent text-[var(--text-soft)] transition',
+                      isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-12 gap-3 px-3.5',
                       isActive
                         ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-transparent hover:border-[var(--panel-border)] hover:bg-[var(--panel-muted)] hover:text-[var(--app-fg)]'
                     )}
                   >
+                    {!isSidebarCollapsed && (
+                      <span
+                        className={cn(
+                          'absolute inset-y-2 left-0 w-0.5 bg-transparent transition',
+                          isActive && 'bg-[var(--accent)]'
+                        )}
+                      />
+                    )}
                     <Icon className="h-5 w-5 shrink-0" />
-                    {!isSidebarCollapsed && <span className="truncate text-sm font-medium">{item.label}</span>}
+                    {!isSidebarCollapsed && (
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{item.label}</span>
+                        {item.description ? (
+                          <span className="block truncate text-[11px] text-[var(--text-muted)] transition group-hover:text-[var(--text-soft)]">
+                            {item.description}
+                          </span>
+                        ) : null}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -491,6 +535,20 @@ export default function Layout({ children }: LayoutProps) {
               <FileSpreadsheet className="h-4.5 w-4.5" />
               <span>Табели</span>
             </Link>
+            {appConfig.isDemoMode && appConfig.features.demoRoute && (
+              <Link
+                to="/demo"
+                className={cn(
+                  'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
+                  location.pathname.startsWith('/demo')
+                    ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                    : 'text-[var(--text-muted)]'
+                )}
+              >
+                <Presentation className="h-4.5 w-4.5" />
+                <span>Демо</span>
+              </Link>
+            )}
             <button
               type="button"
               onClick={() =>
