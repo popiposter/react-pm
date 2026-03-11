@@ -15,7 +15,7 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        'flex h-9 w-full items-center justify-between border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15 disabled:cursor-not-allowed disabled:opacity-60 data-[placeholder]:text-[var(--text-muted)]',
+        'flex h-9 w-full items-center justify-between rounded-none border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15 disabled:cursor-not-allowed disabled:opacity-60 data-[placeholder]:text-[var(--text-muted)]',
         className
       )}
       {...props}
@@ -38,7 +38,7 @@ export function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          'z-50 max-h-80 min-w-[12rem] overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--app-fg)] shadow-[0_24px_80px_-42px_rgba(15,23,42,0.65)]',
+          'z-50 max-h-80 min-w-[12rem] overflow-hidden rounded-none border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--app-fg)] shadow-[0_24px_80px_-42px_rgba(15,23,42,0.65)]',
           className
         )}
         position={position}

@@ -13,7 +13,7 @@ export function DocumentTableToolbar({
   return (
     <div
       className={cn(
-        'border border-[var(--panel-border)] bg-[var(--panel-muted)] p-3.5',
+        'border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_78%,var(--panel-bg-strong)_22%)] p-3.5 shadow-[inset_0_1px_0_0_color-mix(in_oklab,var(--panel-border)_60%,transparent)]',
         className
       )}
     >

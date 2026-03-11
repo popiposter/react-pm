@@ -1545,7 +1545,7 @@ export default function TimesheetEditor() {
               navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
             }
             variant="secondary"
-            className="h-9 rounded-2xl text-[var(--text-soft)]"
+            className="h-9 text-[var(--text-soft)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Назад
@@ -1553,7 +1553,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={handleAddRow}
             variant="secondary"
-            className="h-9 rounded-2xl"
+            className="h-9"
           >
             <Plus className="h-4 w-4" />
             Строка
@@ -1561,7 +1561,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={() => void handleSave(false)}
             disabled={saveMutation.isPending}
-            className="h-9 rounded-2xl"
+            className="h-9"
           >
             <Save className="h-4 w-4" />
             Сохранить

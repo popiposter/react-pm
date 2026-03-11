@@ -257,7 +257,7 @@ export default function TimesheetsList() {
             <div
               key={item.label}
               className={cn(
-                'app-surface border border-[var(--panel-border)] bg-gradient-to-br p-4',
+                'app-surface-strong border border-[var(--panel-border)] bg-gradient-to-br p-4',
                 item.accent
               )}
             >
@@ -268,7 +268,7 @@ export default function TimesheetsList() {
                   </p>
                   <p className="mt-2 text-2xl font-semibold">{item.value}</p>
                 </div>
-                <div className="border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-2.5">
+                <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-bg-strong)_84%,var(--panel-muted)_16%)] p-2.5">
                   <Icon className="h-4.5 w-4.5" />
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function TimesheetsList() {
                       });
                     }}
                     variant="secondary"
-                    className="h-11 w-full rounded-lg"
+                    className="h-11 w-full"
                   >
                     Сбросить
                   </Button>
@@ -504,7 +504,7 @@ export default function TimesheetsList() {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="h-10 rounded-md"
+                    className="h-10"
                     disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
                     onClick={() => {
                       toast.promise(
@@ -525,7 +525,7 @@ export default function TimesheetsList() {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="h-10 rounded-md"
+                    className="h-10"
                     disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
                     onClick={() => {
                       toast.promise(

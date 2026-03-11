@@ -2,6 +2,8 @@
 
 :root {
   color-scheme: dark;
+  --surface-radius: 0px;
+  --control-radius: 0px;
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --mobile-nav-bottom-padding: calc(var(--safe-area-bottom) + 0.875rem);
@@ -106,6 +108,7 @@ textarea {
 
 .app-surface {
   border: 1px solid var(--panel-border);
+  border-radius: var(--surface-radius);
   background: var(--panel-bg);
   color: var(--app-fg);
   backdrop-filter: blur(18px);
@@ -114,6 +117,7 @@ textarea {
 
 .app-surface-strong {
   border: 1px solid var(--panel-border);
+  border-radius: var(--surface-radius);
   background: var(--panel-bg-strong);
   color: var(--app-fg);
   backdrop-filter: blur(18px);

@@ -26,7 +26,7 @@ export function EntityPageHeader({
         <div className="space-y-3">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 space-y-2">
-              <h1 className="text-[1.75rem] font-semibold tracking-tight xl:text-[1.9rem]">
+              <h1 className="text-[1.8rem] font-semibold tracking-tight xl:text-[2rem]">
                 {title}
               </h1>
               {titleMeta}

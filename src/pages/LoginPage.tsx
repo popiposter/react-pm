@@ -179,7 +179,7 @@ export function LoginPage({
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-11 rounded-lg bg-white text-slate-950 hover:bg-slate-100 sm:min-w-40"
+                  className="h-11 bg-white text-slate-950 hover:bg-slate-100 sm:min-w-40"
                 >
                   <ArrowRight className="h-4 w-4" />
                   Войти

@@ -405,7 +405,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       type="button"
                       onClick={() => void handleInstallApp()}
-                      className="hidden h-9 items-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
+                      className="hidden h-9 items-center gap-2 border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
                     >
                       <Download className="h-4 w-4" />
                       Установить
@@ -413,7 +413,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       type="button"
                       onClick={() => void handleInstallApp()}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
+                      className="inline-flex h-9 w-9 items-center justify-center border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
                       aria-label="Установить приложение"
                       title="Установить приложение"
                     >
@@ -425,7 +425,7 @@ export default function Layout({ children }: LayoutProps) {
                   <button
                     type="button"
                     onClick={() => setIsThemeMenuOpen((value) => !value)}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
+                    className="inline-flex h-9 items-center justify-center gap-2 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
                     aria-label="Переключить тему"
                   >
                     <CurrentThemeIcon className="h-4 w-4" />
@@ -469,7 +469,7 @@ export default function Layout({ children }: LayoutProps) {
                         ? 'Сервер доступен'
                         : 'Оффлайн-режим'
                   }
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                 >
                   {isOnline ? (
                     <Wifi
@@ -487,7 +487,7 @@ export default function Layout({ children }: LayoutProps) {
                 <button
                   type="button"
                   onClick={() => void handleLogout()}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                   aria-label="Выйти"
                   title={`Выйти (${auth.session?.user.displayName || 'Пользователь'})`}
                 >
@@ -538,7 +538,7 @@ export default function Layout({ children }: LayoutProps) {
                 q: '',
               }}
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
+                'flex min-w-0 flex-1 flex-col items-center gap-1 border border-transparent px-3 py-1.5 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheets')
                   ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
@@ -551,7 +551,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 to="/demo"
                 className={cn(
-                  'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
+                  'flex min-w-0 flex-1 flex-col items-center gap-1 border border-transparent px-3 py-1.5 text-[11px] font-medium transition',
                   location.pathname.startsWith('/demo')
                     ? 'border border-sky-300/20 bg-sky-400/10 text-sky-200'
                     : 'text-[var(--text-muted)]'
@@ -570,7 +570,7 @@ export default function Layout({ children }: LayoutProps) {
                 })
               }
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
+                'flex min-w-0 flex-1 flex-col items-center gap-1 border border-transparent px-3 py-1.5 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheet/')
                   ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
