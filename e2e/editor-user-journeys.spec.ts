@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   addValidDesktopRow,
   dateDaysAgo,
+  expectEditorScreen,
   openEditorForDateAfterDemoSeed,
   openTodayEditorFromDemo,
   saveTimesheet,
@@ -40,7 +41,7 @@ test('user can cancel leaving a dirty editor', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'У вас есть несохраненные изменения' })).toBeVisible();
   await page.getByRole('button', { name: 'Отмена' }).click();
 
-  await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
+  await expectEditorScreen(page);
   await expect(page.getByText('Не записано').first()).toBeVisible();
 });
 
@@ -99,11 +100,12 @@ test('user can copy an existing timesheet to today', async ({ page }) => {
   const today = todayDate();
 
   await openEditorForDateAfterDemoSeed(page, yesterday);
-  await page.getByRole('button', { name: 'Копировать на сегодня' }).click();
+  await page.getByRole('button', { name: 'Действия с табелем' }).click();
+  await page.getByRole('button', { name: 'Скопировать' }).click();
 
   await expect(page.getByText('Копия создана')).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/timesheet/${today}`));
-  await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
+  await expectEditorScreen(page);
 });
 
 test('offline save shows local-save message and sync can be run later', async ({ page, context }) => {

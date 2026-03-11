@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
-  DragOverlay,
   KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
@@ -16,7 +15,6 @@ import {
 import {
   restrictToFirstScrollableAncestor,
   restrictToVerticalAxis,
-  restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import {
   sortableKeyboardCoordinates,
@@ -116,6 +114,13 @@ const minutesToHours = (minutes: number): string => {
 const createRowId = () =>
   `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+const formatLocalDate = (value = new Date()) => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const userLocale =
   typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'ru-RU';
 
@@ -139,17 +144,6 @@ const getRowValidationErrors = (row: TimesheetRow): string[] => {
   }
 
   return errors;
-};
-
-const getTaskLabel = (taskGroups: GroupedTasks[], taskId: string): string => {
-  for (const group of taskGroups) {
-    const task = group.items.find((item) => item.value === taskId);
-    if (task) {
-      return task.label;
-    }
-  }
-
-  return 'Задача не выбрана';
 };
 
 const getTaskProjectName = (taskLookup: Map<string, Task>, taskId: string) =>
@@ -185,9 +179,6 @@ const normalizeTimeValue = (value: string) => {
 
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
-
-const getTotalHours = (rows: TimesheetRow[]) =>
-  Math.round((rows.reduce((sum, row) => sum + row.duration, 0) / 60) * 10) / 10;
 
 const TaskSelect = ({
   value,
@@ -363,15 +354,13 @@ const DescriptionField = ({
 
 const RowSummaryContent = ({
   row,
-  taskGroups,
   taskLookup,
 }: {
   row: TimesheetRow;
-  taskGroups: GroupedTasks[];
   taskLookup: Map<string, Task>;
 }) => {
-  const taskLabel = getTaskLabel(taskGroups, row.taskId);
   const projectName = getTaskProjectName(taskLookup, row.taskId);
+  const taskLabel = taskLookup.get(row.taskId)?.title || 'Задача не выбрана';
 
   return (
     <>
@@ -395,64 +384,6 @@ const RowSummaryContent = ({
     </>
   );
 };
-
-const MobileDragPreview = ({
-  row,
-  taskGroups,
-  taskLookup,
-}: {
-  row: TimesheetRow;
-  taskGroups: GroupedTasks[];
-  taskLookup: Map<string, Task>;
-}) => (
-  <article className="w-[min(26rem,calc(100vw-2rem))] border border-[var(--accent)] bg-[var(--panel-bg)] shadow-[0_30px_90px_-40px_var(--shadow-color)]">
-    <div className="flex items-start gap-3 px-4 py-3">
-      <div className="mt-7 flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)]">
-        <GripVertical className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <RowSummaryContent row={row} taskGroups={taskGroups} taskLookup={taskLookup} />
-      </div>
-    </div>
-  </article>
-);
-
-const DesktopDragPreview = ({
-  row,
-  taskGroups,
-  taskLookup,
-}: {
-  row: TimesheetRow;
-  taskGroups: GroupedTasks[];
-  taskLookup: Map<string, Task>;
-}) => (
-  <div className="grid min-w-[1100px] grid-cols-[3.25rem_minmax(0,1fr)_8.25rem_8.25rem_7.5rem_minmax(15rem,1fr)_4.5rem] border border-[var(--accent)] bg-[var(--panel-bg)] shadow-[0_34px_96px_-48px_var(--shadow-color)]">
-    <div className="flex items-center justify-center border-r border-[var(--panel-border)] px-1.5 py-3 text-[var(--text-muted)]">
-      <GripVertical className="h-4 w-4" />
-    </div>
-    <div className="border-r border-[var(--panel-border)] px-3 py-3">
-      <div className="space-y-1.5">
-        <p className="truncate text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
-          {getTaskProjectName(taskLookup, row.taskId)}
-        </p>
-        <p className="truncate text-sm font-semibold">{getTaskLabel(taskGroups, row.taskId)}</p>
-      </div>
-    </div>
-    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm font-medium tabular-nums">
-      {formatTimeLabel(row.startTime)}
-    </div>
-    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm font-medium tabular-nums">
-      {formatTimeLabel(row.endTime)}
-    </div>
-    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm font-medium tabular-nums">
-      {minutesToHours(row.duration)} ч
-    </div>
-    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm text-[var(--text-soft)]">
-      {row.description || 'Без описания работ'}
-    </div>
-    <div className="px-3 py-3" />
-  </div>
-);
 
 const SortableDesktopRow = ({
   row,
@@ -586,7 +517,6 @@ const SortableMobileRow = ({
   });
   const [isExpanded, setIsExpanded] = useState(validationErrors.length > 0);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const taskLabel = getTaskLabel(taskGroups, row.taskId);
   const projectName = getTaskProjectName(taskLookup, row.taskId);
   const articleRef = useRef<HTMLElement | null>(null);
   const taskSelectRef = useRef<HTMLSelectElement | null>(null);
@@ -647,15 +577,8 @@ const SortableMobileRow = ({
             aria-label="Закрыть меню действий"
             onClick={() => setIsActionsOpen(false)}
           />
-          <div className="app-surface-strong absolute right-3 top-12 z-20 min-w-56 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150 p-2 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
-            <div className="border-b border-[var(--panel-border)] px-2 pb-2 pt-1">
-              <p className="text-sm font-semibold">{taskLabel}</p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{projectName}</p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">
-                {formatTimeLabel(row.startTime)} - {formatTimeLabel(row.endTime)}, {minutesToHours(row.duration)} ч
-              </p>
-            </div>
-            <div className="mt-2 space-y-1">
+          <div className="app-surface-strong absolute right-2 top-10 z-20 min-w-44 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150 p-2 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
+            <div className="space-y-1">
               <Button
                 onClick={() => {
                   duplicateRow(row);
@@ -666,17 +589,6 @@ const SortableMobileRow = ({
               >
                 <Copy className="h-4 w-4" />
                 Скопировать
-              </Button>
-              <Button
-                onClick={() => {
-                  setIsExpanded((value) => !value);
-                  setIsActionsOpen(false);
-                }}
-                variant="ghost"
-                className="h-10 w-full justify-start"
-              >
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                {isExpanded ? 'Свернуть' : 'Показать детали'}
               </Button>
               <Button
                 onClick={() => {
@@ -700,7 +612,7 @@ const SortableMobileRow = ({
           {...listeners}
           variant="ghost"
           size="icon"
-          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 cursor-grab border border-transparent text-[var(--text-muted)] touch-none active:cursor-grabbing hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
+          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 cursor-grab border border-transparent text-[var(--text-muted)] touch-none active:cursor-grabbing hover:bg-[var(--panel-hover)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -709,7 +621,7 @@ const SortableMobileRow = ({
           onClick={() => setIsActionsOpen(true)}
           variant="ghost"
           size="icon"
-          className="absolute right-1 top-1 z-[1] h-8 w-8 text-[var(--text-muted)] hover:border hover:border-[var(--panel-border)]"
+          className="absolute right-1 top-1 z-[1] h-8 w-8 text-[var(--text-muted)] hover:bg-[var(--panel-hover)]"
           aria-label="Действия со строкой"
         >
           <Ellipsis className="h-4 w-4" />
@@ -719,7 +631,7 @@ const SortableMobileRow = ({
           onClick={() => setIsExpanded((value) => !value)}
           variant="ghost"
           size="icon"
-          className="absolute right-1 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
+          className="absolute right-1 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 rounded-full border border-transparent text-[var(--text-muted)] hover:bg-[var(--panel-hover)]"
           aria-label={isExpanded ? 'Свернуть строку' : 'Развернуть строку'}
         >
           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -733,7 +645,7 @@ const SortableMobileRow = ({
           <div className="min-w-0">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <RowSummaryContent row={row} taskGroups={taskGroups} taskLookup={taskLookup} />
+                <RowSummaryContent row={row} taskLookup={taskLookup} />
               </div>
               {validationErrors.length > 0 && (
                 <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-[var(--warning-text)]">
@@ -746,8 +658,8 @@ const SortableMobileRow = ({
       </div>
 
       {isExpanded && (
-        <div className="border-t border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
-          <div className="space-y-4 border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-3">
+        <div className="border-t border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 pb-3 pt-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <div className="space-y-4">
             <div className="space-y-1">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 Проект
@@ -775,7 +687,7 @@ const SortableMobileRow = ({
                 <TimeField
                   value={row.startTime}
                   onChange={(value) => updateRow(index, { startTime: value })}
-                  className="bg-[var(--app-bg)]"
+                  className="bg-[var(--panel-muted)]"
                 />
               </div>
               <div className="space-y-2">
@@ -785,7 +697,7 @@ const SortableMobileRow = ({
                 <TimeField
                   value={row.endTime}
                   onChange={(value) => updateRow(index, { endTime: value })}
-                  className="bg-[var(--app-bg)]"
+                  className="bg-[var(--panel-muted)]"
                 />
               </div>
             </div>
@@ -798,7 +710,7 @@ const SortableMobileRow = ({
                 <DurationField
                   value={row.duration}
                   onChange={(value) => updateRow(index, { duration: value })}
-                  className="[&_input]:bg-[var(--app-bg)]"
+                  className="[&_input]:bg-[var(--panel-muted)]"
                 />
               </div>
               <div className="space-y-2" />
@@ -812,7 +724,7 @@ const SortableMobileRow = ({
                 value={row.description || ''}
                 onChange={(value) => updateRow(index, { description: value })}
                 rows={3}
-                className="bg-[var(--app-bg)]"
+                className="bg-[var(--panel-muted)]"
               />
             </div>
 
@@ -843,6 +755,7 @@ export default function TimesheetEditor() {
   const [conflictModalOpened, setConflictModalOpened] = useState(false);
   const [conflictError, setConflictError] = useState<{ message: string } | null>(null);
   const [rowPendingDelete, setRowPendingDelete] = useState<number | null>(null);
+  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
   const [freshMobileRowId, setFreshMobileRowId] = useState<string | null>(null);
@@ -886,14 +799,9 @@ export default function TimesheetEditor() {
   );
 
   const invalidRowsCount = rowsWithValidation.filter((row) => row.errors.length > 0).length;
-  const totalHours = useMemo(() => getTotalHours(rows), [rows]);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [overRowId, setOverRowId] = useState<string | null>(null);
   const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
-  const activeRow = useMemo(
-    () => (activeRowId ? rows.find((row) => row.id === activeRowId) ?? null : null),
-    [activeRowId, rows]
-  );
   const activeRowIndex = activeRowId ? rowIds.indexOf(activeRowId) : -1;
   const overRowIndex = overRowId ? rowIds.indexOf(overRowId) : -1;
   const dndSensors = useSensors(
@@ -904,8 +812,8 @@ export default function TimesheetEditor() {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 140,
-        tolerance: 8,
+        delay: 220,
+        tolerance: 14,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -1079,7 +987,7 @@ export default function TimesheetEditor() {
   const handleCopy = async () => {
     if (!timesheet) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate();
     const copiedRows = recalculateAll().map((row) => ({
       ...row,
       id: createRowId(),
@@ -1173,7 +1081,7 @@ export default function TimesheetEditor() {
     addRow({
       id: rowId,
       taskId: '',
-      date: date || new Date().toISOString().split('T')[0],
+      date: date || formatLocalDate(),
       startTime,
       endTime: '10:00',
       duration: 60,
@@ -1190,7 +1098,7 @@ export default function TimesheetEditor() {
     addRow({
       id: rowId,
       taskId: sourceRow.taskId,
-      date: date || new Date().toISOString().split('T')[0],
+      date: date || formatLocalDate(),
       startTime,
       endTime: sourceRow.endTime,
       duration: sourceRow.duration,
@@ -1309,14 +1217,7 @@ export default function TimesheetEditor() {
             )}
           </div>
         }
-        title={`Табель за ${formatEditorDate(date)}`}
-        titleMeta={
-          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-soft)]">
-            <span>Строк: {rows.length}</span>
-            <span className="text-[var(--text-muted)]">•</span>
-            <span>Часов: {totalHours}</span>
-          </div>
-        }
+        title={formatEditorDate(date).replace(/\s+г\.$/, '')}
         actionsClassName="xl:w-full"
         actions={
           <DocumentActionBar className="xl:w-full xl:justify-between">
@@ -1331,10 +1232,32 @@ export default function TimesheetEditor() {
                 <ArrowLeft className="h-4 w-4" />
                 К списку
               </Button>
-              <Button onClick={handleCopy} variant="secondary" className="w-full sm:w-auto">
-                <Copy className="h-4 w-4" />
-                Копировать на сегодня
-              </Button>
+              <div className="relative">
+                <Button
+                  onClick={() => setIsHeaderMenuOpen((value) => !value)}
+                  variant="secondary"
+                  size="icon"
+                  className="h-10 w-10"
+                  aria-label="Действия с табелем"
+                >
+                  <Ellipsis className="h-4 w-4" />
+                </Button>
+                {isHeaderMenuOpen && (
+                  <div className="app-surface-strong absolute left-0 top-12 z-20 min-w-44 p-2 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
+                    <Button
+                      onClick={() => {
+                        void handleCopy();
+                        setIsHeaderMenuOpen(false);
+                      }}
+                      variant="ghost"
+                      className="h-10 w-full justify-start"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Скопировать
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="hidden flex-wrap items-center gap-2.5 xl:flex">
               <Button
@@ -1356,40 +1279,6 @@ export default function TimesheetEditor() {
         }
       />
 
-      <div className="xl:hidden">
-        <div className="grid grid-cols-3 gap-2">
-          <div className="app-surface px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Записей
-            </p>
-            <p className="mt-1 text-base font-semibold">{rows.length}</p>
-          </div>
-          <div className="app-surface px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Часов
-            </p>
-            <p className="mt-1 text-base font-semibold">{totalHours} ч</p>
-          </div>
-          <div className="app-surface px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Состояние
-            </p>
-            <p
-              className={cn(
-                'mt-1 text-xs font-semibold leading-5',
-                invalidRowsCount > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--success-text)]'
-              )}
-            >
-              {invalidRowsCount > 0
-                ? `Проблемных строк: ${invalidRowsCount}`
-                : isDirty
-                  ? 'Есть несохраненные правки'
-                  : 'Все изменения сохранены'}
-            </p>
-          </div>
-        </div>
-      </div>
-
       <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -1405,14 +1294,11 @@ export default function TimesheetEditor() {
               <Plus className="h-4 w-4" />
               Добавить строку
             </Button>
-            <span className="text-sm text-[var(--text-muted)]">
-              Строк: {rows.length} Часов: {totalHours}
-            </span>
           </div>
         </div>
 
         <DndContext
-          collisionDetection={closestCenter}
+          collisionDetection={closestCorners}
           sensors={dndSensors}
           modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
           measuring={{
@@ -1516,33 +1402,6 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
-          <DragOverlay
-            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
-            zIndex={60}
-            dropAnimation={{
-              duration: 180,
-              easing: 'cubic-bezier(0.18, 0.67, 0.28, 1)',
-            }}
-          >
-            {activeRow ? (
-              <div className="pointer-events-none">
-                <div className="xl:hidden">
-                  <MobileDragPreview
-                    row={activeRow}
-                    taskGroups={taskGroups}
-                    taskLookup={taskLookup}
-                  />
-                </div>
-                <div className="hidden xl:block">
-                  <DesktopDragPreview
-                    row={activeRow}
-                    taskGroups={taskGroups}
-                    taskLookup={taskLookup}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </DragOverlay>
         </DndContext>
       </div>
 

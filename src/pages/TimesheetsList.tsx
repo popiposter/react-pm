@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { appConfig } from '../config/app-config';
-import { getCurrentMonthPeriod } from '../features/documents/listSearch';
 import { useBulkUpdateTimesheets } from '../hooks/useBulkUpdateTimesheets';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
@@ -58,6 +57,11 @@ const shiftPeriod = (period: string, delta: number) => {
   const [year, monthNumber] = period.split('-').map(Number);
   const nextDate = new Date(year, monthNumber - 1 + delta, 1);
   return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const getLocalMonthPeriod = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 };
 
 const MONTH_LABELS = Array.from({ length: 12 }, (_, monthIndex) =>
@@ -112,11 +116,11 @@ function PeriodPicker({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+      <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
         <button
           type="button"
           onClick={() => onChange(shiftPeriod(period, -1))}
-          className="inline-flex h-full items-center justify-center border-r border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          className="relative z-[1] inline-flex h-full items-center justify-center border-r border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Предыдущий период"
         >
           <ArrowRight className="h-4 w-4 rotate-180" />
@@ -124,7 +128,7 @@ function PeriodPicker({
         <button
           type="button"
           onClick={() => setIsOpen((value) => !value)}
-          className="inline-flex min-w-0 items-center justify-center gap-2 px-3 text-sm font-medium text-[var(--app-fg)] transition hover:bg-[var(--panel-hover)]"
+          className="relative z-[1] inline-flex min-w-0 items-center justify-center gap-2 bg-[var(--panel-bg-strong)] px-3 text-sm font-medium text-[var(--app-fg)] transition hover:bg-[var(--panel-hover)]"
           aria-expanded={isOpen}
           aria-label={`Выбрать период, сейчас ${formatMonthLabel(period)}`}
         >
@@ -136,7 +140,7 @@ function PeriodPicker({
         <button
           type="button"
           onClick={() => onChange(shiftPeriod(period, 1))}
-          className="inline-flex h-full items-center justify-center border-l border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          className="relative z-[1] inline-flex h-full items-center justify-center border-l border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Следующий период"
         >
           <ArrowRight className="h-4 w-4" />
@@ -200,7 +204,7 @@ function PeriodPicker({
             <button
               type="button"
               onClick={() => {
-                onChange(getCurrentMonthPeriod());
+                onChange(getLocalMonthPeriod());
                 setIsOpen(false);
               }}
               className="inline-flex items-center gap-2 text-sm text-[var(--accent)] transition hover:text-[var(--accent-strong)]"
@@ -416,7 +420,7 @@ export default function TimesheetsList() {
               <Button
                 onClick={() => {
                   updateSearch({
-                    period: getCurrentMonthPeriod(),
+                    period: getLocalMonthPeriod(),
                     status: 'all',
                     q: '',
                   });
@@ -563,7 +567,7 @@ export default function TimesheetsList() {
                   <Button
                     onClick={() => {
                       updateSearch({
-                        period: getCurrentMonthPeriod(),
+                         period: getLocalMonthPeriod(),
                         status: 'all',
                         q: '',
                       });

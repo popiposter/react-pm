@@ -1,12 +1,28 @@
 import { expect, type Page } from '@playwright/test';
 
-export const todayDate = () => new Date().toISOString().split('T')[0];
+const formatLocalDate = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const todayDate = () => formatLocalDate();
 
 export const dateDaysAgo = (daysAgo: number) => {
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
-  return date.toISOString().split('T')[0];
+  return formatLocalDate(date);
 };
+
+export async function expectEditorScreen(page: Page) {
+  await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible({
+    timeout: 15000,
+  });
+  await expect(
+    page.getByRole('main').getByRole('heading', { name: 'Рабочие записи за день' })
+  ).toBeVisible({ timeout: 15000 });
+}
 
 export async function loginAsDemoUser(page: Page) {
   await page.goto('/login');
@@ -36,6 +52,12 @@ export async function setUiShellState(
       );
     }
   }, options);
+}
+
+export async function hideToastsForVisuals(page: Page) {
+  await page.addStyleTag({
+    content: '[data-sonner-toaster]{display:none !important;}',
+  });
 }
 
 export async function openLoginPageForVisuals(
@@ -69,12 +91,7 @@ export async function openTodayEditorFromDemo(page: Page) {
   await page.getByRole('button', { name: 'Войти' }).click();
 
   await expect(page).toHaveURL(/\/timesheet\//);
-  await expect(
-    page.getByRole('main').getByRole('heading', { name: /Табель за/i })
-  ).toBeVisible({ timeout: 15000 });
-  await expect(
-    page.getByRole('main').getByRole('heading', { name: 'Рабочие записи за день' })
-  ).toBeVisible({ timeout: 15000 });
+  await expectEditorScreen(page);
 }
 
 export async function openDemoCenterForVisuals(
@@ -87,6 +104,7 @@ export async function openDemoCenterForVisuals(
   await setUiShellState(page, options);
   await page.goto('/demo');
   await expect(page.getByRole('heading', { name: /Подготовить демонстрацию/i })).toBeVisible();
+  await hideToastsForVisuals(page);
 }
 
 export async function openJournalForVisuals(
@@ -97,8 +115,10 @@ export async function openJournalForVisuals(
   } = {}
 ) {
   await setUiShellState(page, options);
+  await seedDemoDataFromDemo(page);
   await loginAsDemoUser(page);
   await expect(page.getByRole('heading', { name: /^Табели за/i })).toBeVisible();
+  await hideToastsForVisuals(page);
 }
 
 export async function openTodayEditorForVisuals(
@@ -111,6 +131,7 @@ export async function openTodayEditorForVisuals(
   await setUiShellState(page, options);
   await openTodayEditorFromDemo(page);
   await expect(page.getByRole('button', { name: 'Добавить строку' })).toBeVisible();
+  await hideToastsForVisuals(page);
 }
 
 export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {
@@ -123,9 +144,7 @@ export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {
   await page.getByRole('button', { name: 'Войти' }).click();
 
   await expect(page).toHaveURL(new RegExp(`/timesheet/${date}`));
-  await expect(
-    page.getByRole('main').getByRole('heading', { name: /Табель за/i })
-  ).toBeVisible({ timeout: 15000 });
+  await expectEditorScreen(page);
 }
 
 export async function addValidDesktopRow(

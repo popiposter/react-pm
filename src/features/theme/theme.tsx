@@ -14,8 +14,8 @@ export type ResolvedTheme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'timesheets:theme-mode';
 const THEME_CHROME_COLORS: Record<ResolvedTheme, string> = {
-  dark: '#0b1320',
-  light: '#f8fbff',
+  dark: '#09111f',
+  light: '#f4f7fb',
 };
 
 interface ThemeContextValue {

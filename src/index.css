@@ -7,9 +7,9 @@
   --brand-mark-color: #f8fbff;
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --mobile-nav-bottom-padding: calc(var(--safe-area-bottom) + 0.875rem);
-  --mobile-nav-content-offset: calc(var(--safe-area-bottom) + 5.25rem);
-  --mobile-editor-bar-offset: calc(var(--safe-area-bottom) + 4.75rem);
+  --mobile-nav-bottom-padding: calc(var(--safe-area-bottom) + 0.5rem);
+  --mobile-nav-content-offset: calc(var(--safe-area-bottom) + 4.5rem);
+  --mobile-editor-bar-offset: calc(var(--safe-area-bottom) + 4.35rem);
   --app-bg:
     radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 26%),
     radial-gradient(circle at bottom right, rgba(45, 212, 191, 0.09), transparent 22%),
@@ -83,6 +83,7 @@ body {
     'Segoe UI',
     sans-serif;
   background: var(--app-bg);
+  background-color: color-mix(in oklab, var(--panel-bg-strong) 82%, black 18%);
   color: var(--app-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

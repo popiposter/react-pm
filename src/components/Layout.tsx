@@ -36,7 +36,14 @@ interface NavigationItem {
   tone?: 'primary' | 'demo';
 }
 
-const startOfToday = () => new Date().toISOString().split('T')[0];
+const formatLocalDate = (value = new Date()) => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const startOfToday = () => formatLocalDate();
 const brandMarkMask = {
   maskImage: `url(${brandLogo})`,
   WebkitMaskImage: `url(${brandLogo})`,
@@ -55,7 +62,7 @@ export default function Layout({ children }: LayoutProps) {
 
     return window.localStorage.getItem('timesheets:sidebar-collapsed') === 'true';
   });
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
   const { data: syncStatus } = useSyncStatus();
   const runSyncMutation = useRunSync();
@@ -244,10 +251,6 @@ export default function Layout({ children }: LayoutProps) {
     { value: 'auto', label: 'Авто', icon: MonitorCog },
   ];
 
-  const currentThemeOption =
-    themeOptions.find((option) => option.value === themeMode) ?? themeOptions[2];
-  const CurrentThemeIcon = currentThemeOption.icon;
-
   return (
     <div className="min-h-screen text-[var(--app-fg)]">
       <div className="pointer-events-none absolute inset-0" />
@@ -283,7 +286,7 @@ export default function Layout({ children }: LayoutProps) {
                 </button>
               ) : (
                 <>
-                  <div className="flex h-10 w-10 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] shadow-[0_12px_32px_-18px_rgba(0,0,0,0.45)]">
+                  <div className="flex h-10 w-10 items-center justify-center">
                     <span
                       aria-hidden="true"
                       className="brand-mark h-6 w-6"
@@ -387,13 +390,13 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex min-h-screen flex-1 flex-col">
           <header
             className={cn(
-              'app-surface-strong sticky top-0 z-40 border-b transition-transform duration-300 ease-out',
+              'app-surface-strong sticky top-0 z-40 border-b pt-[var(--safe-area-top)] transition-transform duration-300 ease-out xl:pt-0',
               isMobileChromeHidden && '-translate-y-full xl:translate-y-0'
             )}
           >
             <div className="flex h-16 w-full items-center justify-between px-4 sm:px-5 xl:px-8 2xl:px-10">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] xl:hidden">
+                <div className="flex h-9 w-9 items-center justify-center xl:hidden">
                   <span
                     aria-hidden="true"
                     className="brand-mark h-4.5 w-4.5"
@@ -425,44 +428,6 @@ export default function Layout({ children }: LayoutProps) {
                     </button>
                   </>
                 )}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsThemeMenuOpen((value) => !value)}
-                    className="inline-flex h-9 items-center justify-center gap-2 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
-                    aria-label="Переключить тему"
-                  >
-                    <CurrentThemeIcon className="h-4 w-4" />
-                  </button>
-                  {isThemeMenuOpen && (
-                    <div className="app-surface-strong absolute right-0 top-12 z-50 min-w-44 p-1 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
-                      {themeOptions.map((option) => {
-                        const Icon = option.icon;
-                        const isActive = option.value === themeMode;
-
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              setThemeMode(option.value);
-                              setIsThemeMenuOpen(false);
-                            }}
-                            className={cn(
-                              'flex w-full items-center gap-3 px-3 py-2 text-sm transition',
-                              isActive
-                                ? 'bg-[var(--accent-soft)] text-[var(--app-fg)]'
-                                : 'text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
-                            )}
-                          >
-                            <Icon className="h-4 w-4" />
-                            <span>{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
                 <button
                   type="button"
                   onClick={() => void (syncStatus?.pendingCount ? handleRunSync() : undefined)}
@@ -488,17 +453,61 @@ export default function Layout({ children }: LayoutProps) {
                     <WifiOff className="h-4 w-4 text-[var(--warning-text)]" />
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void handleLogout()}
-                  className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
-                  aria-label="Выйти"
-                  title={`Выйти (${auth.session?.user.displayName || 'Пользователь'})`}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950">
-                  {userInitials || 'П'}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsAccountMenuOpen((value) => !value)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-300 to-cyan-500 text-sm font-semibold text-slate-950"
+                    aria-label="Меню пользователя"
+                    title={auth.session?.user.displayName || 'Пользователь'}
+                  >
+                    {userInitials || 'П'}
+                  </button>
+                  {isAccountMenuOpen && (
+                    <div className="app-surface-strong absolute right-0 top-12 z-50 min-w-48 p-1 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
+                      <div className="border-b border-[var(--panel-border)] px-3 py-2">
+                        <p className="text-sm font-medium">
+                          {auth.session?.user.displayName || 'Пользователь'}
+                        </p>
+                      </div>
+                      <div className="py-1">
+                        {themeOptions.map((option) => {
+                          const Icon = option.icon;
+                          const isActive = option.value === themeMode;
+
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => {
+                                setThemeMode(option.value);
+                                setIsAccountMenuOpen(false);
+                              }}
+                              className={cn(
+                                'flex w-full items-center gap-3 px-3 py-2 text-sm transition',
+                                isActive
+                                  ? 'bg-[var(--accent-soft)] text-[var(--app-fg)]'
+                                  : 'text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              <span>{option.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="border-t border-[var(--panel-border)] pt-1">
+                        <button
+                          type="button"
+                          onClick={() => void handleLogout()}
+                          className="flex w-full items-center gap-3 px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Выйти</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -529,60 +538,75 @@ export default function Layout({ children }: LayoutProps) {
       {!isEditorRoute && (
         <nav
           className={cn(
-            'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/95 px-4 pb-[var(--mobile-nav-bottom-padding)] pt-2.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
+            'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/96 px-2.5 pb-[var(--mobile-nav-bottom-padding)] pt-0.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
             isMobileChromeHidden && 'translate-y-full'
           )}
         >
-          <div className="mx-auto flex max-w-md items-center justify-between gap-2.5">
+          <div className="mx-auto grid max-w-md grid-cols-3 items-center gap-0.5">
             <Link
               to="/timesheets"
               search={{
-                period: new Date().toISOString().slice(0, 7),
+                period: startOfToday().slice(0, 7),
                 status: 'all',
                 q: '',
               }}
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center gap-1 border border-transparent px-3 py-1.5 text-[11px] font-medium transition',
+                'relative flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheets')
-                  ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                  ? 'text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
               )}
             >
+              <span
+                className={cn(
+                  'absolute inset-x-7 top-0 h-0.5 bg-transparent transition',
+                  location.pathname.startsWith('/timesheets') && 'bg-[var(--accent)]'
+                )}
+              />
               <FileSpreadsheet className="h-4.5 w-4.5" />
               <span>Табели</span>
             </Link>
-            {appConfig.isDemoMode && appConfig.features.demoRoute && (
-              <Link
-                to="/demo"
-                className={cn(
-                  'flex min-w-0 flex-1 flex-col items-center gap-1 border border-transparent px-3 py-1.5 text-[11px] font-medium transition',
-                  location.pathname.startsWith('/demo')
-                    ? 'border border-sky-300/20 bg-sky-400/10 text-sky-200'
-                    : 'text-[var(--text-muted)]'
-                )}
-              >
-                <Presentation className="h-4.5 w-4.5" />
-                <span>Демо</span>
-              </Link>
-            )}
-            <button
-              type="button"
-              onClick={() =>
-                void navigate({
-                  to: '/timesheet/$date',
-                  params: { date: startOfToday() },
-                })
-              }
+            <Link
+              to="/timesheet/$date"
+              params={{ date: startOfToday() }}
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center gap-1 border border-transparent px-3 py-1.5 text-[11px] font-medium transition',
+                'relative flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheet/')
-                  ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                  ? 'text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
               )}
             >
+              <span
+                className={cn(
+                  'absolute inset-x-7 top-0 h-0.5 bg-transparent transition',
+                  location.pathname.startsWith('/timesheet/') && 'bg-[var(--accent)]'
+                )}
+              />
               <FolderClock className="h-4.5 w-4.5" />
               <span>Сегодня</span>
-            </button>
+            </Link>
+            {appConfig.isDemoMode && appConfig.features.demoRoute ? (
+              <Link
+                to="/demo"
+                className={cn(
+                  'relative flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium transition',
+                  location.pathname.startsWith('/demo')
+                    ? 'text-sky-200'
+                    : 'text-[var(--text-muted)]'
+                )}
+              >
+                <span
+                  className={cn(
+                      'absolute inset-x-7 top-0 h-0.5 bg-transparent transition',
+                    location.pathname.startsWith('/demo') && 'bg-sky-300'
+                  )}
+                />
+                <Presentation className="h-4.5 w-4.5" />
+                <span>Демо</span>
+              </Link>
+            ) : (
+              <span />
+            )}
           </div>
         </nav>
       )}
