@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   ArrowRight,
   CalendarRange,
   CheckCheck,
+  ChevronDown,
   CircleCheckBig,
   Clock3,
   FileSearch,
@@ -57,6 +58,162 @@ const shiftPeriod = (period: string, delta: number) => {
   const nextDate = new Date(year, monthNumber - 1 + delta, 1);
   return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
 };
+
+const MONTH_LABELS = Array.from({ length: 12 }, (_, monthIndex) =>
+  new Date(2026, monthIndex, 1).toLocaleDateString('ru-RU', {
+    month: 'short',
+  })
+    .replace('.', '')
+    .replace(/^./, (char) => char.toUpperCase())
+);
+
+function PeriodPicker({
+  period,
+  onChange,
+}: {
+  period: string;
+  onChange: (period: string) => void;
+}) {
+  const [year] = period.split('-').map(Number);
+  const [isOpen, setIsOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(year);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setPickerYear(year);
+  }, [year, period]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+        <button
+          type="button"
+          onClick={() => onChange(shiftPeriod(period, -1))}
+          className="inline-flex h-full items-center justify-center border-r border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          aria-label="Предыдущий период"
+        >
+          <ArrowRight className="h-4 w-4 rotate-180" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsOpen((value) => !value)}
+          className="inline-flex min-w-0 items-center justify-center gap-2 px-3 text-sm font-medium text-[var(--app-fg)] transition hover:bg-[var(--panel-hover)]"
+          aria-expanded={isOpen}
+          aria-label={`Выбрать период, сейчас ${formatMonthLabel(period)}`}
+        >
+          <span className="truncate">{formatMonthLabel(period)}</span>
+          <ChevronDown
+            className={cn('h-4 w-4 shrink-0 text-[var(--text-muted)] transition', isOpen && 'rotate-180')}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(shiftPeriod(period, 1))}
+          className="inline-flex h-full items-center justify-center border-l border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          aria-label="Следующий период"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {isOpen ? (
+        <div className="app-surface-strong absolute left-0 top-[calc(100%+0.5rem)] z-20 w-full min-w-[19rem] p-3 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.65)]">
+          <div className="flex items-center justify-between gap-2 border-b border-[var(--panel-border)] pb-3">
+            <button
+              type="button"
+              onClick={() => setPickerYear((value) => value - 1)}
+              className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+              aria-label="Предыдущий год"
+            >
+              <ArrowRight className="h-4 w-4 rotate-180" />
+            </button>
+            <div className="text-center">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Рабочий период
+              </p>
+              <p className="mt-1 text-base font-semibold">{pickerYear}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPickerYear((value) => value + 1)}
+              className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+              aria-label="Следующий год"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {MONTH_LABELS.map((label, monthIndex) => {
+              const optionValue = `${pickerYear}-${String(monthIndex + 1).padStart(2, '0')}`;
+              const isSelected = optionValue === period;
+
+              return (
+                <button
+                  key={optionValue}
+                  type="button"
+                  onClick={() => {
+                    onChange(optionValue);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'inline-flex h-10 items-center justify-center border px-3 text-sm transition',
+                    isSelected
+                      ? 'border-sky-300/20 bg-sky-400/10 text-[var(--accent)]'
+                      : 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]'
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--panel-border)] pt-3">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(getCurrentMonthPeriod());
+                setIsOpen(false);
+              }}
+              className="inline-flex items-center gap-2 text-sm text-[var(--accent)] transition hover:text-[var(--accent-strong)]"
+            >
+              <CalendarRange className="h-4 w-4" />
+              Текущий месяц
+            </button>
+            <span className="text-xs text-[var(--text-muted)]">{formatMonthLabel(period)}</span>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 const getTotalHours = (rows: Timesheet['rows']): number => {
   const totalMinutes = rows.reduce((sum, row) => sum + row.duration, 0);
@@ -310,27 +467,7 @@ export default function TimesheetsList() {
                     <CalendarRange className="h-3.5 w-3.5" />
                     Период
                   </span>
-                  <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
-                    <button
-                      type="button"
-                      onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, -1) })}
-                      className="inline-flex h-full items-center justify-center border-r border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
-                      aria-label="Предыдущий период"
-                    >
-                      <ArrowRight className="h-4 w-4 rotate-180" />
-                    </button>
-                    <span className="flex min-w-0 select-none items-center justify-center px-3 text-sm font-medium text-[var(--app-fg)]">
-                      <span className="truncate">{formatMonthLabel(selectedPeriod)}</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, 1) })}
-                      className="inline-flex h-full items-center justify-center border-l border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
-                      aria-label="Следующий период"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <PeriodPicker period={selectedPeriod} onChange={(period) => updateSearch({ period })} />
                 </label>
 
                 <label className="flex min-w-0 flex-col gap-2">
