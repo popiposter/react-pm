@@ -1,11 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { DndContext, closestCorners, type DragOverEvent } from '@dnd-kit/core';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  MeasuringStrategy,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragOverEvent,
+} from '@dnd-kit/core';
 import {
   restrictToFirstScrollableAncestor,
   restrictToVerticalAxis,
 } from '@dnd-kit/modifiers';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  sortableKeyboardCoordinates,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   AlertTriangle,
@@ -366,13 +381,13 @@ const SortableDesktopRow = ({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.55 : 1,
+        opacity: isDragging ? 0.92 : 1,
       }}
       className={cn(
         'relative border-t border-[var(--panel-border)] align-middle transition hover:bg-[var(--panel-hover)]',
         validationErrors.length > 0 && 'bg-amber-400/[0.06]',
-        isDragging && 'z-10 bg-[var(--panel-bg)] shadow-[0_18px_48px_-36px_var(--shadow-color)]',
-        isDropTarget && 'bg-sky-400/[0.07] shadow-[inset_0_2px_0_0_var(--accent),inset_0_-1px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
+        isDragging && 'z-10 bg-[var(--panel-bg)] shadow-[0_24px_52px_-34px_var(--shadow-color)]',
+        isDropTarget && 'bg-sky-400/[0.08] shadow-[inset_0_3px_0_0_var(--accent),inset_0_-2px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
@@ -381,7 +396,7 @@ const SortableDesktopRow = ({
           type="button"
           {...attributes}
           {...listeners}
-          className="inline-flex h-8 w-8 items-center justify-center border border-transparent bg-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          className="inline-flex h-8 w-8 cursor-grab items-center justify-center border border-transparent bg-transparent text-[var(--text-muted)] transition active:cursor-grabbing hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -502,13 +517,13 @@ const SortableMobileRow = ({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.55 : 1,
+        opacity: isDragging ? 0.96 : 1,
       }}
       className={cn(
         'relative overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg)] transition-all duration-200',
         validationErrors.length > 0 && 'bg-amber-400/[0.08]',
-        isDragging && 'z-20 scale-[1.01] shadow-[0_20px_48px_-32px_var(--shadow-color)]',
-        isDropTarget && 'bg-sky-400/[0.09] shadow-[inset_0_2px_0_0_var(--accent),inset_0_-1px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
+        isDragging && 'z-20 scale-[1.02] shadow-[0_26px_64px_-34px_var(--shadow-color)]',
+        isDropTarget && 'bg-sky-400/[0.09] shadow-[inset_0_3px_0_0_var(--accent),inset_0_-2px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
@@ -580,7 +595,7 @@ const SortableMobileRow = ({
           {...listeners}
           variant="ghost"
           size="icon"
-          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] touch-none"
+          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 cursor-grab border border-transparent text-[var(--text-muted)] touch-none active:cursor-grabbing hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -784,6 +799,22 @@ export default function TimesheetEditor() {
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [overRowId, setOverRowId] = useState<string | null>(null);
   const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
+  const dndSensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 140,
+        tolerance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -1263,8 +1294,14 @@ export default function TimesheetEditor() {
         </div>
 
         <DndContext
-          collisionDetection={closestCorners}
+          collisionDetection={closestCenter}
+          sensors={dndSensors}
           modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
+          measuring={{
+            droppable: {
+              strategy: MeasuringStrategy.Always,
+            },
+          }}
           onDragStart={({ active }) => setActiveRowId(String(active.id))}
           onDragOver={handleDragOver}
           onDragCancel={() => {
