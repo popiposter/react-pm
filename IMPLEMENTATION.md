@@ -224,6 +224,9 @@ Current browser smoke coverage includes:
 - timesheets journal
 - demo seed flow
 - open editor for today
+- editor save validation
+- editor save success
+- dirty-navigation modal flows: cancel, discard, save-and-leave
 
 ## Known Risks And Watchouts
 
@@ -269,6 +272,7 @@ Keep this short. Only active or recently active work belongs here.
 - evaluate install UX and additional PWA-specific affordances
 - add screenshot-based visual checkpoints
 - extend smoke coverage to `/demo`
+- continue expanding browser coverage around editor actions and high-risk user flows
 
 ## Open Questions
 

@@ -1,13 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-
-async function loginAsDemoUser(page: Page) {
-  await page.goto('/login');
-  await expect(page.getByRole('heading', { name: 'Войти в приложение' })).toBeVisible();
-  await page.getByLabel('Логин').fill('demo.user');
-  await page.getByLabel('Пароль').fill('demo');
-  await page.getByRole('button', { name: 'Войти' }).click();
-  await expect(page).toHaveURL(/\/timesheets/);
-}
+import { expect, test } from '@playwright/test';
+import { loginAsDemoUser, openTodayEditorFromDemo } from './helpers';
 
 test('demo user can sign in and open timesheets journal', async ({ page }) => {
   await loginAsDemoUser(page);
@@ -23,21 +15,7 @@ test('demo user can sign in and open timesheets journal', async ({ page }) => {
 });
 
 test('demo user can seed data and open today timesheet editor', async ({ page }, testInfo) => {
-  await page.goto('/demo');
-  await expect(page.getByRole('heading', { name: /Подготовить демонстрацию/i })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Заполнить базу' }).click();
-  await expect(page.getByText('Демо-база готова')).toBeVisible();
-  await page.getByRole('button', { name: 'Открыть сегодня' }).click();
-
-  await expect(page).toHaveURL(/\/login/);
-  await page.getByLabel('Логин').fill('demo.user');
-  await page.getByLabel('Пароль').fill('demo');
-  await page.getByRole('button', { name: 'Войти' }).click();
-
-  await expect(page).toHaveURL(/\/timesheet\//);
-  await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Рабочие записи за день' })).toBeVisible();
+  await openTodayEditorFromDemo(page);
   await expect(page.getByRole('button', { name: 'Добавить строку' })).toBeVisible();
 
   await page.screenshot({
