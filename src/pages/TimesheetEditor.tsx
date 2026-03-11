@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
+import { DndContext, DragOverlay, closestCorners, type DragOverEvent } from '@dnd-kit/core';
+import {
+  restrictToFirstScrollableAncestor,
+  restrictToVerticalAxis,
+  snapCenterToCursor,
+} from '@dnd-kit/modifiers';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -348,11 +352,14 @@ const DragRowPreview = ({
   taskGroups: GroupedTasks[];
   taskLookup: Map<string, Task>;
 }) => (
-  <div className="w-[min(260px,calc(100vw-2rem))] rounded-[1rem] border border-[var(--accent)]/25 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_70px_-36px_var(--shadow-color)]">
+  <div className="w-[min(340px,calc(100vw-2rem))] border border-[var(--accent)]/35 bg-[var(--panel-bg)] px-4 py-3 shadow-[0_28px_80px_-40px_var(--shadow-color)]">
     <p className="truncate text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
       {getTaskProjectName(taskLookup, row.taskId)}
     </p>
     <p className="mt-1 truncate text-sm font-semibold">{getTaskLabel(taskGroups, row.taskId)}</p>
+    <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--text-soft)]">
+      {row.description || 'Без описания работ'}
+    </p>
     <p className="mt-2 text-sm text-[var(--text-soft)]">
       {formatTimeLabel(row.startTime)} - {formatTimeLabel(row.endTime)} · {minutesToHours(row.duration)} ч
     </p>
@@ -388,7 +395,8 @@ const SortableDesktopRow = ({
       className={cn(
         'relative border-t border-[var(--panel-border)] align-middle transition hover:bg-[var(--panel-hover)]',
         validationErrors.length > 0 && 'bg-amber-400/[0.06]',
-        isDropTarget && 'bg-sky-400/[0.07] shadow-[inset_0_2px_0_0_var(--accent)]',
+        isDragging && 'z-10 bg-[var(--panel-bg)] shadow-[0_18px_48px_-36px_var(--shadow-color)]',
+        isDropTarget && 'bg-sky-400/[0.07] shadow-[inset_0_2px_0_0_var(--accent),inset_0_-1px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
@@ -521,10 +529,10 @@ const SortableMobileRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'relative rounded-[1rem] px-0 py-2.5 transition-all duration-200',
+        'relative overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg)] transition-all duration-200',
         validationErrors.length > 0 && 'bg-amber-400/[0.08]',
-        isDragging && 'scale-[1.01] shadow-[0_20px_48px_-32px_var(--shadow-color)]',
-        isDropTarget && 'bg-sky-400/[0.09] ring-2 ring-sky-300/20',
+        isDragging && 'z-20 scale-[1.01] shadow-[0_20px_48px_-32px_var(--shadow-color)]',
+        isDropTarget && 'bg-sky-400/[0.09] shadow-[inset_0_2px_0_0_var(--accent),inset_0_-1px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
@@ -596,7 +604,7 @@ const SortableMobileRow = ({
           {...listeners}
           variant="ghost"
           size="icon"
-          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 rounded-xl border border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
+          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:rounded-full hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] touch-none"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -605,15 +613,25 @@ const SortableMobileRow = ({
           onClick={() => setIsActionsOpen(true)}
           variant="ghost"
           size="icon"
-          className="absolute right-1 top-1 z-[1] h-8 w-8 rounded-full text-[var(--text-muted)]"
+          className="absolute right-1 top-1 z-[1] h-8 w-8 rounded-full text-[var(--text-muted)] hover:border hover:border-[var(--panel-border)]"
           aria-label="Действия со строкой"
         >
           <Ellipsis className="h-4 w-4" />
         </Button>
+        <Button
+          type="button"
+          onClick={() => setIsExpanded((value) => !value)}
+          variant="ghost"
+          size="icon"
+          className="absolute right-1 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:rounded-full hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
+          aria-label={isExpanded ? 'Свернуть строку' : 'Развернуть строку'}
+        >
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
         <button
           type="button"
           onClick={() => setIsExpanded((value) => !value)}
-          className="min-w-0 w-full rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
+          className="min-w-0 w-full bg-transparent py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
           aria-expanded={isExpanded}
         >
           <div className="min-w-0">
@@ -637,11 +655,6 @@ const SortableMobileRow = ({
               <span className="rounded-full bg-[var(--panel-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-soft)]">
                 {minutesToHours(row.duration)} ч
               </span>
-              {isExpanded ? (
-                <ChevronUp className="ml-auto h-4 w-4 text-[var(--text-muted)] transition-transform duration-200" />
-              ) : (
-                <ChevronDown className="ml-auto h-4 w-4 text-[var(--text-muted)] transition-transform duration-200" />
-              )}
             </div>
             <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--text-soft)]">
               {row.description || 'Без описания работ'}
@@ -651,8 +664,8 @@ const SortableMobileRow = ({
       </div>
 
       {isExpanded && (
-        <div className="mt-3 rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
-          <div className="space-y-4">
+        <div className="border-t border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <div className="space-y-4 border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-3">
             <div className="space-y-1">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 Проект
@@ -680,7 +693,7 @@ const SortableMobileRow = ({
                 <TimeField
                   value={row.startTime}
                   onChange={(value) => updateRow(index, { startTime: value })}
-                  className="bg-[var(--panel-bg-strong)]"
+                  className="bg-[var(--app-bg)]"
                 />
               </div>
               <div className="space-y-2">
@@ -690,7 +703,7 @@ const SortableMobileRow = ({
                 <TimeField
                   value={row.endTime}
                   onChange={(value) => updateRow(index, { endTime: value })}
-                  className="bg-[var(--panel-bg-strong)]"
+                  className="bg-[var(--app-bg)]"
                 />
               </div>
             </div>
@@ -703,7 +716,7 @@ const SortableMobileRow = ({
                 <DurationField
                   value={row.duration}
                   onChange={(value) => updateRow(index, { duration: value })}
-                  className="[&_input]:bg-[var(--panel-bg-strong)]"
+                  className="[&_input]:bg-[var(--app-bg)]"
                 />
               </div>
               <div className="space-y-2" />
@@ -717,7 +730,7 @@ const SortableMobileRow = ({
                 value={row.description || ''}
                 onChange={(value) => updateRow(index, { description: value })}
                 rows={3}
-                className="bg-[var(--panel-bg-strong)]"
+                className="bg-[var(--app-bg)]"
               />
             </div>
 
@@ -798,6 +811,7 @@ export default function TimesheetEditor() {
     () => rows.find((row) => row.id === activeRowId) ?? null,
     [activeRowId, rows]
   );
+  const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -1105,6 +1119,24 @@ export default function TimesheetEditor() {
     });
   };
 
+  const handleDragOver = ({ active, over }: DragOverEvent) => {
+    const nextOverId = over ? String(over.id) : null;
+    setOverRowId(nextOverId);
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = rows.findIndex((row) => row.id === String(active.id));
+    const newIndex = rows.findIndex((row) => row.id === String(over.id));
+
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+      return;
+    }
+
+    moveRow(oldIndex, newIndex);
+  };
+
   const onDragEnd = () => {
     setActiveRowId(null);
     setOverRowId(null);
@@ -1239,7 +1271,7 @@ export default function TimesheetEditor() {
         </div>
       </div>
 
-      <div className="app-surface rounded-[1rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
+      <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
@@ -1260,30 +1292,16 @@ export default function TimesheetEditor() {
 
         <DndContext
           collisionDetection={closestCorners}
+          modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor, snapCenterToCursor]}
           onDragStart={({ active }) => setActiveRowId(String(active.id))}
-          onDragOver={({ active, over }) => {
-            if (!over) {
-              setOverRowId(null);
-              return;
-            }
-
-            const nextOverId = String(over.id);
-            setOverRowId(nextOverId);
-
-            const activeIndex = rows.findIndex((row) => row.id === active.id);
-            const overIndex = rows.findIndex((row) => row.id === over.id);
-
-            if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
-              moveRow(activeIndex, overIndex);
-            }
-          }}
+          onDragOver={handleDragOver}
           onDragCancel={() => {
             setActiveRowId(null);
             setOverRowId(null);
           }}
           onDragEnd={onDragEnd}
         >
-          <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
             {rows.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
                 <div className="rounded-2xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
@@ -1326,7 +1344,7 @@ export default function TimesheetEditor() {
                   ))}
                 </div>
 
-                <div className="mt-4 hidden overflow-x-auto rounded-[0.9rem] border border-[var(--panel-border)] xl:block">
+                <div className="mt-4 hidden overflow-x-auto border border-[var(--panel-border)] xl:block">
                   <table className="min-w-[1100px] w-full border-collapse">
                     <thead className="bg-[var(--panel-muted)] text-left text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
                       <tr>
@@ -1369,13 +1387,9 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
-          <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
+          <DragOverlay modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]} adjustScale={false}>
             {activeRow ? (
-              <DragRowPreview
-                row={activeRow}
-                taskGroups={taskGroups}
-                taskLookup={taskLookup}
-              />
+              <DragRowPreview row={activeRow} taskGroups={taskGroups} taskLookup={taskLookup} />
             ) : null}
           </DragOverlay>
         </DndContext>

@@ -234,7 +234,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex h-full flex-col">
             <div
               className={cn(
-                'relative flex items-center border-b border-[var(--panel-border)] px-3 py-3',
+                'relative flex h-16 items-center border-b border-[var(--panel-border)] px-3',
                 isSidebarCollapsed ? 'justify-center' : 'justify-between'
               )}
             >
@@ -265,7 +265,7 @@ export default function Layout({ children }: LayoutProps) {
                     type="button"
                     onClick={() => setIsSidebarCollapsed(true)}
                     title="Свернуть навигацию"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
                   >
                     <PanelLeftClose className="h-4 w-4" />
                   </button>
@@ -287,10 +287,10 @@ export default function Layout({ children }: LayoutProps) {
                     to={item.href}
                     title={item.label}
                     className={cn(
-                      'flex items-center rounded-xl border text-[var(--text-soft)] transition',
+                      'flex items-center rounded-xl border border-transparent text-[var(--text-soft)] transition',
                       isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-11 gap-3 px-3.5',
                       isActive
-                        ? 'border-[var(--accent)]/20 bg-[var(--accent-soft)] text-[var(--accent)]'
+                        ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-transparent hover:border-[var(--panel-border)] hover:bg-[var(--panel-muted)] hover:text-[var(--app-fg)]'
                     )}
                   >
@@ -331,7 +331,7 @@ export default function Layout({ children }: LayoutProps) {
               isMobileChromeHidden && '-translate-y-full xl:translate-y-0'
             )}
           >
-            <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-2.5 sm:px-5 xl:px-8 xl:py-3 2xl:px-10">
+            <div className="flex h-16 w-full items-center justify-between px-4 sm:px-5 xl:px-8 2xl:px-10">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-white/90 xl:hidden">
                   <img
@@ -340,7 +340,7 @@ export default function Layout({ children }: LayoutProps) {
                     className="h-4.5 w-4.5 object-contain"
                   />
                 </div>
-                <h2 className="text-sm font-semibold sm:text-base xl:text-lg">Проектные табели</h2>
+                <h2 className="text-sm font-semibold sm:text-base xl:text-[1.35rem]">Проектные табели</h2>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
