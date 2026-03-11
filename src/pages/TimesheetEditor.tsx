@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -57,6 +57,7 @@ interface RowEditorProps {
   requestRemoveRow: (index: number) => void;
   duplicateRow: (row: TimesheetRow) => void;
   validationErrors: string[];
+  shouldAutoReveal?: boolean;
 }
 
 type SaveAndNavigateEvent = CustomEvent<{
@@ -148,12 +149,15 @@ const NativeTaskSelect = ({
   value,
   onChange,
   taskGroups,
+  selectRef,
 }: {
   value: string;
   onChange: (value: string) => void;
   taskGroups: GroupedTasks[];
+  selectRef?: RefObject<HTMLSelectElement | null>;
 }) => (
   <select
+    ref={selectRef}
     value={value}
     onChange={(event) => onChange(event.target.value)}
     className="h-10 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] outline-none [color-scheme:light_dark]"
@@ -339,6 +343,7 @@ const SortableMobileRow = ({
   requestRemoveRow,
   duplicateRow,
   validationErrors,
+  shouldAutoReveal = false,
 }: RowEditorProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
@@ -346,10 +351,33 @@ const SortableMobileRow = ({
   const [isExpanded, setIsExpanded] = useState(validationErrors.length > 0);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const taskLabel = getTaskLabel(taskGroups, row.taskId);
+  const articleRef = useRef<HTMLElement | null>(null);
+  const taskSelectRef = useRef<HTMLSelectElement | null>(null);
+
+  useEffect(() => {
+    if (!shouldAutoReveal) {
+      return;
+    }
+
+    setIsExpanded(true);
+
+    const revealTimeout = window.setTimeout(() => {
+      articleRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+      taskSelectRef.current?.focus();
+    }, 120);
+
+    return () => window.clearTimeout(revealTimeout);
+  }, [shouldAutoReveal]);
 
   return (
     <article
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        articleRef.current = node;
+      }}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -419,11 +447,17 @@ const SortableMobileRow = ({
 
       {isExpanded && (
         <div className="mt-4 space-y-4 border-t border-[var(--panel-border)] pt-4">
-          <NativeTaskSelect
-            value={row.taskId}
-            onChange={(value) => updateRow(index, { taskId: value })}
-            taskGroups={taskGroups}
-          />
+          <div className="space-y-2">
+            <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+              Задача
+            </label>
+            <NativeTaskSelect
+              value={row.taskId}
+              onChange={(value) => updateRow(index, { taskId: value })}
+              taskGroups={taskGroups}
+              selectRef={taskSelectRef}
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -555,6 +589,7 @@ export default function TimesheetEditor() {
   const [rowPendingDelete, setRowPendingDelete] = useState<number | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
+  const [freshMobileRowId, setFreshMobileRowId] = useState<string | null>(null);
 
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   const {
@@ -638,6 +673,16 @@ export default function TimesheetEditor() {
       })
     );
   }, [date, isDirty]);
+
+  useEffect(() => {
+    if (!freshMobileRowId) {
+      return;
+    }
+
+    if (!rows.some((row) => row.id === freshMobileRowId)) {
+      setFreshMobileRowId(null);
+    }
+  }, [freshMobileRowId, rows]);
 
   const showSaveSuccess = useCallback(() => {
     toast.success('Сохранено', {
@@ -827,8 +872,10 @@ export default function TimesheetEditor() {
   const handleAddRow = () => {
     const lastRow = rows[rows.length - 1];
     const startTime = lastRow ? lastRow.endTime : '09:00';
+    const rowId = createRowId();
 
     addRow({
+      id: rowId,
       taskId: '',
       date: date || new Date().toISOString().split('T')[0],
       startTime,
@@ -836,13 +883,16 @@ export default function TimesheetEditor() {
       duration: 60,
       description: '',
     });
+    setFreshMobileRowId(rowId);
   };
 
   const handleDuplicateRow = (sourceRow: TimesheetRow) => {
     const lastRow = rows[rows.length - 1];
     const startTime = lastRow ? lastRow.endTime : sourceRow.startTime || '09:00';
+    const rowId = createRowId();
 
     addRow({
+      id: rowId,
       taskId: sourceRow.taskId,
       date: date || new Date().toISOString().split('T')[0],
       startTime,
@@ -850,6 +900,7 @@ export default function TimesheetEditor() {
       duration: sourceRow.duration,
       description: sourceRow.description || '',
     });
+    setFreshMobileRowId(rowId);
 
     toast.success('Запись добавлена', {
       description: 'Новая строка создана по образцу и пересчитана в конце табеля.',
@@ -898,12 +949,26 @@ export default function TimesheetEditor() {
     );
   }
 
+  const statusToneClass =
+    invalidRowsCount > 0
+      ? 'border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)]'
+      : isDirty
+        ? 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
+        : 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]';
+
+  const statusSummary =
+    invalidRowsCount > 0
+      ? `Нужно исправить строк: ${invalidRowsCount}`
+      : isDirty
+        ? 'Есть несохраненные изменения'
+        : 'Все изменения сохранены';
+
   return (
-    <section className="space-y-4 pb-24 xl:pb-0">
+    <section className="space-y-3 pb-[var(--mobile-editor-bar-offset)] xl:space-y-4 xl:pb-0">
       <div className="app-surface overflow-hidden rounded-[1rem]">
-        <div className="flex flex-col gap-4 px-5 py-5 xl:flex-row xl:items-start xl:justify-between xl:px-6">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 xl:flex-row xl:items-start xl:justify-between xl:px-6">
+          <div className="space-y-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
                 Табель
               </span>
@@ -930,14 +995,40 @@ export default function TimesheetEditor() {
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <h1 className="text-2xl font-semibold tracking-tight xl:text-[1.75rem]">
+            <div className="space-y-1">
+              <h1 className="text-[1.75rem] font-semibold tracking-tight xl:text-[1.8rem]">
                 Табель за {formatEditorDate(date)}
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                Рабочий экран для ввода часов, перестановки строк и быстрого сохранения без
-                лишних переходов.
+                Ввод часов, перестановка строк и быстрое сохранение в одном рабочем экране.
               </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <div
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm',
+                  isOnline
+                    ? 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
+                    : 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
+                )}
+              >
+                {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+                <span>
+                  {isOnline
+                    ? 'Сохранение и синхронизация доступны'
+                    : 'Офлайн-режим: изменения сохранятся локально'}
+                </span>
+              </div>
+              <div
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm',
+                  statusToneClass
+                )}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                <span>{statusSummary}</span>
+              </div>
             </div>
           </div>
 
@@ -978,70 +1069,27 @@ export default function TimesheetEditor() {
         </div>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div
-          className={cn(
-            'app-surface flex items-start gap-3 rounded-[0.9rem] px-4 py-3',
-            !isOnline && 'border-amber-300/20 bg-amber-400/[0.08]'
-          )}
-        >
-          <div
-            className={cn(
-              'rounded-md p-2',
-              isOnline
-                ? 'bg-emerald-400/12 text-[var(--success-text)]'
-                : 'bg-amber-400/15 text-[var(--warning-text)]'
-            )}
-          >
-            {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium">
-              {isOnline ? 'Сохранение и синхронизация доступны' : 'Офлайн-режим активен'}
-            </p>
-            <p className="text-sm leading-6 text-[var(--text-soft)]">
-              {isOnline
-                ? 'Изменения можно сразу отправлять на сервер или хранить локально до ручного sync.'
-                : 'Продолжайте работу: изменения сохранятся локально и попадут в очередь синхронизации.'}
-            </p>
-          </div>
-        </div>
-        <div className="app-surface flex items-start gap-3 rounded-[0.9rem] px-4 py-3">
-          <div className="rounded-md bg-rose-400/10 p-2 text-[var(--danger-text)]">
-            <AlertTriangle className="h-4 w-4" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Проверка перед сохранением</p>
-            <p className="text-sm leading-6 text-[var(--text-soft)]">
-              {invalidRowsCount > 0
-                ? 'Исправьте строки без задачи или с нулевой длительностью перед сохранением.'
-                : 'Все строки выглядят корректно. Можно сохранять табель или продолжать редактирование.'}
-            </p>
-          </div>
-        </div>
-      </div>
-
       <div className="xl:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <div className="app-surface min-w-[140px] rounded-[0.9rem] px-3 py-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="app-surface rounded-[0.9rem] px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Записей
             </p>
-            <p className="mt-1 text-lg font-semibold">{rows.length}</p>
+            <p className="mt-1 text-base font-semibold">{rows.length}</p>
           </div>
-          <div className="app-surface min-w-[140px] rounded-[0.9rem] px-3 py-3">
+          <div className="app-surface rounded-[0.9rem] px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Часов
             </p>
-            <p className="mt-1 text-lg font-semibold">{totalHours} ч</p>
+            <p className="mt-1 text-base font-semibold">{totalHours} ч</p>
           </div>
-          <div className="app-surface min-w-[160px] rounded-[0.9rem] px-3 py-3">
+          <div className="app-surface rounded-[0.9rem] px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Состояние
             </p>
             <p
               className={cn(
-                'mt-1 text-sm font-semibold',
+                'mt-1 text-xs font-semibold leading-5',
                 invalidRowsCount > 0 ? 'text-[var(--warning-text)]' : 'text-[var(--success-text)]'
               )}
             >
@@ -1089,7 +1137,7 @@ export default function TimesheetEditor() {
               </div>
             ) : (
               <>
-                <div className="mt-5 space-y-3 xl:hidden">
+                <div className="mt-5 space-y-3 pb-6 xl:hidden">
                   {rows.map((row, index) => (
                     (() => {
                       const validationErrors =
@@ -1105,6 +1153,7 @@ export default function TimesheetEditor() {
                       requestRemoveRow={handleRequestRemoveRow}
                       duplicateRow={handleDuplicateRow}
                       validationErrors={validationErrors}
+                      shouldAutoReveal={row.id === freshMobileRowId}
                     />
                       );
                     })()
@@ -1155,7 +1204,7 @@ export default function TimesheetEditor() {
 
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/96 px-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
+          'fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/96 px-3 pb-[var(--mobile-nav-bottom-padding)] pt-2 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
           isMobileChromeHidden && 'translate-y-full'
         )}
       >
@@ -1165,7 +1214,7 @@ export default function TimesheetEditor() {
               navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
             }
             variant="secondary"
-            className="h-10 rounded-2xl text-[var(--text-soft)]"
+            className="h-9 rounded-2xl text-[var(--text-soft)]"
           >
             <ArrowLeft className="h-4 w-4" />
             Назад
@@ -1173,7 +1222,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={handleAddRow}
             variant="secondary"
-            className="h-10 rounded-2xl"
+            className="h-9 rounded-2xl"
           >
             <Plus className="h-4 w-4" />
             Строка
@@ -1181,7 +1230,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={() => void handleSave(false)}
             disabled={saveMutation.isPending}
-            className="h-10 rounded-2xl"
+            className="h-9 rounded-2xl"
           >
             <Save className="h-4 w-4" />
             Сохранить

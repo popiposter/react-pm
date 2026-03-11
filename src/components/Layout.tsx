@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import {
   Clock3,
+  Download,
   FileSpreadsheet,
   FolderClock,
   LogOut,
@@ -18,6 +19,7 @@ import { toast } from 'sonner';
 import { useRunSync } from '../hooks/useRunSync';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import { useAuth } from '../features/auth/auth';
+import { usePwaInstallPrompt } from '../features/pwa/usePwaInstallPrompt';
 import { useTheme, type ThemeMode } from '../features/theme/theme';
 
 interface LayoutProps {
@@ -52,6 +54,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
   const { data: syncStatus } = useSyncStatus();
   const runSyncMutation = useRunSync();
+  const { canInstall, promptInstall } = usePwaInstallPrompt();
   const isEditorRoute = location.pathname.startsWith('/timesheet/');
 
   useEffect(() => {
@@ -181,6 +184,28 @@ export default function Layout({ children }: LayoutProps) {
     await navigate({ to: '/login', search: { redirect: undefined, reason: undefined } });
   };
 
+  const handleInstallApp = async () => {
+    const result = await promptInstall();
+
+    if (!result) {
+      toast('Установка недоступна', {
+        description: 'Этот браузер сейчас не отдал системный prompt для установки.',
+      });
+      return;
+    }
+
+    if (result.outcome === 'accepted') {
+      toast.success('Приложение устанавливается', {
+        description: 'После установки его можно запускать как отдельное приложение.',
+      });
+      return;
+    }
+
+    toast('Установка отменена', {
+      description: 'Можно установить приложение позже из меню браузера.',
+    });
+  };
+
   const themeOptions: Array<{
     value: ThemeMode;
     label: string;
@@ -234,7 +259,7 @@ export default function Layout({ children }: LayoutProps) {
             {!isSidebarCollapsed && (
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">
-                  Timesheets
+                  Рабочее место
                 </p>
                 <h1 className="text-xl font-semibold">Проектные табели</h1>
               </div>
@@ -293,7 +318,7 @@ export default function Layout({ children }: LayoutProps) {
                 onClick={() => void handleRunSync()}
                 className="inline-flex items-center justify-center rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm font-medium text-[var(--warning-text)] transition hover:bg-amber-400/20"
               >
-                Pending sync: {syncStatus.pendingCount}
+                Ожидают синхронизации: {syncStatus.pendingCount}
               </button>
             )}
           </div>
@@ -318,8 +343,29 @@ export default function Layout({ children }: LayoutProps) {
 
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="hidden rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1.5 text-sm text-[var(--accent)] lg:flex lg:items-center lg:gap-2">
-                  <span>Public demo</span>
+                  <span>Публичное демо</span>
                 </div>
+                {canInstall && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void handleInstallApp()}
+                      className="hidden h-9 items-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
+                    >
+                      <Download className="h-4 w-4" />
+                      Установить
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleInstallApp()}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
+                      aria-label="Установить приложение"
+                      title="Установить приложение"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
                 <div className="relative">
                   <button
                     type="button"
@@ -403,7 +449,9 @@ export default function Layout({ children }: LayoutProps) {
           <main
             className={cn(
               'flex-1 px-4 py-5 sm:px-5 xl:px-8 xl:py-6 xl:pb-6',
-              isEditorRoute ? 'pb-24' : 'pb-20'
+              isEditorRoute
+                ? 'pb-[var(--mobile-editor-bar-offset)]'
+                : 'pb-[var(--mobile-nav-content-offset)]'
             )}
           >
             {children}
@@ -414,7 +462,7 @@ export default function Layout({ children }: LayoutProps) {
       {!isEditorRoute && (
         <nav
           className={cn(
-            'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
+            'fixed inset-x-0 bottom-0 z-40 border-t border-[var(--panel-border)] bg-[var(--panel-bg-strong)]/95 px-4 pb-[var(--mobile-nav-bottom-padding)] pt-2.5 backdrop-blur transition-transform duration-300 ease-out xl:hidden',
             isMobileChromeHidden && 'translate-y-full'
           )}
         >

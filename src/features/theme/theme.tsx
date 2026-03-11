@@ -13,6 +13,10 @@ export type ThemeMode = 'light' | 'dark' | 'auto';
 export type ResolvedTheme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'timesheets:theme-mode';
+const THEME_CHROME_COLORS: Record<ResolvedTheme, string> = {
+  dark: '#0b1320',
+  light: '#f8fbff',
+};
 
 interface ThemeContextValue {
   themeMode: ThemeMode;
@@ -78,6 +82,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.dataset.theme = resolvedTheme;
     root.dataset.themeMode = themeMode;
   }, [resolvedTheme, themeMode]);
+
+  useEffect(() => {
+    const chromeColor = THEME_CHROME_COLORS[resolvedTheme];
+    const themeMetaTags = document.querySelectorAll('meta[name="theme-color"]');
+
+    themeMetaTags.forEach((metaTag) => {
+      metaTag.setAttribute('content', chromeColor);
+    });
+  }, [resolvedTheme]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({

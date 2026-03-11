@@ -6,7 +6,6 @@ import {
   DatabaseZap,
   Globe2,
   LockKeyhole,
-  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
@@ -98,76 +97,58 @@ export function LoginPage({
   return (
     <div className="min-h-screen text-[var(--app-fg)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_28%),radial-gradient(circle_at_bottom_right,var(--success-soft),transparent_28%)]" />
-      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-4 py-8 sm:py-12 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-[1.02fr_0.98fr] lg:gap-6">
-          <section className="app-surface rounded-[1.75rem] p-6 sm:p-8">
+      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-4 py-6 sm:py-8 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(300px,0.92fr)] lg:items-start lg:gap-6">
+          <section className="app-surface-strong rounded-[1.75rem] p-5 sm:p-7">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
                 <LockKeyhole className="h-3.5 w-3.5" />
-                Protected workspace
+                Рабочее место
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--success-text)]">
                 <Globe2 className="h-3.5 w-3.5" />
-                Public demo
+                Демо-режим
               </span>
             </div>
-            <div className="mt-6 space-y-4">
-              <h1 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">
-                Вход в офлайн-first рабочее место табелей.
+
+            <div className="mt-5 space-y-2">
+              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                Авторизация
+              </p>
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Войти в приложение
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-[var(--text-soft)]">
-                Здесь сразу закладываем ту же схему, которая позже пойдет в 1С: экран логина,
-                защищенные маршруты, локальная сессия для демо и готовность к токенам.
-              </p>
-            </div>
-            <div className="mt-6 rounded-[1.25rem] border border-sky-300/15 bg-sky-400/10 p-4 text-sm leading-6 text-[var(--text-soft)]">
-              Это публичная демо-страница для показа UX и offline-first сценариев.
-              Не вводите реальные пароли, персональные данные или чувствительную служебную
-              информацию.
-            </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <div className="app-surface-strong rounded-[1.25rem] p-5">
-                <Sparkles className="h-5 w-5 text-[var(--accent)]" />
-                <h2 className="mt-4 text-lg font-semibold">Демо без боли</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                  Можно наполнить локальную базу реалистичными табелями и сразу показать flow
-                  списка, редактора, offline и sync-очереди.
-                </p>
-              </div>
-              <div className="app-surface-strong rounded-[1.25rem] p-5">
-                <DatabaseZap className="h-5 w-5 text-[var(--success-text)]" />
-                <h2 className="mt-4 text-lg font-semibold">Готово к backend</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                  Data layer уже идет через repository и sync transport, а auth session теперь
-                  хранит access/refresh token contract, поэтому реальный 1С backend можно будет
-                  подключать без переверстки приложения.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="app-surface-strong rounded-[1.75rem] p-6 sm:p-8">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">Авторизация</p>
-              <h2 className="text-2xl font-semibold">Войти в приложение</h2>
-              <p className="text-sm leading-6 text-[var(--text-muted)]">
-                Пока это локальная demo-сессия, но интерфейс и маршруты уже построены под будущий
-                password + token flow.
+              <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
+                Войдите в демо-рабочее место и сразу переходите к журналу табелей. Значения по
+                умолчанию уже подставлены.
               </p>
             </div>
 
-            <div className="mt-6 rounded-[1.25rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">Demo access</p>
-              <p className="mt-2 text-sm text-[var(--app-fg)]">
-                Для входа можно использовать значения по умолчанию:
-                <span className="ml-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-2 py-1 text-xs text-[var(--accent)]">
-                  demo.user / demo
-                </span>
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                Demo auth transport принимает любую непустую пару логин/пароль, но для
-                предсказуемого сценария лучше оставлять стандартные значения.
-              </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+              <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                  Доступ
+                </p>
+                <p className="mt-2 text-sm text-[var(--app-fg)]">
+                  Для быстрого входа используйте
+                  <span className="ml-2 inline-flex rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-2.5 py-1 text-xs text-[var(--accent)]">
+                    demo.user / demo
+                  </span>
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                  Демо-авторизация принимает любую непустую пару логин/пароль, но стандартные значения
+                  дают самый предсказуемый сценарий.
+                </p>
+              </div>
+              <Button
+                onClick={() => void handleSeedDemoData()}
+                disabled={seedDemoData.isPending}
+                variant="secondary"
+                className="h-11 rounded-2xl"
+              >
+                <DatabaseZap className="h-4 w-4" />
+                Подготовить демо
+              </Button>
             </div>
 
             {reasonContent && (
@@ -186,7 +167,7 @@ export function LoginPage({
               </div>
             )}
 
-            <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+            <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-[var(--app-fg)]">Логин</span>
                 <Input
@@ -208,26 +189,46 @@ export function LoginPage({
                 />
               </label>
 
-              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+              <div className="flex flex-col gap-3 pt-1 sm:flex-row">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-11 rounded-2xl bg-white text-slate-950 hover:bg-slate-100"
+                  className="h-11 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 sm:min-w-40"
                 >
                   <ArrowRight className="h-4 w-4" />
                   Войти
                 </Button>
-                <Button
-                  onClick={() => void handleSeedDemoData()}
-                  disabled={seedDemoData.isPending}
-                  variant="secondary"
-                  className="h-11 rounded-2xl"
-                >
-                  <DatabaseZap className="h-4 w-4" />
-                  Заполнить демо-данными
-                </Button>
+                <p className="self-center text-sm leading-6 text-[var(--text-muted)]">
+                  После входа откроется журнал табелей.
+                </p>
               </div>
             </form>
+          </section>
+
+          <section className="app-surface rounded-[1.75rem] p-5 sm:p-7">
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">Что уже можно показать</h2>
+              <div className="grid gap-3">
+                <div className="rounded-[1.1rem] border border-sky-300/15 bg-sky-400/10 p-4">
+                  <p className="text-sm font-medium">Журнал табелей и редактор дня</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
+                    После входа можно открыть день, внести часы и пройти весь основной flow без
+                    реального backend.
+                  </p>
+                </div>
+                <div className="rounded-[1.1rem] border border-emerald-300/15 bg-emerald-400/10 p-4">
+                  <p className="text-sm font-medium">Основа офлайн-режима</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
+                    Локальные данные, очередь синхронизации и foundation под интеграцию с 1С уже
+                    заложены в архитектуре.
+                  </p>
+                </div>
+                <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 text-sm leading-6 text-[var(--text-muted)]">
+                  Это публичное демо. Не вводите реальные пароли, персональные данные или
+                  чувствительную служебную информацию.
+                </div>
+              </div>
+            </div>
           </section>
         </div>
       </div>

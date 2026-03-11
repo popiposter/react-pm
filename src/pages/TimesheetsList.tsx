@@ -9,7 +9,6 @@ import {
   FileSearch,
   FileSpreadsheet,
   Filter,
-  FolderClock,
   NotebookPen,
   Plus,
   RefreshCcw,
@@ -250,147 +249,83 @@ export default function TimesheetsList() {
   return (
     <section className="space-y-5 xl:space-y-6">
       {showDemoOnboarding && (
-        <div className="app-surface overflow-hidden rounded-[1.5rem] border-sky-300/20 bg-[linear-gradient(135deg,var(--accent-soft),transparent_72%)]">
-          <div className="flex flex-col gap-5 px-4 py-5 sm:px-5 lg:px-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-[var(--panel-bg-strong)] px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Demo onboarding
-                </span>
-                <div>
-                  <h2 className="text-2xl font-semibold">
-                    Три быстрых сценария, чтобы показать приложение за пару минут.
-                  </h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                    Это публичное демо. Можно наполнить локальную базу, пройтись по журналу,
-                    открыть редактор и проверить offline-first поведение без реального backend.
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={() => setShowDemoOnboarding(false)}
-                variant="secondary"
-                size="icon"
-                className="h-11 w-11 self-start rounded-2xl"
-                aria-label="Скрыть onboarding"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+        <div className="app-surface overflow-hidden rounded-[1.35rem] border-sky-300/20 bg-[linear-gradient(135deg,var(--accent-soft),transparent_72%)]">
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-[var(--panel-bg-strong)] px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Демо-сценарии
+              </span>
+              <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
+                Для показа приложения обычно хватает трех действий: заполнить демо-базу, открыть
+                день и при необходимости показать работу без сети.
+              </p>
             </div>
+            <Button
+              onClick={() => setShowDemoOnboarding(false)}
+              variant="secondary"
+              size="icon"
+              className="h-10 w-10 shrink-0 self-start rounded-2xl"
+              aria-label="Скрыть onboarding"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
-            <div className="grid gap-3 lg:grid-cols-3">
-              <article className="app-surface-strong rounded-[1.25rem] p-5">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-emerald-400/15 p-3 text-[var(--success-text)]">
-                    <DatabaseZap className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--text-muted)]">Шаг 1</p>
-                    <h3 className="text-lg font-semibold">Подготовить базу</h3>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-[var(--text-soft)]">
-                  Заполните локальное хранилище готовыми задачами и табелями, чтобы сразу
-                  показать рабочий журнал и статусы.
-                </p>
-                <Button
-                  onClick={() => void handleSeedDemoData()}
-                  disabled={seedDemoData.isPending}
-                  variant="secondary"
-                  className="mt-5 border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
-                >
-                  <DatabaseZap className="h-4 w-4" />
-                  Заполнить демо-данными
-                </Button>
-              </article>
-
-              <article className="app-surface-strong rounded-[1.25rem] p-5">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-sky-400/15 p-3 text-[var(--accent)]">
-                    <FolderClock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--text-muted)]">Шаг 2</p>
-                    <h3 className="text-lg font-semibold">Открыть рабочий день</h3>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-[var(--text-soft)]">
-                  Перейдите в табель за сегодня или откройте существующую запись и посмотрите
-                  редактор, пересчет времени и локальное сохранение.
-                </p>
-                <Button
-                  onClick={() =>
-                    void navigate({
-                      to: '/timesheet/$date',
-                      params: { date: startOfToday() },
-                    })
-                  }
-                  variant="secondary"
-                  className="mt-5 border-sky-300/20 bg-sky-400/10 text-[var(--accent)] hover:bg-sky-400/20"
-                >
-                  <Plus className="h-4 w-4" />
-                  Открыть табель на сегодня
-                </Button>
-              </article>
-
-              <article className="app-surface-strong rounded-[1.25rem] p-5">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-amber-400/15 p-3 text-[var(--warning-text)]">
-                    <WifiOff className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--text-muted)]">Шаг 3</p>
-                    <h3 className="text-lg font-semibold">Проверить offline flow</h3>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-[var(--text-soft)]">
-                  Отключите сеть в DevTools или на устройстве, сохраните изменения и затем
-                  вернитесь в онлайн, чтобы показать pending sync и ручной запуск синка.
-                </p>
-                <Button
-                  onClick={() =>
-                    toast('Как показать offline-first', {
-                      description:
-                        'Отключите сеть в DevTools или на устройстве, сохраните табель и затем вернитесь в онлайн, чтобы показать pending sync и ручной запуск синхронизации.',
-                    })
-                  }
-                  variant="secondary"
-                  className="mt-5 border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)] hover:bg-amber-400/20"
-                >
-                  <WifiOff className="h-4 w-4" />
-                  Показать подсказку
-                </Button>
-              </article>
-            </div>
+          <div className="grid gap-2 border-t border-[var(--panel-border)] px-4 py-3 sm:grid-cols-3 sm:px-5 lg:px-6">
+            <Button
+              onClick={() => void handleSeedDemoData()}
+              disabled={seedDemoData.isPending}
+              variant="secondary"
+              className="justify-start border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
+            >
+              <DatabaseZap className="h-4 w-4" />
+              Заполнить демо-данными
+            </Button>
+            <Button
+              onClick={() =>
+                void navigate({
+                  to: '/timesheet/$date',
+                  params: { date: startOfToday() },
+                })
+              }
+              variant="secondary"
+              className="justify-start border-sky-300/20 bg-sky-400/10 text-[var(--accent)] hover:bg-sky-400/20"
+            >
+              <Plus className="h-4 w-4" />
+              Открыть табель на сегодня
+            </Button>
+            <Button
+              onClick={() =>
+                toast('Как показать работу без сети', {
+                  description:
+                    'Отключите сеть в DevTools или на устройстве, сохраните табель и затем вернитесь в онлайн, чтобы показать ожидающую синхронизацию и ручной запуск отправки.',
+                })
+              }
+              variant="secondary"
+              className="justify-start border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)] hover:bg-amber-400/20"
+            >
+              <WifiOff className="h-4 w-4" />
+              Подсказка по офлайн-режиму
+            </Button>
           </div>
         </div>
       )}
 
       <div className="app-surface overflow-hidden rounded-[1.25rem]">
-        <div className="grid gap-5 px-4 py-4 sm:px-5 xl:grid-cols-[minmax(0,1.7fr)_320px] xl:px-6">
-          <div className="space-y-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
+        <div className="grid gap-4 px-4 py-4 sm:px-5 xl:grid-cols-[minmax(0,1.9fr)_300px] xl:px-6">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
               <CalendarRange className="h-3.5 w-3.5" />
-              Главный экран табелей
+              Журнал табелей
             </span>
-            <div className="space-y-2.5">
-              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight xl:text-[1.9rem]">
+            <div className="space-y-2">
+              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight xl:text-[1.75rem]">
                 Журнал табелей для ежедневной работы без лишней навигации.
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                Здесь остается только то, что действительно важно для ежедневной работы:
-                открыть день, завести часы и быстро вернуться к нужному табелю.
+                Откройте нужный день, заведите часы и быстро вернитесь к нужному табелю.
               </p>
-              {syncStatus && syncStatus.pendingCount > 0 && (
-                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm text-[var(--warning-text)]">
-                  Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
-                </div>
-              )}
-              <div className="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2.5 text-sm text-[var(--accent)]">
-                Публичное демо: можно безопасно исследовать интерфейс и offline flow на
-                локальных данных.
-              </div>
             </div>
             <div className="flex flex-wrap gap-2.5">
               <Button
@@ -438,9 +373,19 @@ export default function TimesheetsList() {
                 Сбросить демо-базу
               </Button>
             </div>
+            <div className="flex flex-wrap gap-2.5">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2 text-sm text-[var(--accent)]">
+                Публичное демо на локальных данных.
+              </div>
+              {syncStatus && syncStatus.pendingCount > 0 && (
+                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2 text-sm text-[var(--warning-text)]">
+                  Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
             {activeSummary.map((item) => {
               const Icon = item.icon;
 
@@ -448,17 +393,19 @@ export default function TimesheetsList() {
                 <div
                   key={item.label}
                   className={cn(
-                    'rounded-[1rem] border border-[var(--panel-border)] bg-gradient-to-br p-4',
+                    'rounded-[1rem] border border-[var(--panel-border)] bg-gradient-to-br p-3.5',
                     item.accent
                   )}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm text-[var(--text-soft)]">{item.label}</p>
-                      <p className="mt-2 text-3xl font-semibold">{item.value}</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">
+                        {item.label}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold">{item.value}</p>
                     </div>
-                    <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-3">
-                      <Icon className="h-5 w-5" />
+                    <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-2.5">
+                      <Icon className="h-4.5 w-4.5" />
                     </div>
                   </div>
                 </div>

@@ -26,6 +26,12 @@
 - shadcn/ui docs: https://ui.shadcn.com/docs
 - vite-plugin-pwa docs: https://vite-pwa-org.netlify.app/
 
+Локальные документы для быстрого входа в контекст:
+
+- `IMPLEMENTATION.md`
+- `.docs/product-review-plan.md`
+- `.docs/architecture.md`
+
 ## Build & Dev Commands
 
 - `npm install`
@@ -36,6 +42,9 @@
 - `npm run lint:fix`
 - `npm run test`
 - `npm run test:ui`
+- `npm run test:e2e`
+- `npm run test:e2e:headed`
+- `npm run test:e2e:ui`
 
 ## Architecture Rules
 

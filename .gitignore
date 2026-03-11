@@ -33,6 +33,8 @@ Thumbs.db
 
 # Jest
 coverage/
+playwright-report/
+test-results/
 
 # VS Code
 .vscode/settings.json

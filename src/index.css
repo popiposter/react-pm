@@ -2,6 +2,11 @@
 
 :root {
   color-scheme: dark;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-nav-bottom-padding: calc(var(--safe-area-bottom) + 0.875rem);
+  --mobile-nav-content-offset: calc(var(--safe-area-bottom) + 5.25rem);
+  --mobile-editor-bar-offset: calc(var(--safe-area-bottom) + 4.75rem);
   --app-bg:
     radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 26%),
     radial-gradient(circle at bottom right, rgba(45, 212, 191, 0.09), transparent 22%),

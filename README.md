@@ -52,10 +52,12 @@ Offline-first PWA для ввода и редактирования табеле
 
 Подробности:
 
+- [Implementation memory](IMPLEMENTATION.md)
 - [Архитектура и roadmap](.docs/architecture.md)
 - [План интеграции с 1С](.docs/onec-integration-plan.md)
 - [Авторизация и демо-режим](.docs/demo-and-auth.md)
 - [Деплой и GitHub Pages](.docs/deployment.md)
+- [Product review backlog](.docs/product-review-plan.md)
 
 ## Установка
 
@@ -82,12 +84,21 @@ npm run build
 ```bash
 npm run lint
 npm run test
+npm run test:e2e
 ```
 
 Предпросмотр production build:
 
 ```bash
 npm run preview
+```
+
+E2E и визуальная проверка в браузере:
+
+```bash
+npm run test:e2e
+npm run test:e2e:headed
+npm run test:e2e:ui
 ```
 
 ## Переменные окружения
@@ -122,6 +133,16 @@ VITE_APP_BASE_PATH=/
 Подробно:
 
 - [Авторизация и демо-режим](.docs/demo-and-auth.md)
+
+## Browser E2E
+
+В проект подключен `Playwright` для smoke-проверок и живого просмотра интерфейса в браузере.
+
+- `npm run test:e2e` запускает сценарии headless
+- `npm run test:e2e:headed` прогоняет те же сценарии в видимом окне браузера
+- `npm run test:e2e:ui` открывает Playwright UI runner для локальной отладки
+
+Playwright сам поднимает Vite dev server, поэтому отдельно запускать `npm run dev` для e2e не нужно.
 
 ## Есть ли разделение админ / пользователь
 
@@ -192,6 +213,14 @@ src/
   routes/          TanStack Router routes
   store/           query client, persistence
 ```
+
+## Быстрый вход в контекст
+
+Если подключаешься к проекту впервые или после паузы, начни с:
+
+- [IMPLEMENTATION.md](IMPLEMENTATION.md)
+- [Product review plan](.docs/product-review-plan.md)
+- [Архитектура и roadmap](.docs/architecture.md)
 
 ## Ближайшие планы
 
