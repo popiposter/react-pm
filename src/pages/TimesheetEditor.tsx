@@ -3,17 +3,20 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
+  type DragEndEvent,
   type DragOverEvent,
 } from '@dnd-kit/core';
 import {
   restrictToFirstScrollableAncestor,
   restrictToVerticalAxis,
+  restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import {
   sortableKeyboardCoordinates,
@@ -83,6 +86,7 @@ interface RowEditorProps {
   requestRemoveRow: (index: number) => void;
   duplicateRow: (row: TimesheetRow) => void;
   validationErrors: string[];
+  insertMarker?: 'before' | 'after' | null;
   shouldAutoReveal?: boolean;
 }
 
@@ -357,6 +361,99 @@ const DescriptionField = ({
   );
 };
 
+const RowSummaryContent = ({
+  row,
+  taskGroups,
+  taskLookup,
+}: {
+  row: TimesheetRow;
+  taskGroups: GroupedTasks[];
+  taskLookup: Map<string, Task>;
+}) => {
+  const taskLabel = getTaskLabel(taskGroups, row.taskId);
+  const projectName = getTaskProjectName(taskLookup, row.taskId);
+
+  return (
+    <>
+      <div className="min-w-0">
+        <p className="truncate text-[11px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          {projectName}
+        </p>
+        <p className="mt-1 truncate text-sm font-semibold">{taskLabel}</p>
+      </div>
+      <div className="mt-2 flex items-center gap-2 text-sm text-[var(--text-muted)]">
+        <span>{formatTimeLabel(row.startTime)}</span>
+        <span>&rarr;</span>
+        <span>{formatTimeLabel(row.endTime)}</span>
+        <span className="rounded-full bg-[var(--panel-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-soft)]">
+          {minutesToHours(row.duration)} ч
+        </span>
+      </div>
+      <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--text-soft)]">
+        {row.description || 'Без описания работ'}
+      </p>
+    </>
+  );
+};
+
+const MobileDragPreview = ({
+  row,
+  taskGroups,
+  taskLookup,
+}: {
+  row: TimesheetRow;
+  taskGroups: GroupedTasks[];
+  taskLookup: Map<string, Task>;
+}) => (
+  <article className="w-[min(26rem,calc(100vw-2rem))] border border-[var(--accent)] bg-[var(--panel-bg)] shadow-[0_30px_90px_-40px_var(--shadow-color)]">
+    <div className="flex items-start gap-3 px-4 py-3">
+      <div className="mt-7 flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)]">
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <RowSummaryContent row={row} taskGroups={taskGroups} taskLookup={taskLookup} />
+      </div>
+    </div>
+  </article>
+);
+
+const DesktopDragPreview = ({
+  row,
+  taskGroups,
+  taskLookup,
+}: {
+  row: TimesheetRow;
+  taskGroups: GroupedTasks[];
+  taskLookup: Map<string, Task>;
+}) => (
+  <div className="grid min-w-[1100px] grid-cols-[3.25rem_minmax(0,1fr)_8.25rem_8.25rem_7.5rem_minmax(15rem,1fr)_4.5rem] border border-[var(--accent)] bg-[var(--panel-bg)] shadow-[0_34px_96px_-48px_var(--shadow-color)]">
+    <div className="flex items-center justify-center border-r border-[var(--panel-border)] px-1.5 py-3 text-[var(--text-muted)]">
+      <GripVertical className="h-4 w-4" />
+    </div>
+    <div className="border-r border-[var(--panel-border)] px-3 py-3">
+      <div className="space-y-1.5">
+        <p className="truncate text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
+          {getTaskProjectName(taskLookup, row.taskId)}
+        </p>
+        <p className="truncate text-sm font-semibold">{getTaskLabel(taskGroups, row.taskId)}</p>
+      </div>
+    </div>
+    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm font-medium tabular-nums">
+      {formatTimeLabel(row.startTime)}
+    </div>
+    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm font-medium tabular-nums">
+      {formatTimeLabel(row.endTime)}
+    </div>
+    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm font-medium tabular-nums">
+      {minutesToHours(row.duration)} ч
+    </div>
+    <div className="border-r border-[var(--panel-border)] px-3 py-3 text-sm text-[var(--text-soft)]">
+      {row.description || 'Без описания работ'}
+    </div>
+    <div className="px-3 py-3" />
+  </div>
+);
+
 const SortableDesktopRow = ({
   row,
   index,
@@ -368,6 +465,7 @@ const SortableDesktopRow = ({
   updateRow,
   requestRemoveRow,
   validationErrors,
+  insertMarker = null,
 }: RowEditorProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
@@ -381,14 +479,18 @@ const SortableDesktopRow = ({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.92 : 1,
+        opacity: isDragging ? 0.14 : 1,
       }}
       className={cn(
         'relative border-t border-[var(--panel-border)] align-middle transition hover:bg-[var(--panel-hover)]',
         validationErrors.length > 0 && 'bg-amber-400/[0.06]',
-        isDragging && 'z-10 bg-[var(--panel-bg)] shadow-[0_24px_52px_-34px_var(--shadow-color)]',
-        isDropTarget && 'bg-sky-400/[0.08] shadow-[inset_0_3px_0_0_var(--accent),inset_0_-2px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
-        isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
+        isDragging && 'z-10 bg-[var(--panel-bg)]',
+        isDropTarget && 'bg-sky-400/[0.05]',
+        isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]',
+        insertMarker === 'before' &&
+          'before:pointer-events-none before:absolute before:inset-x-0 before:-top-px before:h-0.5 before:bg-[var(--accent)]',
+        insertMarker === 'after' &&
+          'after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-[var(--accent)]'
       )}
     >
       <td className="w-12 px-1.5 py-2 text-center align-middle">
@@ -476,6 +578,7 @@ const SortableMobileRow = ({
   requestRemoveRow,
   duplicateRow,
   validationErrors,
+  insertMarker = null,
   shouldAutoReveal = false,
 }: RowEditorProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -517,21 +620,23 @@ const SortableMobileRow = ({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.96 : 1,
+        opacity: isDragging ? 0.14 : 1,
       }}
       className={cn(
         'relative overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg)] transition-all duration-200',
         validationErrors.length > 0 && 'bg-amber-400/[0.08]',
-        isDragging && 'z-20 scale-[1.02] shadow-[0_26px_64px_-34px_var(--shadow-color)]',
-        isDropTarget && 'bg-sky-400/[0.09] shadow-[inset_0_3px_0_0_var(--accent),inset_0_-2px_0_0_color-mix(in_oklab,var(--accent)_55%,transparent)]',
+        isDragging && 'z-20',
+        isDropTarget && 'bg-sky-400/[0.05]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
-      {isDropTarget && (
-        <>
-          <div className="pointer-events-none absolute inset-x-3 top-0 h-1.5 -translate-y-1/2 bg-[var(--accent)] shadow-[0_0_0_5px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
-          <div className="pointer-events-none absolute inset-x-3 bottom-0 h-[1px] bg-[var(--accent)]/55" />
-        </>
+      {insertMarker && (
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-3 z-[2] h-1.5 bg-[var(--accent)] shadow-[0_0_0_5px_color-mix(in_oklab,var(--accent)_18%,transparent)]',
+            insertMarker === 'before' ? 'top-0 -translate-y-1/2' : 'bottom-0 translate-y-1/2'
+          )}
+        />
       )}
 
       {isActionsOpen && (
@@ -627,11 +732,8 @@ const SortableMobileRow = ({
         >
           <div className="min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-[11px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                  {projectName}
-                </p>
-                <p className="mt-1 truncate text-sm font-semibold">{taskLabel}</p>
+              <div className="min-w-0 flex-1">
+                <RowSummaryContent row={row} taskGroups={taskGroups} taskLookup={taskLookup} />
               </div>
               {validationErrors.length > 0 && (
                 <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-[var(--warning-text)]">
@@ -639,17 +741,6 @@ const SortableMobileRow = ({
                 </span>
               )}
             </div>
-            <div className="mt-2 flex items-center gap-2 text-sm text-[var(--text-muted)]">
-              <span>{formatTimeLabel(row.startTime)}</span>
-              <span>&rarr;</span>
-              <span>{formatTimeLabel(row.endTime)}</span>
-              <span className="rounded-full bg-[var(--panel-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-soft)]">
-                {minutesToHours(row.duration)} ч
-              </span>
-            </div>
-            <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--text-soft)]">
-              {row.description || 'Без описания работ'}
-            </p>
           </div>
         </button>
       </div>
@@ -799,6 +890,12 @@ export default function TimesheetEditor() {
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [overRowId, setOverRowId] = useState<string | null>(null);
   const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
+  const activeRow = useMemo(
+    () => (activeRowId ? rows.find((row) => row.id === activeRowId) ?? null : null),
+    [activeRowId, rows]
+  );
+  const activeRowIndex = activeRowId ? rowIds.indexOf(activeRowId) : -1;
+  const overRowIndex = overRowId ? rowIds.indexOf(overRowId) : -1;
   const dndSensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -1122,25 +1219,33 @@ export default function TimesheetEditor() {
     });
   };
 
-  const handleDragOver = ({ active, over }: DragOverEvent) => {
+  const handleDragOver = ({ over }: DragOverEvent) => {
     const nextOverId = over ? String(over.id) : null;
     setOverRowId(nextOverId);
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    const oldIndex = rows.findIndex((row) => row.id === String(active.id));
-    const newIndex = rows.findIndex((row) => row.id === String(over.id));
-
-    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
-      return;
-    }
-
-    moveRow(oldIndex, newIndex);
   };
 
-  const onDragEnd = () => {
+  const getInsertMarker = (rowId: string): 'before' | 'after' | null => {
+    if (!activeRowId || !overRowId || rowId !== overRowId || activeRowId === overRowId) {
+      return null;
+    }
+
+    if (activeRowIndex === -1 || overRowIndex === -1) {
+      return null;
+    }
+
+    return activeRowIndex < overRowIndex ? 'after' : 'before';
+  };
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (over && active.id !== over.id) {
+      const oldIndex = rows.findIndex((row) => row.id === String(active.id));
+      const newIndex = rows.findIndex((row) => row.id === String(over.id));
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        moveRow(oldIndex, newIndex);
+      }
+    }
+
     setActiveRowId(null);
     setOverRowId(null);
   };
@@ -1346,6 +1451,7 @@ export default function TimesheetEditor() {
                       requestRemoveRow={handleRequestRemoveRow}
                       duplicateRow={handleDuplicateRow}
                       validationErrors={validationErrors}
+                      insertMarker={getInsertMarker(row.id)}
                       shouldAutoReveal={row.id === freshMobileRowId}
                     />
                       );
@@ -1386,6 +1492,7 @@ export default function TimesheetEditor() {
                           requestRemoveRow={handleRequestRemoveRow}
                           duplicateRow={handleDuplicateRow}
                           validationErrors={validationErrors}
+                          insertMarker={getInsertMarker(row.id)}
                         />
                           );
                         })()
@@ -1396,6 +1503,33 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
+          <DragOverlay
+            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+            zIndex={60}
+            dropAnimation={{
+              duration: 180,
+              easing: 'cubic-bezier(0.18, 0.67, 0.28, 1)',
+            }}
+          >
+            {activeRow ? (
+              <div className="pointer-events-none">
+                <div className="xl:hidden">
+                  <MobileDragPreview
+                    row={activeRow}
+                    taskGroups={taskGroups}
+                    taskLookup={taskLookup}
+                  />
+                </div>
+                <div className="hidden xl:block">
+                  <DesktopDragPreview
+                    row={activeRow}
+                    taskGroups={taskGroups}
+                    taskLookup={taskLookup}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
 
