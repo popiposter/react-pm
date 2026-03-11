@@ -8,6 +8,8 @@ import {
   todayDate,
 } from './helpers';
 
+test.skip(({ isMobile }) => isMobile, 'Desktop-only editor flows');
+
 test('editor blocks saving when a row is incomplete', async ({ page }) => {
   await openTodayEditorFromDemo(page);
 

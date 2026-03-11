@@ -207,6 +207,8 @@ Core:
 Browser testing:
 
 - `npm run test:e2e`
+- `npm run test:e2e:mobile`
+- `npm run test:e2e:prod`
 - `npm run test:e2e:headed`
 - `npm run test:e2e:ui`
 
@@ -216,7 +218,7 @@ Use the smallest sufficient layer:
 
 - unit / business logic: Vitest
 - UI behavior: React Testing Library
-- real browser flows and visual checks: Playwright
+- real browser flows on desktop, mobile, and production-mode smoke: Playwright
 
 Current browser smoke coverage includes:
 
@@ -231,6 +233,9 @@ Current browser smoke coverage includes:
 - row deletion with confirmation
 - copy current timesheet to today
 - offline save with pending sync and manual sync run
+- mobile editor add/save flow
+- mobile row duplication flow
+- production-mode smoke for hidden demo affordances and `/demo` redirect
 
 ## Known Risks And Watchouts
 
@@ -258,6 +263,8 @@ If a decision becomes large or controversial, move it to an ADR-style document i
 - Added `appConfig` and started separating `/demo` from the main working routes.
 - Hardened `prod` mode so login no longer pre-fills demo credentials and `/demo` is excluded from production-like bundle output by default.
 - Fixed a blocker timing issue so `Сохранить и закрыть` now actually leaves the editor after a successful save.
+- Added mobile Playwright coverage and a dedicated production-mode Playwright smoke config.
+- Added a CI workflow that runs lint, build, desktop/mobile browser tests, and prod-mode smoke.
 
 ## Current Work Log
 

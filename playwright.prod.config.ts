@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const port = 4173;
+const port = 4175;
 const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: /prod-smoke\.spec\.ts/,
+  testMatch: /prod-smoke\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -18,9 +18,9 @@ export default defineConfig({
     serviceWorkers: 'block',
   },
   webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${port}`,
+    command: `node scripts/run-vite-with-mode.mjs ${port} prod`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
   projects: [
@@ -28,12 +28,6 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-      },
-    },
-    {
-      name: 'mobile-chrome',
-      use: {
-        ...devices['Pixel 7'],
       },
     },
   ],
