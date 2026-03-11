@@ -1326,17 +1326,17 @@ export default function TimesheetEditor() {
                   navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
                 }
                 variant="secondary"
-                className="text-[var(--text-soft)]"
+                className="hidden text-[var(--text-soft)] xl:inline-flex"
               >
                 <ArrowLeft className="h-4 w-4" />
                 К списку
               </Button>
-              <Button onClick={handleCopy} variant="secondary">
+              <Button onClick={handleCopy} variant="secondary" className="w-full sm:w-auto">
                 <Copy className="h-4 w-4" />
                 Копировать на сегодня
               </Button>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="hidden flex-wrap items-center gap-2.5 xl:flex">
               <Button
                 onClick={() => void handleSave(false)}
                 disabled={saveMutation.isPending}
@@ -1398,14 +1398,6 @@ export default function TimesheetEditor() {
               Строки табеля
             </p>
             <h2 className="mt-1 text-lg font-semibold">Рабочие записи за день</h2>
-            </div>
-            <div className="hidden xl:flex items-center gap-2 text-sm text-[var(--text-soft)]">
-              <span className="inline-flex h-9 items-center border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3">
-                Строк: {rows.length}
-              </span>
-              <span className="inline-flex h-9 items-center border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3">
-                Часов: {totalHours}
-              </span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

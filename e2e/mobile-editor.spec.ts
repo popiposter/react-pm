@@ -14,7 +14,7 @@ test('mobile user can add and save a row from the compact editor flow', async ({
   await lastCard.locator('select').selectOption('task1');
   await lastCard.getByPlaceholder('Описание работ').fill('Мобильный сценарий сохранения');
   await page
-    .getByRole('button', { name: 'Записать', exact: true })
+    .getByRole('button', { name: 'Сохранить', exact: true })
     .last()
     .evaluate((button: HTMLButtonElement) => button.click());
 
