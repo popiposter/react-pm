@@ -20,8 +20,8 @@ export const appConfig = {
   mode,
   isDemoMode: mode === 'demo',
   defaults: {
-    username: 'demo.user',
-    password: 'demo',
+    username: mode === 'demo' ? 'demo.user' : '',
+    password: mode === 'demo' ? 'demo' : '',
   },
   features: {
     demoRoute:

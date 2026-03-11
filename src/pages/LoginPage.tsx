@@ -49,6 +49,8 @@ export function LoginPage({
   const [password, setPassword] = useState<string>(appConfig.defaults.password);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const reasonContent = reason ? loginReasonContent[reason] : null;
+  const showDemoRouteLink = appConfig.features.demoRoute;
+  const showDemoDefaults = appConfig.isDemoMode;
 
   const navigateAfterLogin = async () => {
     if (redirectTo?.startsWith('/')) {
@@ -104,8 +106,9 @@ export function LoginPage({
                 Войти в приложение
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
-                Войдите в рабочее место и сразу переходите к журналу табелей. Если нужно
-                подготовить демонстрацию, отдельный демо-центр доступен вне основного входа.
+                {showDemoRouteLink
+                  ? 'Войдите в рабочее место и сразу переходите к журналу табелей. Если нужно подготовить демонстрацию, отдельный демо-центр доступен вне основного входа.'
+                  : 'Войдите в рабочее место и сразу переходите к журналу табелей.'}
               </p>
             </div>
 
@@ -115,14 +118,21 @@ export function LoginPage({
                   Учетные данные
                 </p>
                 <p className="mt-2 text-sm text-[var(--app-fg)]">
-                  Для быстрого старта сейчас подставлены
-                  <span className="ml-2 inline-flex rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-2.5 py-1 text-xs text-[var(--accent)]">
-                    {appConfig.defaults.username} / {appConfig.defaults.password}
-                  </span>
+                  {showDemoDefaults ? (
+                    <>
+                      Для быстрого старта сейчас подставлены
+                      <span className="ml-2 inline-flex rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-2.5 py-1 text-xs text-[var(--accent)]">
+                        {appConfig.defaults.username} / {appConfig.defaults.password}
+                      </span>
+                    </>
+                  ) : (
+                    'Введите рабочий логин и пароль.'
+                  )}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                  До подключения production auth используется локальный demo transport, поэтому
-                  подойдет любая непустая пара логин/пароль.
+                  {showDemoDefaults
+                    ? 'До подключения production auth используется локальный demo transport, поэтому подойдет любая непустая пара логин/пароль.'
+                    : 'Интерфейс уже приведен к production-потоку: демонстрационные подсказки и маршрут демо скрыты.'}
                 </p>
               </div>
             </div>
@@ -150,7 +160,7 @@ export function LoginPage({
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   className="h-12 rounded-2xl bg-[var(--panel-muted)]"
-                  placeholder="demo.user"
+                  placeholder={showDemoDefaults ? 'demo.user' : 'Введите логин'}
                 />
               </label>
 
@@ -199,7 +209,7 @@ export function LoginPage({
                     заложены в архитектуре.
                   </p>
                 </div>
-                {appConfig.features.demoRoute && (
+                {showDemoRouteLink && (
                   <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 text-sm leading-6 text-[var(--text-muted)]">
                     Нужен презентационный сценарий, seed/reset демо-базы или подсказки по offline
                     flow?

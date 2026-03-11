@@ -249,6 +249,7 @@ If a decision becomes large or controversial, move it to an ADR-style document i
 - Improved the mobile timesheet editor flow so newly added rows auto-reveal into the working area.
 - Added a browser-driven PWA install prompt UX in the app shell for supported platforms.
 - Added `appConfig` and started separating `/demo` from the main working routes.
+- Hardened `prod` mode so login no longer pre-fills demo credentials and `/demo` is excluded from production-like bundle output by default.
 
 ## Current Work Log
 
