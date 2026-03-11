@@ -268,7 +268,7 @@ export default function TimesheetsList() {
                   </p>
                   <p className="mt-2 text-2xl font-semibold">{item.value}</p>
                 </div>
-                <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-2.5">
+                <div className="border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-2.5">
                   <Icon className="h-4.5 w-4.5" />
                 </div>
               </div>
@@ -277,7 +277,7 @@ export default function TimesheetsList() {
         })}
       </div>
 
-      <div className="app-surface rounded-[1.25rem] p-4 sm:p-5">
+      <div className="app-surface p-4 sm:p-5">
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
@@ -300,7 +300,7 @@ export default function TimesheetsList() {
                       value={searchQuery}
                       onChange={(event) => updateSearch({ q: event.target.value })}
                       placeholder="Поиск по дате или описанию"
-                      className="h-11 rounded-xl bg-[var(--panel-bg-strong)] pl-10 pr-4"
+                      className="h-11 bg-[var(--panel-bg-strong)] pl-10 pr-4"
                     />
                   </div>
                 </label>
@@ -310,7 +310,7 @@ export default function TimesheetsList() {
                     <CalendarRange className="h-3.5 w-3.5" />
                     Период
                   </span>
-                  <div className="flex h-11 items-center overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+                  <div className="flex h-11 items-center overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
                     <button
                       type="button"
                       onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, -1) })}
@@ -346,7 +346,7 @@ export default function TimesheetsList() {
                   >
                     <SelectTrigger
                       aria-label="Статус"
-                      className="h-11 rounded-xl bg-[var(--panel-bg-strong)]"
+                      className="h-11 bg-[var(--panel-bg-strong)]"
                     >
                       <SelectValue placeholder="Все статусы" />
                     </SelectTrigger>
@@ -374,7 +374,7 @@ export default function TimesheetsList() {
                       });
                     }}
                     variant="secondary"
-                    className="h-11 w-full rounded-xl"
+                    className="h-11 w-full rounded-lg"
                   >
                     Сбросить
                   </Button>
@@ -389,13 +389,13 @@ export default function TimesheetsList() {
             {[0, 1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="h-32 animate-pulse rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)]"
+                className="h-32 animate-pulse border border-[var(--panel-border)] bg-[var(--panel-muted)]"
               />
             ))}
           </div>
         ) : filteredTimesheets.length === 0 && hasActiveFilters ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="rounded-3xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+            <div className="border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
               <FileSearch className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
@@ -418,7 +418,7 @@ export default function TimesheetsList() {
           </div>
         ) : isEmptyMonth ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="rounded-3xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+            <div className="border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
               <FileSpreadsheet className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
@@ -467,7 +467,7 @@ export default function TimesheetsList() {
                       params: { date: timesheet.date },
                     })
                   }
-                  className="app-surface rounded-[1.25rem] p-4 text-left transition active:scale-[0.99]"
+                  className="app-surface p-4 text-left transition active:scale-[0.99]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -504,7 +504,7 @@ export default function TimesheetsList() {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="h-10 rounded-lg"
+                    className="h-10 rounded-md"
                     disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
                     onClick={() => {
                       toast.promise(
@@ -525,7 +525,7 @@ export default function TimesheetsList() {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="h-10 rounded-lg"
+                    className="h-10 rounded-md"
                     disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
                     onClick={() => {
                       toast.promise(

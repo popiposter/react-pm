@@ -13,7 +13,7 @@ export function DocumentTableToolbar({
   return (
     <div
       className={cn(
-        'rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-3.5',
+        'border border-[var(--panel-border)] bg-[var(--panel-muted)] p-3.5',
         className
       )}
     >

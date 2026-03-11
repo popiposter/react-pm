@@ -243,7 +243,7 @@ export default function Layout({ children }: LayoutProps) {
                   type="button"
                   onClick={() => setIsSidebarCollapsed(false)}
                   title="Развернуть навигацию"
-                  className="group/brand relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+                  className="group/brand relative inline-flex h-10 w-10 items-center justify-center border border-transparent text-[var(--text-soft)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
                 >
                   <img
                     src={brandLogo}
@@ -254,7 +254,7 @@ export default function Layout({ children }: LayoutProps) {
                 </button>
               ) : (
                 <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.45)]">
+                  <div className="flex h-10 w-10 items-center justify-center border border-[var(--panel-border)] bg-white/95 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.45)]">
                     <img
                       src={brandLogo}
                       alt="Логотип Проектные табели"
@@ -265,7 +265,7 @@ export default function Layout({ children }: LayoutProps) {
                     type="button"
                     onClick={() => setIsSidebarCollapsed(true)}
                     title="Свернуть навигацию"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                    className="inline-flex h-9 w-9 items-center justify-center border border-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
                   >
                     <PanelLeftClose className="h-4 w-4" />
                   </button>
@@ -287,7 +287,7 @@ export default function Layout({ children }: LayoutProps) {
                     to={item.href}
                     title={item.label}
                     className={cn(
-                      'flex items-center rounded-xl border border-transparent text-[var(--text-soft)] transition',
+                      'flex items-center border border-transparent text-[var(--text-soft)] transition',
                       isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-11 gap-3 px-3.5',
                       isActive
                         ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
@@ -308,7 +308,7 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={() => void handleRunSync()}
                   title={`Ожидают синхронизации: ${syncStatus.pendingCount}`}
                   className={cn(
-                    'inline-flex items-center rounded-xl border border-transparent text-[var(--warning-text)] transition hover:border-amber-300/20 hover:bg-amber-400/10',
+                    'inline-flex items-center border border-transparent text-[var(--warning-text)] transition hover:border-amber-300/20 hover:bg-amber-400/10',
                     isSidebarCollapsed ? 'h-11 w-11 justify-center' : 'h-11 w-full gap-3 px-3.5'
                   )}
                 >
@@ -333,7 +333,7 @@ export default function Layout({ children }: LayoutProps) {
           >
             <div className="flex h-16 w-full items-center justify-between px-4 sm:px-5 xl:px-8 2xl:px-10">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-white/90 xl:hidden">
+                <div className="flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-white/90 xl:hidden">
                   <img
                     src={brandLogo}
                     alt="Логотип Проектные табели"
@@ -349,7 +349,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       type="button"
                       onClick={() => void handleInstallApp()}
-                      className="hidden h-9 items-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
+                      className="hidden h-9 items-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
                     >
                       <Download className="h-4 w-4" />
                       Установить
@@ -357,7 +357,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       type="button"
                       onClick={() => void handleInstallApp()}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
                       aria-label="Установить приложение"
                       title="Установить приложение"
                     >
@@ -369,13 +369,13 @@ export default function Layout({ children }: LayoutProps) {
                   <button
                     type="button"
                     onClick={() => setIsThemeMenuOpen((value) => !value)}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 text-sm transition hover:bg-[var(--panel-hover)]"
                     aria-label="Переключить тему"
                   >
                     <CurrentThemeIcon className="h-4 w-4" />
                   </button>
                   {isThemeMenuOpen && (
-                    <div className="app-surface-strong absolute right-0 top-12 z-50 min-w-44 rounded-2xl p-1 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
+                    <div className="app-surface-strong absolute right-0 top-12 z-50 min-w-44 p-1 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
                       {themeOptions.map((option) => {
                         const Icon = option.icon;
                         const isActive = option.value === themeMode;
@@ -389,7 +389,7 @@ export default function Layout({ children }: LayoutProps) {
                               setIsThemeMenuOpen(false);
                             }}
                             className={cn(
-                              'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
+                              'flex w-full items-center gap-3 px-3 py-2 text-sm transition',
                               isActive
                                 ? 'bg-[var(--accent-soft)] text-[var(--app-fg)]'
                                 : 'text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
@@ -413,7 +413,7 @@ export default function Layout({ children }: LayoutProps) {
                         ? 'Сервер доступен'
                         : 'Оффлайн-режим'
                   }
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                 >
                   {isOnline ? (
                     <Wifi
@@ -431,7 +431,7 @@ export default function Layout({ children }: LayoutProps) {
                 <button
                   type="button"
                   onClick={() => void handleLogout()}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                   aria-label="Выйти"
                   title={`Выйти (${auth.session?.user.displayName || 'Пользователь'})`}
                 >
@@ -482,7 +482,7 @@ export default function Layout({ children }: LayoutProps) {
                 q: '',
               }}
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] font-medium transition',
+                'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheets')
                   ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
@@ -500,7 +500,7 @@ export default function Layout({ children }: LayoutProps) {
                 })
               }
               className={cn(
-                'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] font-medium transition',
+                'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheet/')
                   ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
