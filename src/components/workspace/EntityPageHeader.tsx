@@ -19,7 +19,7 @@ export function EntityPageHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('app-surface rounded-[1.25rem] p-4 sm:p-5 xl:p-6', className)}>
+    <div className={cn('app-surface p-4 sm:p-5 xl:p-6', className)}>
       <div className="space-y-4">
         {breadcrumbs}
         {eyebrow}

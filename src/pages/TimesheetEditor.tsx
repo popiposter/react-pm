@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { DndContext, DragOverlay, closestCorners, type DragOverEvent } from '@dnd-kit/core';
+import { DndContext, closestCorners, type DragOverEvent } from '@dnd-kit/core';
 import {
   restrictToFirstScrollableAncestor,
   restrictToVerticalAxis,
-  snapCenterToCursor,
 } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -183,7 +182,7 @@ const TaskSelect = ({
   className?: string;
 }) => (
   <Select value={value || '__empty__'} onValueChange={(nextValue) => onChange(nextValue === '__empty__' ? '' : nextValue)}>
-    <SelectTrigger className={cn('h-10 w-full rounded-lg bg-[var(--panel-muted)]', className)}>
+    <SelectTrigger className={cn('h-10 w-full bg-[var(--panel-muted)]', className)}>
       <SelectValue placeholder="Выберите задачу" />
     </SelectTrigger>
     <SelectContent>
@@ -218,7 +217,7 @@ const NativeTaskSelect = ({
     lang={userLocale}
     value={value}
     onChange={(event) => onChange(event.target.value)}
-    className="h-10 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] outline-none [color-scheme:light_dark]"
+    className="h-10 w-full border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] outline-none [color-scheme:light_dark]"
   >
     <option value="">Выберите задачу</option>
     {taskGroups.map((group) => (
@@ -268,7 +267,7 @@ const TimeField = ({
         onChange?.(normalized);
       }}
       className={cn(
-        'h-10 w-full rounded-lg font-medium tabular-nums',
+        'h-10 w-full font-medium tabular-nums',
         readOnly
           ? 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)]'
           : 'bg-[var(--panel-muted)]',
@@ -294,7 +293,7 @@ const DurationField = ({
       step={0.5}
       value={minutesToHours(value)}
       onChange={(event) => onChange(hoursToMinutes(event.target.value))}
-      className="h-10 w-full rounded-lg bg-[var(--panel-muted)] pr-10 [color-scheme:light_dark]"
+      className="h-10 w-full bg-[var(--panel-muted)] pr-10 [color-scheme:light_dark]"
     />
     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">
       ч
@@ -336,35 +335,12 @@ const DescriptionField = ({
       }}
       placeholder="Описание работ"
       className={cn(
-        'min-h-10 w-full resize-none overflow-hidden rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15',
+        'min-h-10 w-full resize-none overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15',
         className
       )}
     />
   );
 };
-
-const DragRowPreview = ({
-  row,
-  taskGroups,
-  taskLookup,
-}: {
-  row: TimesheetRow;
-  taskGroups: GroupedTasks[];
-  taskLookup: Map<string, Task>;
-}) => (
-  <div className="w-[min(340px,calc(100vw-2rem))] border border-[var(--accent)]/35 bg-[var(--panel-bg)] px-4 py-3 shadow-[0_28px_80px_-40px_var(--shadow-color)]">
-    <p className="truncate text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
-      {getTaskProjectName(taskLookup, row.taskId)}
-    </p>
-    <p className="mt-1 truncate text-sm font-semibold">{getTaskLabel(taskGroups, row.taskId)}</p>
-    <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--text-soft)]">
-      {row.description || 'Без описания работ'}
-    </p>
-    <p className="mt-2 text-sm text-[var(--text-soft)]">
-      {formatTimeLabel(row.startTime)} - {formatTimeLabel(row.endTime)} · {minutesToHours(row.duration)} ч
-    </p>
-  </div>
-);
 
 const SortableDesktopRow = ({
   row,
@@ -405,7 +381,7 @@ const SortableDesktopRow = ({
           type="button"
           {...attributes}
           {...listeners}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          className="inline-flex h-8 w-8 items-center justify-center border border-transparent bg-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -420,7 +396,7 @@ const SortableDesktopRow = ({
             value={row.taskId}
             onChange={(value) => updateRow(index, { taskId: value })}
             taskGroups={taskGroups}
-            className="h-9 rounded-md bg-[var(--panel-bg)]"
+            className="h-9 bg-[var(--panel-bg)]"
           />
         </div>
       </td>
@@ -428,21 +404,21 @@ const SortableDesktopRow = ({
         <TimeField
           value={row.startTime}
           onChange={(value) => updateRow(index, { startTime: value })}
-          className="h-9 max-w-[7.75rem] rounded-md bg-[var(--panel-bg)]"
+          className="h-9 max-w-[7.75rem] bg-[var(--panel-bg)]"
         />
       </td>
       <td className="w-[8.25rem] px-2 py-2 align-middle">
         <TimeField
           value={row.endTime}
           onChange={(value) => updateRow(index, { endTime: value })}
-          className="h-9 max-w-[7.75rem] rounded-md bg-[var(--panel-bg)]"
+          className="h-9 max-w-[7.75rem] bg-[var(--panel-bg)]"
         />
       </td>
       <td className="w-[7.5rem] px-2 py-2 align-middle">
         <DurationField
           value={row.duration}
           onChange={(value) => updateRow(index, { duration: value })}
-          className="max-w-[6.5rem] [&_input]:h-9 [&_input]:rounded-md [&_input]:bg-[var(--panel-bg)]"
+          className="max-w-[6.5rem] [&_input]:h-9 [&_input]:bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2 align-middle">
@@ -450,7 +426,7 @@ const SortableDesktopRow = ({
           value={row.description || ''}
           onChange={(value) => updateRow(index, { description: value })}
           rows={1}
-          className="min-h-9 rounded-md bg-[var(--panel-bg)]"
+          className="min-h-9 bg-[var(--panel-bg)]"
         />
       </td>
       <td className="w-[4.5rem] px-2 py-2 text-right align-middle">
@@ -538,7 +514,7 @@ const SortableMobileRow = ({
     >
       {isDropTarget && (
         <>
-          <div className="pointer-events-none absolute inset-x-3 top-0 h-1.5 -translate-y-1/2 rounded-full bg-[var(--accent)] shadow-[0_0_0_5px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
+          <div className="pointer-events-none absolute inset-x-3 top-0 h-1.5 -translate-y-1/2 bg-[var(--accent)] shadow-[0_0_0_5px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
           <div className="pointer-events-none absolute inset-x-3 bottom-0 h-[1px] bg-[var(--accent)]/55" />
         </>
       )}
@@ -551,7 +527,7 @@ const SortableMobileRow = ({
             aria-label="Закрыть меню действий"
             onClick={() => setIsActionsOpen(false)}
           />
-          <div className="app-surface-strong absolute right-3 top-12 z-20 min-w-56 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150 rounded-[1.1rem] p-2 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
+          <div className="app-surface-strong absolute right-3 top-12 z-20 min-w-56 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150 p-2 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
             <div className="border-b border-[var(--panel-border)] px-2 pb-2 pt-1">
               <p className="text-sm font-semibold">{taskLabel}</p>
               <p className="mt-1 text-xs text-[var(--text-muted)]">{projectName}</p>
@@ -566,7 +542,7 @@ const SortableMobileRow = ({
                   setIsActionsOpen(false);
                 }}
                 variant="ghost"
-                className="h-10 w-full justify-start rounded-xl"
+                className="h-10 w-full justify-start"
               >
                 <Copy className="h-4 w-4" />
                 Скопировать
@@ -577,7 +553,7 @@ const SortableMobileRow = ({
                   setIsActionsOpen(false);
                 }}
                 variant="ghost"
-                className="h-10 w-full justify-start rounded-xl"
+                className="h-10 w-full justify-start"
               >
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 {isExpanded ? 'Свернуть' : 'Показать детали'}
@@ -588,7 +564,7 @@ const SortableMobileRow = ({
                   setIsActionsOpen(false);
                 }}
                 variant="ghost"
-                className="h-10 w-full justify-start rounded-xl text-[var(--danger-text)] hover:bg-rose-400/10 hover:text-[var(--danger-text)]"
+                className="h-10 w-full justify-start text-[var(--danger-text)] hover:bg-rose-400/10 hover:text-[var(--danger-text)]"
               >
                 <Trash2 className="h-4 w-4" />
                 Удалить строку
@@ -604,7 +580,7 @@ const SortableMobileRow = ({
           {...listeners}
           variant="ghost"
           size="icon"
-          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:rounded-full hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] touch-none"
+          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] touch-none"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -613,7 +589,7 @@ const SortableMobileRow = ({
           onClick={() => setIsActionsOpen(true)}
           variant="ghost"
           size="icon"
-          className="absolute right-1 top-1 z-[1] h-8 w-8 rounded-full text-[var(--text-muted)] hover:border hover:border-[var(--panel-border)]"
+          className="absolute right-1 top-1 z-[1] h-8 w-8 text-[var(--text-muted)] hover:border hover:border-[var(--panel-border)]"
           aria-label="Действия со строкой"
         >
           <Ellipsis className="h-4 w-4" />
@@ -623,7 +599,7 @@ const SortableMobileRow = ({
           onClick={() => setIsExpanded((value) => !value)}
           variant="ghost"
           size="icon"
-          className="absolute right-1 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:rounded-full hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
+          className="absolute right-1 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 border border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
           aria-label={isExpanded ? 'Свернуть строку' : 'Развернуть строку'}
         >
           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -735,7 +711,7 @@ const SortableMobileRow = ({
             </div>
 
             {validationErrors.length > 0 && (
-              <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
+              <div className="border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
                 {validationErrors.join(' • ')}
               </div>
             )}
@@ -748,7 +724,7 @@ const SortableMobileRow = ({
 
 const LoadingState = () => (
   <div className="flex min-h-[50vh] items-center justify-center">
-    <div className="app-surface flex items-center gap-3 rounded-lg px-5 py-4">
+    <div className="app-surface flex items-center gap-3 px-5 py-4">
       <LoaderCircle className="h-5 w-5 animate-spin" />
       <span>Загрузка табеля...</span>
     </div>
@@ -807,10 +783,6 @@ export default function TimesheetEditor() {
   const totalHours = useMemo(() => getTotalHours(rows), [rows]);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [overRowId, setOverRowId] = useState<string | null>(null);
-  const activeRow = useMemo(
-    () => rows.find((row) => row.id === activeRowId) ?? null,
-    [activeRowId, rows]
-  );
   const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
 
   useEffect(() => {
@@ -1149,7 +1121,7 @@ export default function TimesheetEditor() {
   if (!date || !timesheet) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="app-surface rounded-xl px-6 py-5 text-center text-[var(--text-soft)]">
+        <div className="app-surface px-6 py-5 text-center text-[var(--text-soft)]">
           Не удалось открыть табель.
         </div>
       </div>
@@ -1239,19 +1211,19 @@ export default function TimesheetEditor() {
 
       <div className="xl:hidden">
         <div className="grid grid-cols-3 gap-2">
-          <div className="app-surface rounded-[0.9rem] px-3 py-2.5">
+          <div className="app-surface px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Записей
             </p>
             <p className="mt-1 text-base font-semibold">{rows.length}</p>
           </div>
-          <div className="app-surface rounded-[0.9rem] px-3 py-2.5">
+          <div className="app-surface px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Часов
             </p>
             <p className="mt-1 text-base font-semibold">{totalHours} ч</p>
           </div>
-          <div className="app-surface rounded-[0.9rem] px-3 py-2.5">
+          <div className="app-surface px-3 py-2.5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Состояние
             </p>
@@ -1292,7 +1264,7 @@ export default function TimesheetEditor() {
 
         <DndContext
           collisionDetection={closestCorners}
-          modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor, snapCenterToCursor]}
+          modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
           onDragStart={({ active }) => setActiveRowId(String(active.id))}
           onDragOver={handleDragOver}
           onDragCancel={() => {
@@ -1304,7 +1276,7 @@ export default function TimesheetEditor() {
           <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
             {rows.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-                <div className="rounded-2xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+                <div className="border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
                   <Plus className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
                 <div className="space-y-2">
@@ -1387,11 +1359,6 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
-          <DragOverlay modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]} adjustScale={false}>
-            {activeRow ? (
-              <DragRowPreview row={activeRow} taskGroups={taskGroups} taskLookup={taskLookup} />
-            ) : null}
-          </DragOverlay>
         </DndContext>
       </div>
 
@@ -1433,9 +1400,9 @@ export default function TimesheetEditor() {
 
       {conflictModalOpened && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-          <div className="app-surface-strong w-full max-w-lg rounded-[1.5rem] p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
+          <div className="app-surface-strong w-full max-w-lg p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
             <div className="flex items-start gap-4">
-              <div className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-amber-200">
+              <div className="border border-amber-300/20 bg-amber-400/10 p-3 text-amber-200">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="space-y-2">
@@ -1477,9 +1444,9 @@ export default function TimesheetEditor() {
 
       {rowPendingDelete !== null && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-          <div className="app-surface-strong w-full max-w-lg rounded-[1.5rem] p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
+          <div className="app-surface-strong w-full max-w-lg p-6 shadow-[0_25px_80px_-50px_rgba(15,23,42,1)]">
             <div className="flex items-start gap-4">
-              <div className="rounded-xl border border-rose-300/20 bg-rose-400/10 p-3 text-rose-200">
+              <div className="border border-rose-300/20 bg-rose-400/10 p-3 text-rose-200">
                 <ShieldAlert className="h-5 w-5" />
               </div>
               <div className="space-y-2">

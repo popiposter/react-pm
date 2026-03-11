@@ -257,7 +257,7 @@ export default function TimesheetsList() {
             <div
               key={item.label}
               className={cn(
-                'app-surface rounded-[1rem] border border-[var(--panel-border)] bg-gradient-to-br p-4',
+                'app-surface border border-[var(--panel-border)] bg-gradient-to-br p-4',
                 item.accent
               )}
             >

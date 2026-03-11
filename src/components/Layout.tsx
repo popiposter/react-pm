@@ -234,7 +234,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex h-full flex-col">
             <div
               className={cn(
-                'relative flex h-16 items-center border-b border-[var(--panel-border)] px-3',
+                'relative flex h-16 items-center px-3',
                 isSidebarCollapsed ? 'justify-center' : 'justify-between'
               )}
             >
