@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { TimesheetRow } from '../api/mockBackend';
 
+type AddRowInput = Omit<TimesheetRow, 'id'> & {
+  id?: TimesheetRow['id'];
+};
+
 export interface TimesheetCalculatorResult {
   rows: TimesheetRow[];
   isDirty: boolean;
   setIsDirty: (value: boolean) => void;
   updateRow: (index: number, updatedRow: Partial<TimesheetRow>) => void;
-  addRow: (row: Omit<TimesheetRow, 'id'>) => void;
+  addRow: (row: AddRowInput) => void;
   removeRow: (index: number) => void;
   moveRow: (fromIndex: number, toIndex: number) => void;
   recalculateAll: () => TimesheetRow[];
@@ -138,9 +142,12 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
   }, [recalculateFromIndex]);
 
   // Add a new row
-  const addRow = useCallback((row: Omit<TimesheetRow, 'id'>) => {
+  const addRow = useCallback((row: AddRowInput) => {
     setRows(prevRows => {
-      const newRows = [...prevRows, { ...row, id: `row_${Date.now()}` } as TimesheetRow];
+      const newRows = [
+        ...prevRows,
+        { ...row, id: row.id ?? `row_${Date.now()}` } as TimesheetRow,
+      ];
 
       // Recalculate from the added row index
       const addedIndex = newRows.length - 1;
