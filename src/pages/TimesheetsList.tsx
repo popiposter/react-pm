@@ -52,6 +52,12 @@ const formatMonthLabel = (month: string) => {
   });
 };
 
+const shiftPeriod = (period: string, delta: number) => {
+  const [year, monthNumber] = period.split('-').map(Number);
+  const nextDate = new Date(year, monthNumber - 1 + delta, 1);
+  return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+};
+
 const getTotalHours = (rows: Timesheet['rows']): number => {
   const totalMinutes = rows.reduce((sum, row) => sum + row.duration, 0);
   return Math.round((totalMinutes / 60) * 10) / 10;
@@ -192,10 +198,17 @@ export default function TimesheetsList() {
             Журнал табелей
           </span>
         }
-        title="Табели"
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            <span>Табели за</span>
+            <span className="inline-flex items-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-base font-medium text-[var(--text-soft)] xl:text-lg">
+              {formatMonthLabel(selectedPeriod)}
+            </span>
+          </span>
+        }
         titleMeta={
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-soft)]">
-            <span>Рабочий список документов за период.</span>
+            <span>Рабочий список документов за выбранный период.</span>
             {syncStatus && syncStatus.pendingCount > 0 && (
               <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-[var(--warning-text)]">
                 Ожидают синхронизации: {syncStatus.pendingCount}
@@ -212,7 +225,6 @@ export default function TimesheetsList() {
                   params: { date: startOfToday() },
                 })
               }
-              className="bg-white text-slate-950 hover:bg-slate-100"
             >
               <Plus className="h-4 w-4" />
               Создать табель на сегодня
@@ -267,93 +279,107 @@ export default function TimesheetsList() {
 
       <div className="app-surface rounded-[1.25rem] p-4 sm:p-5">
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">Журнал</p>
-              <h2 className="mt-1 text-xl font-semibold">Табели за рабочий период</h2>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
-              <CalendarRange className="h-4 w-4" />
-              Период: {formatMonthLabel(selectedPeriod)}
+              <h2 className="mt-1 text-xl font-semibold">Список табелей</h2>
             </div>
           </div>
 
           <DocumentTableToolbar
             filters={
-              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_220px_220px] xl:items-end">
-              <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                  <Search className="h-3.5 w-3.5" />
-                  Поиск
-                </span>
-                <div className="relative block">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(event) => updateSearch({ q: event.target.value })}
-                    placeholder="Поиск по дате или описанию"
-                    className="h-11 rounded-xl bg-[var(--panel-bg-strong)] pl-10 pr-4"
-                  />
-                </div>
-              </label>
+              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.25fr)_280px_220px_160px] xl:items-end">
+                <label className="space-y-2">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                    <Search className="h-3.5 w-3.5" />
+                    Поиск
+                  </span>
+                  <div className="relative block">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(event) => updateSearch({ q: event.target.value })}
+                      placeholder="Поиск по дате или описанию"
+                      className="h-11 rounded-xl bg-[var(--panel-bg-strong)] pl-10 pr-4"
+                    />
+                  </div>
+                </label>
 
-              <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                  <CalendarRange className="h-3.5 w-3.5" />
-                  Период
-                </span>
-                <Input
-                  type="month"
-                  value={selectedPeriod}
-                  onChange={(event) => updateSearch({ period: event.target.value })}
-                  className="h-11 rounded-xl bg-[var(--panel-bg-strong)] [color-scheme:light_dark]"
-                />
-              </label>
+                <label className="space-y-2">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                    <CalendarRange className="h-3.5 w-3.5" />
+                    Период
+                  </span>
+                  <div className="flex h-11 items-center overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+                    <button
+                      type="button"
+                      onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, -1) })}
+                      className="inline-flex h-full w-11 items-center justify-center border-r border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                      aria-label="Предыдущий период"
+                    >
+                      <ArrowRight className="h-4 w-4 rotate-180" />
+                    </button>
+                    <div className="flex min-w-0 flex-1 items-center justify-center px-3 text-sm font-medium text-[var(--app-fg)]">
+                      {formatMonthLabel(selectedPeriod)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, 1) })}
+                      className="inline-flex h-full w-11 items-center justify-center border-l border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                      aria-label="Следующий период"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </label>
 
-              <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                  <Filter className="h-3.5 w-3.5" />
-                  Статус
-                </span>
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) =>
-                    updateSearch({ status: value as TimesheetStatusFilter })
-                  }
-                >
-                  <SelectTrigger
-                    aria-label="Статус"
-                    className="h-11 rounded-xl bg-[var(--panel-bg-strong)]"
+                <label className="space-y-2">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                    <Filter className="h-3.5 w-3.5" />
+                    Статус
+                  </span>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) =>
+                      updateSearch({ status: value as TimesheetStatusFilter })
+                    }
                   >
-                    <SelectValue placeholder="Все статусы" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusFilterOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
+                    <SelectTrigger
+                      aria-label="Статус"
+                      className="h-11 rounded-xl bg-[var(--panel-bg-strong)]"
+                    >
+                      <SelectValue placeholder="Все статусы" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusFilterOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+
+                <div className="space-y-2">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    Действия
+                  </span>
+                  <Button
+                    onClick={() => {
+                      updateSearch({
+                        period: getCurrentMonthPeriod(),
+                        status: 'all',
+                        q: '',
+                      });
+                    }}
+                    variant="secondary"
+                    className="h-11 w-full rounded-xl"
+                  >
+                    Сбросить
+                  </Button>
+                </div>
               </div>
-            }
-            actions={
-              <>
-                <Button
-                  onClick={() => {
-                    updateSearch({
-                      period: getCurrentMonthPeriod(),
-                      status: 'all',
-                      q: '',
-                    });
-                  }}
-                  variant="secondary"
-                  className="h-11 rounded-xl"
-                >
-                  Сбросить
-                </Button>
-              </>
             }
           />
         </div>
@@ -375,7 +401,7 @@ export default function TimesheetsList() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Ничего не найдено</h3>
               <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
-                Попробуйте изменить месяц, сбросить статус или убрать поисковый запрос.
+                Попробуйте изменить период, сбросить статус или убрать поисковый запрос.
               </p>
             </div>
             <Button
@@ -396,7 +422,7 @@ export default function TimesheetsList() {
               <FileSpreadsheet className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold">Пока нет табелей за этот месяц</h3>
+              <h3 className="text-xl font-semibold">Пока нет табелей за этот период</h3>
               <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
                 Можно создать первый табель вручную и начать работу с периодом без дополнительных
                 экранов настройки.
@@ -410,7 +436,6 @@ export default function TimesheetsList() {
                     params: { date: startOfToday() },
                   })
                 }
-                className="bg-white text-slate-950 hover:bg-slate-100"
               >
                 <Plus className="h-4 w-4" />
                 Создать первый табель

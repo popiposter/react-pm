@@ -41,7 +41,7 @@ test('user can cancel leaving a dirty editor', async ({ page }) => {
   await page.getByRole('button', { name: 'Отмена' }).click();
 
   await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
-  await expect(page.getByText('Есть несохраненные изменения').first()).toBeVisible();
+  await expect(page.getByText('Не записано').first()).toBeVisible();
 });
 
 test('user can leave a dirty editor without saving', async ({ page }) => {
@@ -53,7 +53,7 @@ test('user can leave a dirty editor without saving', async ({ page }) => {
   await page.getByRole('button', { name: 'Уйти без сохранения' }).click();
 
   await expect(page).toHaveURL(/\/timesheets/);
-  await expect(page.getByRole('heading', { name: /^Табели$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Табели за/i })).toBeVisible();
 });
 
 test('user can save and leave from the dirty-state modal', async ({ page }) => {
@@ -115,12 +115,12 @@ test('offline save shows local-save message and sync can be run later', async ({
 
   await expect(page.getByLabel('Notifications alt+T').getByText('Сохранено')).toBeVisible();
   await expect(page.getByText('Табель сохранен локально (нет сети)')).toBeVisible();
-  await expect(page.getByText('Ожидают синхронизации: 1')).toBeVisible();
+  await expect(page.getByText('Синхронизация: 1')).toBeVisible();
 
   await context.setOffline(false);
-  await page.getByText('Ожидают синхронизации: 1').click();
+  await page.getByText('Синхронизация: 1').click();
 
   await expect(page.getByText('Синхронизация завершена')).toBeVisible();
   await expect(page.getByText(/Осталось в очереди: 0|Синхронизировано: 1, очередь пуста/)).toBeVisible();
-  await expect(page.getByText('Ожидают синхронизации: 1')).toHaveCount(0);
+  await expect(page.getByText('Синхронизация: 1')).toHaveCount(0);
 });

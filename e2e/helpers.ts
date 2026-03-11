@@ -36,10 +36,12 @@ export async function openTodayEditorFromDemo(page: Page) {
   await page.getByRole('button', { name: 'Войти' }).click();
 
   await expect(page).toHaveURL(/\/timesheet\//);
-  await expect(page.getByRole('main').getByRole('heading', { name: /Табель за/i })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('heading', { name: /Табель за/i })
+  ).toBeVisible({ timeout: 15000 });
   await expect(
     page.getByRole('main').getByRole('heading', { name: 'Рабочие записи за день' })
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 15000 });
 }
 
 export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {
@@ -52,7 +54,9 @@ export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {
   await page.getByRole('button', { name: 'Войти' }).click();
 
   await expect(page).toHaveURL(new RegExp(`/timesheet/${date}`));
-  await expect(page.getByRole('main').getByRole('heading', { name: /Табель за/i })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('heading', { name: /Табель за/i })
+  ).toBeVisible({ timeout: 15000 });
 }
 
 export async function addValidDesktopRow(

@@ -7,11 +7,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-sky-400 text-slate-950 hover:bg-sky-300',
+        default:
+          'bg-[var(--accent)] text-white shadow-[0_16px_36px_-22px_var(--shadow-color)] hover:bg-[var(--accent-strong)]',
         secondary:
           'border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--app-fg)] hover:bg-[var(--panel-hover)]',
         ghost: 'text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]',
-        destructive: 'bg-rose-400 text-slate-950 hover:bg-rose-300',
+        destructive: 'bg-rose-500 text-white hover:bg-rose-600',
       },
       size: {
         sm: 'h-8 px-3 text-sm',

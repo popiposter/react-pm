@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { DndContext, DragEndEvent, DragOverlay, closestCenter } from '@dnd-kit/core';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -140,7 +141,27 @@ const formatTimeLabel = (time: string) => {
   return new Intl.DateTimeFormat(userLocale, {
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   }).format(value);
+};
+
+const normalizeTimeValue = (value: string) => {
+  const compact = value.replace(/[^\d:]/g, '').trim();
+
+  if (!compact) {
+    return '00:00';
+  }
+
+  const rawParts = compact.includes(':')
+    ? compact.split(':')
+    : compact.length <= 2
+      ? [compact, '00']
+      : [compact.slice(0, compact.length - 2), compact.slice(-2)];
+
+  const hours = Math.min(23, Math.max(0, Number(rawParts[0] || 0)));
+  const minutes = Math.min(59, Math.max(0, Number(rawParts[1] || 0)));
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
 const getTotalHours = (rows: TimesheetRow[]) =>
@@ -218,23 +239,40 @@ const TimeField = ({
   onChange?: (value: string) => void;
   readOnly?: boolean;
   className?: string;
-}) => (
-  <Input
-    type="time"
-    lang={userLocale}
-    step={300}
-    value={value}
-    readOnly={readOnly}
-    onChange={(event) => onChange?.(event.target.value || '00:00')}
-    className={cn(
-      'h-10 w-full rounded-lg [color-scheme:light_dark]',
-      readOnly
-        ? 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)]'
-        : 'bg-[var(--panel-muted)]',
-      className
-    )}
-  />
-);
+}) => {
+  const [draftValue, setDraftValue] = useState(value);
+
+  useEffect(() => {
+    setDraftValue(value);
+  }, [value]);
+
+  return (
+    <Input
+      type="text"
+      inputMode="numeric"
+      lang={userLocale}
+      value={draftValue}
+      readOnly={readOnly}
+      placeholder="00:00"
+      onChange={(event) => {
+        const nextValue = event.target.value.replace(/[^\d:]/g, '').slice(0, 5);
+        setDraftValue(nextValue);
+      }}
+      onBlur={(event) => {
+        const normalized = normalizeTimeValue(event.target.value || '00:00');
+        setDraftValue(normalized);
+        onChange?.(normalized);
+      }}
+      className={cn(
+        'h-10 w-full rounded-lg font-medium tabular-nums',
+        readOnly
+          ? 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-muted)]'
+          : 'bg-[var(--panel-muted)]',
+        className
+      )}
+    />
+  );
+};
 
 const DurationField = ({
   value,
@@ -270,22 +308,36 @@ const DescriptionField = ({
   onChange: (value: string) => void;
   className?: string;
   rows?: number;
-}) => (
-  <textarea
-    value={value}
-    rows={rows}
-    onChange={(event) => {
-      event.currentTarget.style.height = '0px';
-      event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-      onChange(event.target.value);
-    }}
-    placeholder="Описание работ"
-    className={cn(
-      'min-h-10 w-full resize-none rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15',
-      className
-    )}
-  />
-);
+}) => {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!textareaRef.current) {
+      return;
+    }
+
+    textareaRef.current.style.height = '0px';
+    textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      rows={rows}
+      onChange={(event) => {
+        event.currentTarget.style.height = '0px';
+        event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+        onChange(event.target.value);
+      }}
+      placeholder="Описание работ"
+      className={cn(
+        'min-h-10 w-full resize-none overflow-hidden rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15',
+        className
+      )}
+    />
+  );
+};
 
 const DragRowPreview = ({
   row,
@@ -296,7 +348,7 @@ const DragRowPreview = ({
   taskGroups: GroupedTasks[];
   taskLookup: Map<string, Task>;
 }) => (
-  <div className="w-[min(320px,calc(100vw-2rem))] rotate-1 rounded-[1rem] border border-[var(--accent)]/25 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_70px_-36px_var(--shadow-color)]">
+  <div className="w-[min(260px,calc(100vw-2rem))] rounded-[1rem] border border-[var(--accent)]/25 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_70px_-36px_var(--shadow-color)]">
     <p className="truncate text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
       {getTaskProjectName(taskLookup, row.taskId)}
     </p>
@@ -334,58 +386,58 @@ const SortableDesktopRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'relative border-t border-[var(--panel-border)] align-top transition hover:bg-[var(--panel-hover)]',
+        'relative border-t border-[var(--panel-border)] align-middle transition hover:bg-[var(--panel-hover)]',
         validationErrors.length > 0 && 'bg-amber-400/[0.06]',
         isDropTarget && 'bg-sky-400/[0.07] shadow-[inset_0_2px_0_0_var(--accent)]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
-      <td className="px-2 py-2 text-center">
+      <td className="w-12 px-1.5 py-2 text-center align-middle">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-transparent text-[var(--text-muted)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
         </button>
       </td>
-      <td className="px-2 py-2">
+      <td className="px-2 py-2 align-middle">
         <div className="space-y-1.5">
+          <p className="truncate px-1 text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            {getTaskProjectName(taskLookup, row.taskId)}
+          </p>
           <TaskSelect
             value={row.taskId}
             onChange={(value) => updateRow(index, { taskId: value })}
             taskGroups={taskGroups}
             className="h-9 rounded-md bg-[var(--panel-bg)]"
           />
-          <p className="truncate px-1 text-xs text-[var(--text-muted)]">
-            {getTaskProjectName(taskLookup, row.taskId)}
-          </p>
         </div>
       </td>
-      <td className="px-2 py-2">
+      <td className="w-[8.25rem] px-2 py-2 align-middle">
         <TimeField
           value={row.startTime}
           onChange={(value) => updateRow(index, { startTime: value })}
-          className="h-9 rounded-md bg-[var(--panel-bg)]"
+          className="h-9 max-w-[7.75rem] rounded-md bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="px-2 py-2">
+      <td className="w-[8.25rem] px-2 py-2 align-middle">
         <TimeField
           value={row.endTime}
           onChange={(value) => updateRow(index, { endTime: value })}
-          className="h-9 rounded-md bg-[var(--panel-bg)]"
+          className="h-9 max-w-[7.75rem] rounded-md bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="px-2 py-2">
+      <td className="w-[7.5rem] px-2 py-2 align-middle">
         <DurationField
           value={row.duration}
           onChange={(value) => updateRow(index, { duration: value })}
-          className="max-w-28 [&_input]:h-9 [&_input]:rounded-md [&_input]:bg-[var(--panel-bg)]"
+          className="max-w-[6.5rem] [&_input]:h-9 [&_input]:rounded-md [&_input]:bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="px-2 py-2">
+      <td className="px-2 py-2 align-middle">
         <DescriptionField
           value={row.description || ''}
           onChange={(value) => updateRow(index, { description: value })}
@@ -393,12 +445,12 @@ const SortableDesktopRow = ({
           className="min-h-9 rounded-md bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="px-2 py-2 text-right">
+      <td className="w-[4.5rem] px-2 py-2 text-right align-middle">
         <Button
           onClick={() => requestRemoveRow(index)}
           variant="ghost"
           size="icon"
-          className="border border-rose-400/20 bg-rose-400/10 text-rose-200 hover:bg-rose-400/20 hover:text-rose-100"
+          className="border border-transparent text-[var(--danger-text)] hover:border-rose-400/20 hover:bg-rose-400/10 hover:text-[var(--danger-text)]"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
@@ -469,15 +521,18 @@ const SortableMobileRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'relative rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 transition-all duration-200',
-        validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.08]',
+        'relative rounded-[1rem] bg-[var(--panel-muted)] px-0 py-3 transition-all duration-200',
+        validationErrors.length > 0 && 'bg-amber-400/[0.08]',
         isDragging && 'scale-[1.01] shadow-[0_20px_48px_-32px_var(--shadow-color)]',
-        isDropTarget && 'border-sky-300/35 bg-sky-400/[0.09] ring-2 ring-sky-300/20',
-        isHighlighted && 'animate-[pulse_0.7s_ease-out_1] border-emerald-300/25 bg-emerald-400/[0.08]'
+        isDropTarget && 'bg-sky-400/[0.09] ring-2 ring-sky-300/20',
+        isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
       {isDropTarget && (
-        <div className="pointer-events-none absolute inset-x-4 top-0 h-1 -translate-y-1/2 rounded-full bg-[var(--accent)]/80 shadow-[0_0_0_4px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
+        <>
+          <div className="pointer-events-none absolute inset-x-3 top-0 h-1.5 -translate-y-1/2 rounded-full bg-[var(--accent)] shadow-[0_0_0_5px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
+          <div className="pointer-events-none absolute inset-x-3 bottom-0 h-[1px] bg-[var(--accent)]/55" />
+        </>
       )}
 
       {isActionsOpen && (
@@ -539,9 +594,9 @@ const SortableMobileRow = ({
         <Button
           {...attributes}
           {...listeners}
-          variant="secondary"
+          variant="ghost"
           size="icon"
-          className="absolute left-0 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 rounded-xl text-[var(--text-muted)]"
+          className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 rounded-xl border border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -550,7 +605,7 @@ const SortableMobileRow = ({
           onClick={() => setIsActionsOpen(true)}
           variant="ghost"
           size="icon"
-          className="absolute right-0 top-0 z-[1] h-8 w-8 rounded-full text-[var(--text-muted)]"
+          className="absolute right-1 top-1 z-[1] h-8 w-8 rounded-full text-[var(--text-muted)]"
           aria-label="Действия со строкой"
         >
           <Ellipsis className="h-4 w-4" />
@@ -558,7 +613,7 @@ const SortableMobileRow = ({
         <button
           type="button"
           onClick={() => setIsExpanded((value) => !value)}
-          className="min-w-0 w-full rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
+          className="min-w-0 w-full rounded-[0.9rem] bg-[var(--panel-bg)] py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
           aria-expanded={isExpanded}
         >
           <div className="min-w-0">
@@ -776,6 +831,14 @@ export default function TimesheetEditor() {
   useEffect(() => {
     dispatchDirtyStateChange(isDirty, date || '');
   }, [date, isDirty]);
+
+  useEffect(() => {
+    return () => {
+      if (date) {
+        dispatchDirtyStateChange(false, date);
+      }
+    };
+  }, [date]);
 
   useEffect(() => {
     if (!freshMobileRowId) {
@@ -1100,7 +1163,7 @@ export default function TimesheetEditor() {
                   : 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
               )}
             >
-              {isDirty ? 'Есть несохраненные изменения' : 'Сохранено'}
+              {isDirty ? 'Не записано' : 'Сохранено'}
             </span>
             {invalidRowsCount > 0 && (
               <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-2.5 py-1 text-[11px] font-medium text-[var(--danger-text)]">
@@ -1130,7 +1193,6 @@ export default function TimesheetEditor() {
             <Button
               onClick={() => void handleSave(false)}
               disabled={saveMutation.isPending}
-              className="border border-white/10 bg-white text-slate-950 hover:bg-slate-100"
             >
               <Save className="h-4 w-4" />
               Записать
@@ -1181,20 +1243,22 @@ export default function TimesheetEditor() {
       </div>
 
       <div className="app-surface rounded-[1rem] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
-        <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
               Строки табеля
             </p>
             <h2 className="mt-1 text-lg font-semibold">Рабочие записи за день</h2>
           </div>
-          <Button
-            onClick={handleAddRow}
-            variant="secondary"
-          >
-            <Plus className="h-4 w-4" />
-            Добавить строку
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={handleAddRow} variant="secondary">
+              <Plus className="h-4 w-4" />
+              Добавить строку
+            </Button>
+            <span className="text-sm text-[var(--text-muted)]">
+              {rows.length} строк, {totalHours} ч
+            </span>
+          </div>
         </div>
 
         <DndContext
@@ -1254,13 +1318,13 @@ export default function TimesheetEditor() {
                   <table className="min-w-[1100px] w-full border-collapse">
                     <thead className="bg-[var(--panel-muted)] text-left text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
                       <tr>
-                        <th className="px-2 py-2.5">Порядок</th>
-                        <th className="px-2 py-2.5">Задача</th>
-                        <th className="px-2 py-2.5">Начало</th>
-                        <th className="px-2 py-2.5">Окончание</th>
-                        <th className="px-2 py-2.5">Длительность</th>
+                        <th className="w-12 px-1.5 py-2.5">Порядок</th>
+                        <th className="px-2 py-2.5">Проект / задача</th>
+                        <th className="w-[8.25rem] px-2 py-2.5">Начало</th>
+                        <th className="w-[8.25rem] px-2 py-2.5">Окончание</th>
+                        <th className="w-[7.5rem] px-2 py-2.5">Длительность</th>
                         <th className="px-2 py-2.5">Описание</th>
-                        <th className="px-2 py-2.5 text-right">Действие</th>
+                        <th className="w-[4.5rem] px-2 py-2.5 text-right">Действие</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1293,7 +1357,7 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
-          <DragOverlay dropAnimation={null}>
+          <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
             {activeRow ? (
               <DragRowPreview
                 row={activeRow}

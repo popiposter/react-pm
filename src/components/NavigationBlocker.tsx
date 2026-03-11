@@ -101,6 +101,8 @@ export function NavigationBlocker({ children }: { children: ReactNode }) {
   };
 
   const handleDiscard = () => {
+    setIsDirty(false);
+    setCurrentTimesheetDate(null);
     blocker.proceed?.();
   };
 
