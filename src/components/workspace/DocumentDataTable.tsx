@@ -126,7 +126,7 @@ export function DocumentDataTable<TData>({
               <Button
                 type="button"
                 variant="secondary"
-                className="h-10 rounded-lg"
+                className="h-10"
                 onClick={() => setRowSelection({})}
               >
                 Снять выделение
@@ -136,20 +136,20 @@ export function DocumentDataTable<TData>({
               <button
                 type="button"
                 onClick={() => setIsColumnsMenuOpen((value) => !value)}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+                className="inline-flex h-10 items-center gap-2 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
               >
                 <Columns3 className="h-4 w-4" />
                 Колонки
               </button>
               {isColumnsMenuOpen && (
-                <div className="app-surface-strong absolute right-0 top-11 z-20 min-w-52 rounded-xl p-2 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.45)]">
+                <div className="app-surface-strong absolute right-0 top-11 z-20 min-w-52 p-2 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.45)]">
                   {table
                     .getAllLeafColumns()
                     .filter((column) => column.getCanHide())
                     .map((column) => (
                       <label
                         key={column.id}
-                        className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-[var(--panel-hover)]"
+                        className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm transition hover:bg-[var(--panel-hover)]"
                       >
                         <input
                           type="checkbox"
@@ -165,7 +165,7 @@ export function DocumentDataTable<TData>({
           </div>
         }
       >
-        <div className="max-h-[68vh] overflow-auto rounded-[1rem] border border-[var(--panel-border)]">
+        <div className="max-h-[70vh] overflow-auto border border-[var(--panel-border)]">
           <table className="min-w-full border-collapse">
             <thead className="bg-[var(--panel-muted)] text-left text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -173,7 +173,7 @@ export function DocumentDataTable<TData>({
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="sticky top-0 z-10 bg-[var(--panel-muted)] px-4 py-3 font-medium"
+                      className="sticky top-0 z-10 bg-[var(--panel-muted)] px-4 py-2.5 font-medium"
                     >
                       {header.isPlaceholder ? null : (
                         header.column.getCanSort() ? (
@@ -212,7 +212,7 @@ export function DocumentDataTable<TData>({
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 align-middle">
+                    <td key={cell.id} className="px-4 py-2.5 align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}

@@ -61,10 +61,10 @@ export function TimesheetsDesktopTable({
         header: () => 'Дата',
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-[var(--app-fg)]">
+            <p className="font-medium leading-5 text-[var(--app-fg)]">
               {formatTimesheetDate(row.original.date)}
             </p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">{row.original.date}</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">{row.original.date}</p>
           </div>
         ),
       }),
@@ -100,7 +100,7 @@ export function TimesheetsDesktopTable({
         id: 'description',
         header: () => 'Последняя заметка',
         cell: ({ row }) => (
-          <span className="block max-w-[30rem] truncate text-[var(--text-muted)]">
+          <span className="block max-w-[34rem] truncate text-[var(--text-muted)]">
             {row.original.rows[0]?.description || 'Без описания работ'}
           </span>
         ),
@@ -115,7 +115,7 @@ export function TimesheetsDesktopTable({
             <button
               type="button"
               onClick={() => onOpenTimesheet(row.original.date)}
-              className="inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
+              className="inline-flex items-center gap-2 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
             >
               Открыть
               <ArrowRight className="h-4 w-4" />

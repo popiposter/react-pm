@@ -208,7 +208,7 @@ export default function TimesheetsList() {
         }
         titleMeta={
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-soft)]">
-            <span>Рабочий список документов за выбранный период.</span>
+            <span>Откройте нужный день, быстро проверьте статус и продолжайте работу.</span>
             {syncStatus && syncStatus.pendingCount > 0 && (
               <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-[var(--warning-text)]">
                 Ожидают синхронизации: {syncStatus.pendingCount}
@@ -381,6 +381,18 @@ export default function TimesheetsList() {
                 </div>
               </div>
             }
+            actions={
+              <>
+                <span className="inline-flex h-10 items-center border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 text-sm text-[var(--text-soft)]">
+                  Найдено: {filteredTimesheets.length}
+                </span>
+                {hasActiveFilters && (
+                  <span className="inline-flex h-10 items-center border border-sky-300/20 bg-sky-400/10 px-3 text-sm text-[var(--accent)]">
+                    Фильтры активны
+                  </span>
+                )}
+              </>
+            }
           />
         </div>
 
@@ -401,7 +413,7 @@ export default function TimesheetsList() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Ничего не найдено</h3>
               <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
-                Попробуйте изменить период, сбросить статус или убрать поисковый запрос.
+                Попробуйте расширить период, убрать статусный фильтр или очистить поисковую строку.
               </p>
             </div>
             <Button
@@ -424,8 +436,7 @@ export default function TimesheetsList() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Пока нет табелей за этот период</h3>
               <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
-                Можно создать первый табель вручную и начать работу с периодом без дополнительных
-                экранов настройки.
+                Начните с табеля на сегодня или загрузите демо-данные, чтобы сразу показать рабочий сценарий.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -449,13 +460,6 @@ export default function TimesheetsList() {
           </div>
         ) : (
           <>
-            <div className="mt-5 flex items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-              <span>
-                Найдено табелей: <span className="font-medium text-[var(--app-fg)]">{filteredTimesheets.length}</span>
-              </span>
-              {hasActiveFilters && <span>Показан отфильтрованный список</span>}
-            </div>
-
             <div className="mt-4 grid gap-3 xl:hidden">
               {filteredTimesheets.map((timesheet) => (
                 <button
@@ -475,7 +479,7 @@ export default function TimesheetsList() {
                         {formatTimesheetDate(timesheet.date)}
                       </p>
                       <p className="mt-2 text-sm text-[var(--text-muted)]">
-                        {timesheet.rows.length} строк, {getTotalHours(timesheet.rows)} ч
+                        Строк: {timesheet.rows.length} · Часов: {getTotalHours(timesheet.rows)}
                       </p>
                     </div>
                     <span
