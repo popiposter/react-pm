@@ -16,19 +16,24 @@ Offline-first PWA для ввода и редактирования табеле
 - Sync runner и transport abstraction под будущую интеграцию с 1С
 - Demo auth flow с локальной сессией, access/refresh token contract и foundation под настоящий backend
 - PWA через `vite-plugin-pwa`
-- Журнал табелей, редактор табеля, локальная seed-загрузка демо-данных
+- Журнал табелей, редактор табеля, отдельный demo entrypoint, локальная seed-загрузка демо-данных
+- Workspace primitives для document screens и общий desktop table preset
 
 ## Текущий функциональный scope
 
 - `/login`:
-  - вход в демо-режим
-  - подготовка демо-данных
+  - вход в рабочий контур
   - баннеры причин редиректа (`auth-required`, `expired`, `refresh-failed`)
+- `/demo`:
+  - презентационный entrypoint
+  - подготовка и сброс демо-данных
+  - быстрые переходы в рабочие экраны
 - `/timesheets`:
   - список табелей
   - поиск
   - фильтр по статусу
-  - фильтр по месяцу
+  - фильтр по периоду
+  - batch operations по выбранным строкам списка
   - индикаторы pending sync
 - `/timesheet/$date`:
   - редактирование строк табеля
@@ -128,7 +133,7 @@ VITE_APP_MODE=demo
 
 Сейчас действует demo auth transport.
 
-- В UI по умолчанию подставлены:
+- В `demo`-режиме в UI по умолчанию подставлены:
   - логин: `demo.user`
   - пароль: `demo`
 - Фактически demo transport принимает любую непустую пару логин/пароль.

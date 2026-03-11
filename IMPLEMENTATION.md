@@ -182,7 +182,7 @@ These are easy to violate accidentally. Treat them as hard constraints unless pr
 - Demo presentation flow is now being separated from the main working routes through `/demo` and `appConfig`.
 - Roles like `admin`, `manager`, and `user` are not implemented yet.
 - Demo login accepts any non-empty username and password.
-- Default login values shown in UI are `demo.user` / `demo`.
+- In `demo` mode the login form shows default values `demo.user` / `demo`; in `prod` mode these defaults are hidden.
 - The current product is partly optimized for demos and still needs a tighter enterprise-task UX pass.
 - The primary UI language is Russian. Future multilingual support may be added later, but new visible UI copy should default to Russian.
 
@@ -199,12 +199,12 @@ Current UX priorities are tracked in:
 
 Highest priority items right now:
 
-- make login task-first
-- move the timesheets journal above the fold
-- reduce mobile editor friction
-- strengthen information hierarchy
-- polish mobile safe-area behavior and PWA shell integration
-- refine timesheet row ergonomics on mobile and desktop
+- finish document workspace standardization for desktop screens
+- keep core document actions, breadcrumbs, filters, and tables consistent across future document types
+- formalize bulk action rules and shared list-search contracts
+- improve sidebar usefulness without reintroducing visual noise
+- add persistent table preferences and saved views
+- back major layout work with visual regression checkpoints
 
 ## Development Commands
 
@@ -241,7 +241,7 @@ Use the smallest sufficient layer:
 - unit / business logic: Vitest
 - UI behavior: React Testing Library
 
-## Current Work Log
+## Recent Implementation Notes
 
 ### 2026-03-11
 
@@ -315,19 +315,18 @@ Keep this short. Only active or recently active work belongs here.
 
 ### Active
 
-- Phase 1 UX tightening of login and timesheets journal
-- editor layout compression and mobile ergonomics pass
-- mobile safe-area and PWA shell polish
-- demo mode split and app mode hardening
-- preserving offline-first architecture while improving product clarity
+- document workspace standardization for desktop document screens
+- shared desktop list behavior through `DocumentDataTable` and related workspace primitives
+- shared `period + status + q` search model for document lists
+- first-generation bulk actions for timesheets with follow-up capability rules still to define
+- preserving offline-first architecture while making the product feel more operational than demonstrational
 
 ### Next likely work
 
-- continue app-mode cleanup across shell and auth UX
-- evaluate install UX and additional PWA-specific affordances
-- add screenshot-based visual checkpoints
-- extend smoke coverage to `/demo`
-- continue expanding browser coverage around editor actions and high-risk user flows
+- add confirm and capability rules for batch actions
+- persist table preferences and saved views
+- expand visual regression checkpoints for `login`, `timesheets`, and `editor`
+- validate the next document list against the same shared workspace pattern
 
 ## Open Questions
 

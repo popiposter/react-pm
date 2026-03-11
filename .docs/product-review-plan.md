@@ -6,316 +6,221 @@ Reviewer lens: enterprise user, product acceptance, daily operational efficiency
 
 ## Goal
 
-Сделать интерфейс табелей не просто аккуратным демо, а быстрым рабочим инструментом, в котором пользователь:
+Сделать интерфейс табелей не просто аккуратным демо, а быстрым рабочим инструментом и базой для следующих document screens.
 
-- сразу понимает, куда нажимать
-- видит главный объект работы без лишнего скролла
-- не тратит внимание на второстепенные объяснения
-- может быстро открыть день, внести часы и сохранить изменения
+Целевое состояние:
 
-## Review Summary
+- пользователь сразу понимает главный action
+- списки документов читаются как рабочие таблицы, а не как демо-страницы
+- редактор документа быстро приводит к основной задаче
+- desktop и mobile используют один продуктовый язык, но разную плотность и ergonomics
+- новые документы могут наследовать уже готовые workspace patterns
 
-Сильные стороны текущего продукта:
+## Current Product Verdict
 
-- визуально приложение уже выглядит современно, чисто и цельно
-- есть хороший базовый visual language без legacy-шума
-- сценарии login -> journal -> editor уже рабочие
-- mobile layout не сломан структурно и в целом адаптирован
-- editor уже передает ощущение прикладного рабочего экрана
+Что уже хорошо:
 
-Главные проблемы:
+- базовая visual language чистая и современная
+- основной путь `login -> journal -> editor` устойчив
+- mobile editor больше не выглядит сломанным
+- demo/work split уже вынесен в отдельную стратегию и app mode
+- desktop document UI начал превращаться в систему, а не набор разовых экранов
 
-- продукт слишком много объясняет до того, как дает работать
-- над журналом и редактором слишком много “верхнего шума”
-- mobile-сценарий перегружен вертикально
-- визуальная иерархия недостаточно жестко расставляет приоритеты
-- часть терминов и microcopy выглядит как демо-витрина, а не как production UI
+Что еще остается главным источником UX-долга:
 
-## Prioritized Backlog
+- не все document flows еще используют общий workspace pattern
+- sidebar все еще скорее нейтральный, чем по-настоящему полезный
+- batch operations пока есть только в первом приближении
+- у списков документов еще нет saved views, table preferences и capability rules
+- visual regression discipline пока не зафиксирована baseline-снимками
+
+## Completed
+
+### Core UX passes
+
+- `login` переведен в task-first layout
+- верх `timesheets` сокращен, журнал поднят выше fold
+- mobile editor cleanup выполнен
+- editor header сжат
+- mobile safe-area и PWA shell polish выполнены
+- language cleanup по основным пользовательским экранам начат и русский закреплен как базовый UI язык
+
+### Editor ergonomics
+
+- mobile row actions перенесены из detached bottom sheet в компактное контекстное меню
+- в строках табеля теперь виден проект
+- `endTime` редактируется напрямую
+- описание стало multiline
+- drag-and-drop получил preview overlay, drop target highlight и motion polish
+- wide desktop spacing и общий shell layout улучшены
+
+### Demo/work split
+
+- demo strategy вынесена в отдельный документ
+- введен `appConfig`
+- demo onboarding и demo data controls убраны из основных рабочих экранов
+- `/demo` вынесен в отдельный presentation entrypoint
+- `prod`-hardening выполнен
+
+### Browser verification
+
+- Playwright покрывает desktop, mobile и prod-smoke
+- editor flows покрыты заметно глубже, чем в начале:
+  save, leave, delete, copy, offline-sync, mobile add/save, mobile duplicate
+
+## Active Workstream
+
+### Document Workspace Standardization
+
+Это теперь главный platform/UI слой проекта.
+
+Что уже внедрено:
+
+- `PageBreadcrumbs`
+- `EntityPageHeader`
+- `DocumentActionBar`
+- `DocumentTableToolbar`
+- `DocumentTableFrame`
+- `DocumentDataTable`
+- общий search schema для document lists: `period + status + q`
+- первые bulk actions над списком табелей
+
+Что это уже дало:
+
+- desktop document screens стали заметно последовательнее
+- toolbar/filter/header patterns больше не расползаются по-разному
+- таблица табелей уже выглядит как рабочая document table
+- следующий document list можно будет собирать на готовом preset
+
+## Active Backlog
 
 ### Must
 
-#### 1. Make login task-first
-
-Проблема:
-На login пользователь сначала видит большой explain-block, а уже потом форму. На mobile форма уходит слишком низко.
+#### 1. Finish document workspace standardization
 
 Что сделать:
 
-- поднять форму и CTA выше первого экрана
-- сократить или свернуть левый промо-блок на mobile
-- уменьшить объем вводного текста
-- сделать demo-действия вторичными относительно входа
+- закрепить `DocumentDataTable` как основной preset для desktop document lists
+- вынести capability rules для batch actions
+- привести следующий document list на тот же pattern, когда появится новая сущность
 
 Критерий готовности:
 
-- на mobile поля логина и кнопка входа видны без длинного скролла
-- на desktop форма визуально доминирует над маркетинговым контентом
+- новые document lists собираются из shared primitives без локальной table-архитектуры
 
-#### 2. Move timesheets journal above the fold
-
-Проблема:
-Onboarding, hero, summary и пояснения занимают слишком много высоты до первого табеля.
+#### 2. Define batch action behavior
 
 Что сделать:
 
-- сократить hero-блок
-- свернуть demo onboarding в компактный dismissible блок
-- уменьшить высоту summary
-- приблизить фильтры и список табелей к началу страницы
+- описать, какие массовые операции допустимы для каждой сущности и статуса
+- добавить confirm/gating rules для destructive или state-changing bulk actions
+- исключить “тихие” массовые изменения без явного пользовательского сигнала
 
 Критерий готовности:
 
-- на desktop первый экран показывает заголовок, основные действия, фильтры и начало списка
-- на mobile путь до первого табеля заметно сокращен
+- batch operations предсказуемы, ограничены capability rules и не выглядят случайной надстройкой
 
-#### 3. Reduce mobile editor friction
-
-Проблема:
-Sticky action bar и статусные блоки съедают много высоты. После добавления строки рабочая область выглядит тесной.
+#### 3. Unify list search and period model
 
 Что сделать:
 
-- уменьшить нижнюю панель действий
-- проверить safe-area и перекрытие формы
-- сократить верхние статусные блоки на mobile
-- сделать так, чтобы после добавления строки фокус был на полях, а не на chrome интерфейса
+- использовать shared `period + status + q` schema как базовый контракт для document lists
+- при необходимости расширять его типовыми filter groups, а не ad hoc search params
+- описать этот contract как стандарт для будущих экранов
 
 Критерий готовности:
 
-- новая строка открывается без ощущения “зажатого” экрана
-- действия сохранить/назад не мешают редактированию
-
-#### 4. Strengthen information hierarchy
-
-Проблема:
-Слишком много одинаково заметных бейджей, карточек и мягких акцентов. Главный action не всегда считывается первым.
-
-Что сделать:
-
-- оставить один явный primary CTA на экран
-- ослабить вторичные декоративные плашки
-- повысить контраст у ключевых данных и действий
-- сократить количество одновременных status badges
-
-Критерий готовности:
-
-- за 3-5 секунд новый пользователь понимает главный action на экране
-- взгляд быстрее приходит к списку, форме или кнопке сохранения
+- search params новых document lists проектируются поверх общей схемы, а не изобретаются заново
 
 ### Should
 
-#### 5. Unify UI language
-
-Проблема:
-В UI смешаны русские и английские термины.
+#### 4. Improve sidebar usefulness
 
 Что сделать:
 
-- выбрать единый язык интерфейса
-- привести к одной системе названия demo state, navigation, banners и labels
+- решить, sidebar это рабочая навигация или минимальный shell
+- если рабочая навигация, дать ей полезные shortcuts/sections
+- если нет, уменьшить ее смысловой шум еще сильнее
 
 Критерий готовности:
 
-- исчезают смешанные конструкции вроде `Public demo`, `Timesheets`, `Demo onboarding`
+- sidebar либо помогает быстрее двигаться по продукту, либо почти не отвлекает
 
-Статус:
-
-- 2026-03-11: начат перевод shell и основных пользовательских экранов на русский
-
-#### 6. Compress editor header
-
-Проблема:
-Верх редактора дает много контекста, но замедляет переход к строкам табеля.
+#### 5. Add table preferences and saved views
 
 Что сделать:
 
-- уменьшить высоту hero editor header
-- объединить online/offline, validation и dirty-state в компактную status strip
-- оставить рабочую таблицу главным фокусом
+- хранить column visibility
+- сохранить preferred sorting/filter setup
+- продумать presets/saved views для document lists
 
 Критерий готовности:
 
-- на desktop и mobile строки табеля начинаются выше
+- пользователь не настраивает table environment заново каждый раз
 
-#### 7. Revisit sidebar usefulness
-
-Проблема:
-Левый sidebar на desktop занимает ширину, но не дает столько полезной навигации, сколько мог бы.
+#### 6. Add visual regression checkpoints
 
 Что сделать:
 
-- пересмотреть плотность и смысл блока с описанием
-- либо упростить sidebar, либо усилить его как рабочую навигацию
+- зафиксировать desktop/mobile baselines для `login`, `timesheets`, `editor`
+- использовать их как часть visual discipline для layout changes
 
 Критерий готовности:
 
-- sidebar либо помогает быстрее перемещаться, либо почти не отвлекает
-
-#### 8. Mobile safe-area and PWA shell polish
-
-Проблема:
-
-На реальном устройстве нижние действия и bottom navigation могут конфликтовать с gesture area. Также shell приложения можно сильнее интегрировать с браузером и PWA-режимом.
-
-Что сделать:
-
-- увеличить безопасный нижний отступ у mobile navigation и bottom action bars поверх `safe-area-inset-bottom`
-- использовать `viewport-fit=cover`
-- синхронизировать `theme-color` с цветом верхнего toolbar/shell
-- проверить standalone/PWA-режим на iOS и Android
-- оценить install UX и полезные platform-specific enhancements
-
-Критерий готовности:
-
-- на устройствах с жестовой навигацией нижние действия не упираются в gesture zone
-- верхний browser/PWA chrome визуально согласован с приложением
-- install/open-in-app сценарий не выглядит “сырой веб-страницей”
+- основные экраны защищены не только e2e behavior, но и snapshot-style visual checks
 
 ### Nice To Have
 
-#### 9. Add visual regression checkpoints
+#### 7. Strengthen desktop operational feel
 
 Что сделать:
 
-- сохранить эталонные Playwright-снимки для `login`, `timesheets`, `editor`
-- проверять desktop и mobile ключевые состояния
+- sticky filters или compact pinned toolbar при длинных таблицах
+- richer row interactions там, где это оправдано
+- дальше развивать table ergonomics без превращения UI в перегруженный admin panel
 
-#### 10. Create a “demo mode” and “daily work mode” presentation strategy
+## Suggested Next Phase
 
-Что сделать:
+### Platform Phase A
 
-- для демо оставить onboarding/help affordances
-- для рабочего режима сделать более плотный operational UI
+- batch action rules and confirm flows
+- shared document-list contract documentation
+- next list screen built on `DocumentDataTable`
 
-Статус:
+### Platform Phase B
 
-- 2026-03-11: решение принято, стратегия вынесена в `.docs/demo-mode-strategy.md`
-- 2026-03-11: начат Phase A с `appConfig`, отдельным `/demo` и очисткой рабочих экранов
-
-## Suggested Delivery Sequence
-
-### Phase 1
-
-- login simplification
-- timesheets header compression
-- journal above-the-fold
-
-### Phase 2
-
-- mobile editor cleanup
-- editor header compression
-- information hierarchy pass
-- mobile safe-area and PWA shell polish
-- row-level interaction polish for mobile and drag-and-drop clarity
-
-### Phase 3
-
-- language unification
-- sidebar cleanup
+- table preferences
+- saved views / presets
 - visual regression baselines
 
-### Phase 4
+### Platform Phase C
 
-- demo mode separation
-- app mode hardening for `prod`
-- smoke coverage for `/demo`
+- capability-driven document operations
+- cross-document workspace consistency pass
 
 ## Acceptance Checklist
 
-Перед закрытием каждого UX-этапа проверять:
+Перед закрытием следующего platform/UI этапа проверять:
 
 - desktop 1440 px
+- wide desktop
 - mobile around 390 px width
 - login first screen
-- timesheets empty state
 - timesheets seeded state
-- timesheet editor empty state
 - timesheet editor with one row
+- table sorting obviously visible
+- filters grouped in one operational block
 - primary action obvious in under 5 seconds
-- core task doable without reading long explanatory text
+- core task doable without reading explanatory text
+- selection and batch operations are discoverable and safe
 
 ## Working Notes
 
-Этот документ живой. После каждого заметного изменения интерфейса обновлять:
+Этот документ теперь должен отражать не только UI polish, но и развитие общей workspace system.
 
-- что уже исправлено
-- что еще болит
-- что поменялось в приоритетах
-- какие новые regressions или UX debt появились
+После каждого заметного шага обновлять:
 
-### 2026-03-11 - Phase 1 started
-
-Сделано:
-
-- `login` переведен в более task-first layout
-- форма входа и основной CTA подняты выше
-- информационный блок справа стал вторичным
-- `timesheets` onboarding сжат до компактного banner/action strip
-- верх главного экрана сокращен, журнал поднят выше fold
-
-Что еще осталось в рамках следующего UX-прохода:
-
-- mobile editor cleanup
-- дополнительная чистка visual hierarchy
-- унификация языка интерфейса
-
-### 2026-03-11 - Phase 2 editor ergonomics pass
-
-Сделано:
-
-- mobile row actions перенесены из fullscreen-like bottom sheet в компактное контекстное меню
-- в строках табеля теперь виден проект, а summary стал плотнее и информативнее
-- `endTime` стал редактируемым, пересчет продолжительности работает в обе стороны
-- описание переведено на multiline editing
-- drag-and-drop получил отдельный preview overlay и более понятное dragging state
-- browser coverage обновлена под новый mobile flow
-
-Что еще остается:
-
-- финальная оценка wide-desktop spacing на реальном 5K/ultrawide экране
-- финальный motion pass для раскрытия, копирования и перестановки строк
-
-Дополнительно сделано в этом же проходе:
-
-- `login` и authenticated shell получили более уверенные max-width bounds и лучшее центрирование на больших экранах
-- drag-and-drop теперь показывает не только preview перетаскиваемой строки, но и активную drop target area
-- начата стандартизация desktop document UI: breadcrumbs, единый action header и более собранный table-toolbar для журнала
-- добавлены reusable desktop primitives для будущих документов: `EntityPageHeader`, `DocumentActionBar`, `DocumentTableToolbar`, `PageBreadcrumbs`
-- добавлен reusable `DocumentTableFrame` и первый operational table pass: sticky header, row selection, visible sort state
-- desktop table standard further consolidated into reusable `DocumentDataTable`, so future document lists can inherit interaction patterns instead of reimplementing them
-- начат общий слой для будущих списков документов: shared `period/filter search schema` и первые batch operations над выбранными строками
-
-### 2026-03-11 - Phase 2 editor pass
-
-Сделано:
-
-- верх редактора табеля стал компактнее
-- online/offline и validation summary сведены к коротким status strips
-- mobile summary сокращен до более плотной сетки
-- нижняя mobile action bar уменьшена по высоте
-- после добавления строки на mobile новая запись автоматически раскрывается и подводится к пользователю
-
-Что еще можно улучшить следующим проходом:
-
-- уменьшить ощущение наложения sticky bar на мобильную рабочую область
-- точнее управлять фокусом и прокруткой после добавления новой строки
-- продолжить language cleanup в header и shell
-
-### 2026-03-11 - Demo mode split started
-
-Сделано:
-
-- оформлена стратегия разделения demo и рабочего контура в `.docs/demo-mode-strategy.md`
-- введен единый `appConfig` для `demo|prod`
-- добавлен отдельный `/demo` как presentation entrypoint
-- demo seed/reset и onboarding убраны с `login` и `timesheets`
-
-Что еще осталось:
-
-- добавить smoke coverage для `/demo`
-- позже согласовать production login UX после появления реального auth transport
-
-Дополнительно:
-
-- 2026-03-11: `prod`-hardening выполнен, `/demo` больше не попадает в production-like bundle по умолчанию
+- что уже стало стандартом
+- какие shared primitives появились
+- какие document patterns считаются обязательными
+- что остается локальным исключением, а не общим правилом
