@@ -4,6 +4,7 @@
   color-scheme: dark;
   --surface-radius: 0px;
   --control-radius: 0px;
+  --brand-mark-color: #f8fbff;
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --mobile-nav-bottom-padding: calc(var(--safe-area-bottom) + 0.875rem);
@@ -36,6 +37,7 @@
 
 :root[data-theme='light'] {
   color-scheme: light;
+  --brand-mark-color: #0f7ae5;
   --app-bg:
     radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 26%),
     radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 20%),
@@ -122,4 +124,15 @@ textarea {
   color: var(--app-fg);
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 80px -56px var(--shadow-color);
+}
+
+.brand-mark {
+  display: inline-block;
+  background: var(--brand-mark-color);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }

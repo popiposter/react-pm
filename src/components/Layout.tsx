@@ -37,6 +37,10 @@ interface NavigationItem {
 }
 
 const startOfToday = () => new Date().toISOString().split('T')[0];
+const brandMarkMask = {
+  maskImage: `url(${brandLogo})`,
+  WebkitMaskImage: `url(${brandLogo})`,
+} as const;
 
 export default function Layout({ children }: LayoutProps) {
   const auth = useAuth();
@@ -270,20 +274,20 @@ export default function Layout({ children }: LayoutProps) {
                   title="Развернуть навигацию"
                   className="group/brand relative inline-flex h-10 w-10 items-center justify-center border border-transparent text-[var(--text-soft)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
                 >
-                  <img
-                    src={brandLogo}
-                    alt="Логотип Проектные табели"
-                    className="h-6 w-6 object-contain transition-opacity duration-200 group-hover/brand:opacity-0"
+                  <span
+                    aria-hidden="true"
+                    className="brand-mark h-6 w-6 transition-opacity duration-200 group-hover/brand:opacity-0"
+                    style={brandMarkMask}
                   />
                   <PanelLeftOpen className="absolute h-4 w-4 opacity-0 transition-opacity duration-200 group-hover/brand:opacity-100" />
                 </button>
               ) : (
                 <>
-                  <div className="flex h-10 w-10 items-center justify-center border border-[var(--panel-border)] bg-white/95 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.45)]">
-                    <img
-                      src={brandLogo}
-                      alt="Логотип Проектные табели"
-                      className="h-6 w-6 object-contain"
+                  <div className="flex h-10 w-10 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] shadow-[0_12px_32px_-18px_rgba(0,0,0,0.45)]">
+                    <span
+                      aria-hidden="true"
+                      className="brand-mark h-6 w-6"
+                      style={brandMarkMask}
                     />
                   </div>
                   <button
@@ -389,11 +393,11 @@ export default function Layout({ children }: LayoutProps) {
           >
             <div className="flex h-16 w-full items-center justify-between px-4 sm:px-5 xl:px-8 2xl:px-10">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-white/90 xl:hidden">
-                  <img
-                    src={brandLogo}
-                    alt="Логотип Проектные табели"
-                    className="h-4.5 w-4.5 object-contain"
+                <div className="flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] xl:hidden">
+                  <span
+                    aria-hidden="true"
+                    className="brand-mark h-4.5 w-4.5"
+                    style={brandMarkMask}
                   />
                 </div>
                 <h2 className="text-sm font-semibold sm:text-base xl:text-[1.35rem]">Проектные табели</h2>

@@ -289,7 +289,7 @@ export default function TimesheetsList() {
           <DocumentTableToolbar
             filters={
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.25fr)_280px_220px_160px] xl:items-end">
-                <label className="space-y-2">
+                <label className="flex min-w-0 flex-col gap-2">
                   <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                     <Search className="h-3.5 w-3.5" />
                     Поиск
@@ -305,27 +305,27 @@ export default function TimesheetsList() {
                   </div>
                 </label>
 
-                <label className="space-y-2">
+                <label className="flex min-w-0 flex-col gap-2">
                   <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                     <CalendarRange className="h-3.5 w-3.5" />
                     Период
                   </span>
-                  <div className="flex h-11 items-center overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+                  <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
                     <button
                       type="button"
                       onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, -1) })}
-                      className="inline-flex h-full w-11 items-center justify-center border-r border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                      className="inline-flex h-full items-center justify-center border-r border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
                       aria-label="Предыдущий период"
                     >
                       <ArrowRight className="h-4 w-4 rotate-180" />
                     </button>
-                    <div className="flex min-w-0 flex-1 items-center justify-center px-3 text-sm font-medium text-[var(--app-fg)]">
-                      {formatMonthLabel(selectedPeriod)}
-                    </div>
+                    <span className="flex min-w-0 select-none items-center justify-center px-3 text-sm font-medium text-[var(--app-fg)]">
+                      <span className="truncate">{formatMonthLabel(selectedPeriod)}</span>
+                    </span>
                     <button
                       type="button"
                       onClick={() => updateSearch({ period: shiftPeriod(selectedPeriod, 1) })}
-                      className="inline-flex h-full w-11 items-center justify-center border-l border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                      className="inline-flex h-full items-center justify-center border-l border-[var(--panel-border)] text-[var(--text-muted)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
                       aria-label="Следующий период"
                     >
                       <ArrowRight className="h-4 w-4" />
@@ -333,7 +333,7 @@ export default function TimesheetsList() {
                   </div>
                 </label>
 
-                <label className="space-y-2">
+                <label className="flex min-w-0 flex-col gap-2">
                   <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                     <Filter className="h-3.5 w-3.5" />
                     Статус
@@ -346,9 +346,9 @@ export default function TimesheetsList() {
                   >
                     <SelectTrigger
                       aria-label="Статус"
-                      className="h-11 bg-[var(--panel-bg-strong)]"
+                      className="h-11 w-full min-w-[220px] bg-[var(--panel-bg-strong)]"
                     >
-                      <SelectValue placeholder="Все статусы" />
+                      <SelectValue placeholder="Все статусы" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       {statusFilterOptions.map((option) => (
@@ -360,7 +360,7 @@ export default function TimesheetsList() {
                   </Select>
                 </label>
 
-                <div className="space-y-2">
+                <div className="flex min-w-0 flex-col gap-2">
                   <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                     <ArrowRight className="h-3.5 w-3.5" />
                     Действия

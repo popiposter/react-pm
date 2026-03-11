@@ -13,7 +13,7 @@ export function DocumentTableFrame({
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn('space-y-3 pt-1', className)}>
       {(summary || actions) && (
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">{summary}</div>
