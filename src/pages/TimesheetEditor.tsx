@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { DndContext, DragEndEvent, DragOverlay, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -521,7 +521,7 @@ const SortableMobileRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'relative rounded-[1rem] bg-[var(--panel-muted)] px-0 py-3 transition-all duration-200',
+        'relative rounded-[1rem] px-0 py-2.5 transition-all duration-200',
         validationErrors.length > 0 && 'bg-amber-400/[0.08]',
         isDragging && 'scale-[1.01] shadow-[0_20px_48px_-32px_var(--shadow-color)]',
         isDropTarget && 'bg-sky-400/[0.09] ring-2 ring-sky-300/20',
@@ -613,7 +613,7 @@ const SortableMobileRow = ({
         <button
           type="button"
           onClick={() => setIsExpanded((value) => !value)}
-          className="min-w-0 w-full rounded-[0.9rem] bg-[var(--panel-bg)] py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
+          className="min-w-0 w-full rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
           aria-expanded={isExpanded}
         >
           <div className="min-w-0">
@@ -651,76 +651,82 @@ const SortableMobileRow = ({
       </div>
 
       {isExpanded && (
-        <div className="mt-4 space-y-4 border-t border-[var(--panel-border)] pt-4 animate-in fade-in-0 slide-in-from-top-1 duration-200">
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              Задача
-            </label>
-            <NativeTaskSelect
-              value={row.taskId}
-              onChange={(value) => updateRow(index, { taskId: value })}
-              taskGroups={taskGroups}
-              selectRef={taskSelectRef}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                Начало
-              </label>
-              <TimeField
-                value={row.startTime}
-                onChange={(value) => updateRow(index, { startTime: value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                Окончание
-              </label>
-              <TimeField
-                value={row.endTime}
-                onChange={(value) => updateRow(index, { endTime: value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-3">
-            <div className="space-y-2">
-              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                Длительность
-              </label>
-              <DurationField
-                value={row.duration}
-                onChange={(value) => updateRow(index, { duration: value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+        <div className="mt-3 rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 Проект
+              </p>
+              <p className="text-sm font-medium text-[var(--text-soft)]">{projectName}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Задача
               </label>
-              <div className="flex h-10 items-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--text-soft)]">
-                {projectName}
+              <NativeTaskSelect
+                value={row.taskId}
+                onChange={(value) => updateRow(index, { taskId: value })}
+                taskGroups={taskGroups}
+                selectRef={taskSelectRef}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  Начало
+                </label>
+                <TimeField
+                  value={row.startTime}
+                  onChange={(value) => updateRow(index, { startTime: value })}
+                  className="bg-[var(--panel-bg-strong)]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  Окончание
+                </label>
+                <TimeField
+                  value={row.endTime}
+                  onChange={(value) => updateRow(index, { endTime: value })}
+                  className="bg-[var(--panel-bg-strong)]"
+                />
               </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              Описание
-            </label>
-            <DescriptionField
-              value={row.description || ''}
-              onChange={(value) => updateRow(index, { description: value })}
-              rows={3}
-            />
-          </div>
-
-          {validationErrors.length > 0 && (
-            <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
-              {validationErrors.join(' • ')}
+            <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-3">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  Длительность
+                </label>
+                <DurationField
+                  value={row.duration}
+                  onChange={(value) => updateRow(index, { duration: value })}
+                  className="[&_input]:bg-[var(--panel-bg-strong)]"
+                />
+              </div>
+              <div className="space-y-2" />
             </div>
-          )}
+
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Описание
+              </label>
+              <DescriptionField
+                value={row.description || ''}
+                onChange={(value) => updateRow(index, { description: value })}
+                rows={3}
+                className="bg-[var(--panel-bg-strong)]"
+              />
+            </div>
+
+            {validationErrors.length > 0 && (
+              <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
+                {validationErrors.join(' • ')}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </article>
@@ -1099,18 +1105,9 @@ export default function TimesheetEditor() {
     });
   };
 
-  const onDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const onDragEnd = () => {
     setActiveRowId(null);
     setOverRowId(null);
-    if (!over) return;
-
-    const activeIndex = rows.findIndex((row) => row.id === active.id);
-    const overIndex = rows.findIndex((row) => row.id === over.id);
-
-    if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
-      moveRow(activeIndex, overIndex);
-    }
   };
 
   if (tasksLoading || timesheetLoading) {
@@ -1256,15 +1253,30 @@ export default function TimesheetEditor() {
               Добавить строку
             </Button>
             <span className="text-sm text-[var(--text-muted)]">
-              {rows.length} строк, {totalHours} ч
+              Строк: {rows.length} Часов: {totalHours}
             </span>
           </div>
         </div>
 
         <DndContext
-          collisionDetection={closestCenter}
+          collisionDetection={closestCorners}
           onDragStart={({ active }) => setActiveRowId(String(active.id))}
-          onDragOver={({ over }) => setOverRowId(over ? String(over.id) : null)}
+          onDragOver={({ active, over }) => {
+            if (!over) {
+              setOverRowId(null);
+              return;
+            }
+
+            const nextOverId = String(over.id);
+            setOverRowId(nextOverId);
+
+            const activeIndex = rows.findIndex((row) => row.id === active.id);
+            const overIndex = rows.findIndex((row) => row.id === over.id);
+
+            if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+              moveRow(activeIndex, overIndex);
+            }
+          }}
           onDragCancel={() => {
             setActiveRowId(null);
             setOverRowId(null);
