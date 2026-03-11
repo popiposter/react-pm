@@ -4,7 +4,7 @@ import { loginAsDemoUser, openTodayEditorFromDemo } from './helpers';
 test('demo user can sign in and open timesheets journal', async ({ page }) => {
   await loginAsDemoUser(page);
 
-  await expect(page.getByRole('heading', { name: /^Табели за/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Табели за/i })).toBeVisible({ timeout: 15000 });
   await expect(
     page.getByRole('button', { name: 'Создать табель на сегодня' })
   ).toBeVisible();

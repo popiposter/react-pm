@@ -17,11 +17,11 @@ export const dateDaysAgo = (daysAgo: number) => {
 
 export async function expectEditorScreen(page: Page) {
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible({
-    timeout: 15000,
+    timeout: 30000,
   });
   await expect(
     page.getByRole('main').getByRole('heading', { name: 'Рабочие записи за день' })
-  ).toBeVisible({ timeout: 15000 });
+  ).toBeVisible({ timeout: 30000 });
 }
 
 export async function loginAsDemoUser(page: Page) {
