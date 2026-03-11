@@ -498,15 +498,15 @@ const SortableDesktopRow = ({
           type="button"
           {...attributes}
           {...listeners}
-          className="inline-flex h-8 w-8 cursor-grab items-center justify-center border border-transparent bg-transparent text-[var(--text-muted)] transition active:cursor-grabbing hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+          className="inline-flex h-7 w-7 cursor-grab items-center justify-center border border-transparent bg-transparent text-[var(--text-muted)] transition active:cursor-grabbing hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
         </button>
       </td>
-      <td className="px-2 py-2 align-middle">
-        <div className="space-y-1.5">
-          <p className="truncate px-1 text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
+      <td className="px-2 py-1.5 align-middle">
+        <div className="space-y-1">
+          <p className="truncate px-1 text-[10px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
             {getTaskProjectName(taskLookup, row.taskId)}
           </p>
           <TaskSelect
@@ -517,28 +517,28 @@ const SortableDesktopRow = ({
           />
         </div>
       </td>
-      <td className="w-[8.25rem] px-2 py-2 align-middle">
+      <td className="w-[7.5rem] px-2 py-1.5 align-middle">
         <TimeField
           value={row.startTime}
           onChange={(value) => updateRow(index, { startTime: value })}
-          className="h-9 max-w-[7.75rem] bg-[var(--panel-bg)]"
+          className="h-9 max-w-[7rem] bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="w-[8.25rem] px-2 py-2 align-middle">
+      <td className="w-[7.5rem] px-2 py-1.5 align-middle">
         <TimeField
           value={row.endTime}
           onChange={(value) => updateRow(index, { endTime: value })}
-          className="h-9 max-w-[7.75rem] bg-[var(--panel-bg)]"
+          className="h-9 max-w-[7rem] bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="w-[7.5rem] px-2 py-2 align-middle">
+      <td className="w-[6.75rem] px-2 py-1.5 align-middle">
         <DurationField
           value={row.duration}
           onChange={(value) => updateRow(index, { duration: value })}
-          className="max-w-[6.5rem] [&_input]:h-9 [&_input]:bg-[var(--panel-bg)]"
+          className="max-w-[5.75rem] [&_input]:h-9 [&_input]:bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="px-2 py-2 align-middle">
+      <td className="px-2 py-1.5 align-middle">
         <DescriptionField
           value={row.description || ''}
           onChange={(value) => updateRow(index, { description: value })}
@@ -546,12 +546,12 @@ const SortableDesktopRow = ({
           className="min-h-9 bg-[var(--panel-bg)]"
         />
       </td>
-      <td className="w-[4.5rem] px-2 py-2 text-right align-middle">
+      <td className="w-[4rem] px-2 py-1.5 text-right align-middle">
         <Button
           onClick={() => requestRemoveRow(index)}
           variant="ghost"
           size="icon"
-          className="border border-transparent text-[var(--danger-text)] hover:border-rose-400/20 hover:bg-rose-400/10 hover:text-[var(--danger-text)]"
+          className="h-7 w-7 border border-transparent text-[var(--danger-text)] hover:border-rose-400/20 hover:bg-rose-400/10 hover:text-[var(--danger-text)]"
           aria-label="Удалить строку"
         >
           <Trash2 className="h-4 w-4" />
@@ -1310,37 +1310,48 @@ export default function TimesheetEditor() {
           </div>
         }
         title={`Табель за ${formatEditorDate(date)}`}
-        actionsClassName="xl:justify-start"
+        titleMeta={
+          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-soft)]">
+            <span>Строк: {rows.length}</span>
+            <span className="text-[var(--text-muted)]">•</span>
+            <span>Часов: {totalHours}</span>
+          </div>
+        }
+        actionsClassName="xl:w-full"
         actions={
-          <DocumentActionBar className="xl:w-full xl:justify-start">
-            <Button
-              onClick={() =>
-                navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
-              }
-              variant="secondary"
-              className="text-[var(--text-soft)]"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              К списку
-            </Button>
-            <Button onClick={handleCopy} variant="secondary">
-              <Copy className="h-4 w-4" />
-              Копировать на сегодня
-            </Button>
-            <Button
-              onClick={() => void handleSave(false)}
-              disabled={saveMutation.isPending}
-            >
-              <Save className="h-4 w-4" />
-              Записать
-            </Button>
-            <Button
-              onClick={() => void handleSave(true)}
-              disabled={saveMutation.isPending}
-            >
-              <Save className="h-4 w-4" />
-              Записать и закрыть
-            </Button>
+          <DocumentActionBar className="xl:w-full xl:justify-between">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                onClick={() =>
+                  navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
+                }
+                variant="secondary"
+                className="text-[var(--text-soft)]"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                К списку
+              </Button>
+              <Button onClick={handleCopy} variant="secondary">
+                <Copy className="h-4 w-4" />
+                Копировать на сегодня
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                onClick={() => void handleSave(false)}
+                disabled={saveMutation.isPending}
+              >
+                <Save className="h-4 w-4" />
+                Записать
+              </Button>
+              <Button
+                onClick={() => void handleSave(true)}
+                disabled={saveMutation.isPending}
+              >
+                <Save className="h-4 w-4" />
+                Записать и закрыть
+              </Button>
+            </div>
           </DocumentActionBar>
         }
       />
@@ -1381,11 +1392,21 @@ export default function TimesheetEditor() {
 
       <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4">
-          <div>
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div>
             <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
               Строки табеля
             </p>
             <h2 className="mt-1 text-lg font-semibold">Рабочие записи за день</h2>
+            </div>
+            <div className="hidden xl:flex items-center gap-2 text-sm text-[var(--text-soft)]">
+              <span className="inline-flex h-9 items-center border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3">
+                Строк: {rows.length}
+              </span>
+              <span className="inline-flex h-9 items-center border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3">
+                Часов: {totalHours}
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={handleAddRow} variant="secondary">
@@ -1460,16 +1481,16 @@ export default function TimesheetEditor() {
                 </div>
 
                 <div className="mt-4 hidden overflow-x-auto border border-[var(--panel-border)] xl:block">
-                  <table className="min-w-[1100px] w-full border-collapse">
+                  <table className="min-w-[1040px] w-full border-collapse">
                     <thead className="bg-[var(--panel-muted)] text-left text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
                       <tr>
-                        <th className="w-12 px-1.5 py-2.5">Порядок</th>
+                        <th className="w-10 px-1.5 py-2.5">Порядок</th>
                         <th className="px-2 py-2.5">Проект / задача</th>
-                        <th className="w-[8.25rem] px-2 py-2.5">Начало</th>
-                        <th className="w-[8.25rem] px-2 py-2.5">Окончание</th>
-                        <th className="w-[7.5rem] px-2 py-2.5">Длительность</th>
+                        <th className="w-[7.5rem] px-2 py-2.5">Начало</th>
+                        <th className="w-[7.5rem] px-2 py-2.5">Окончание</th>
+                        <th className="w-[6.75rem] px-2 py-2.5">Длительность</th>
                         <th className="px-2 py-2.5">Описание</th>
-                        <th className="w-[4.5rem] px-2 py-2.5 text-right">Действие</th>
+                        <th className="w-[4rem] px-2 py-2.5 text-right">Действие</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1539,21 +1560,20 @@ export default function TimesheetEditor() {
           isMobileChromeHidden && 'translate-y-full'
         )}
       >
-        <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
+        <div className="mx-auto grid max-w-md grid-cols-[auto_1fr_1.15fr] gap-2">
           <Button
             onClick={() =>
               navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
             }
             variant="secondary"
-            className="h-9 text-[var(--text-soft)]"
+            className="h-10 px-3 text-[var(--text-soft)]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Назад
           </Button>
           <Button
             onClick={handleAddRow}
             variant="secondary"
-            className="h-9"
+            className="h-10 justify-center"
           >
             <Plus className="h-4 w-4" />
             Строка
@@ -1561,7 +1581,7 @@ export default function TimesheetEditor() {
           <Button
             onClick={() => void handleSave(false)}
             disabled={saveMutation.isPending}
-            className="h-9"
+            className="h-10 justify-center"
           >
             <Save className="h-4 w-4" />
             Сохранить
