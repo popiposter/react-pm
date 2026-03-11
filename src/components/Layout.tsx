@@ -33,6 +33,7 @@ interface NavigationItem {
   label: string;
   icon: typeof FileSpreadsheet;
   description?: string;
+  tone?: 'primary' | 'demo';
 }
 
 const startOfToday = () => new Date().toISOString().split('T')[0];
@@ -63,6 +64,7 @@ export default function Layout({ children }: LayoutProps) {
         label: 'Табели',
         icon: FileSpreadsheet,
         description: 'Рабочие документы',
+        tone: 'primary',
       },
     ];
 
@@ -72,6 +74,7 @@ export default function Layout({ children }: LayoutProps) {
         label: 'Демо-центр',
         icon: Presentation,
         description: 'Сценарии и демо-данные',
+        tone: 'demo',
       });
     }
 
@@ -317,7 +320,9 @@ export default function Layout({ children }: LayoutProps) {
                       'group relative flex items-center border border-transparent text-[var(--text-soft)] transition',
                       isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-12 gap-3 px-3.5',
                       isActive
-                        ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                        ? item.tone === 'demo'
+                          ? 'border-sky-300/20 bg-sky-400/10 text-sky-200'
+                          : 'bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-transparent hover:border-[var(--panel-border)] hover:bg-[var(--panel-muted)] hover:text-[var(--app-fg)]'
                     )}
                   >
@@ -332,7 +337,14 @@ export default function Layout({ children }: LayoutProps) {
                     <Icon className="h-5 w-5 shrink-0" />
                     {!isSidebarCollapsed && (
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium">{item.label}</span>
+                        <span className="flex items-center gap-2">
+                          <span className="block truncate text-sm font-medium">{item.label}</span>
+                          {item.tone === 'demo' ? (
+                            <span className="inline-flex border border-sky-300/20 bg-sky-400/10 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-sky-200">
+                              demo
+                            </span>
+                          ) : null}
+                        </span>
                         {item.description ? (
                           <span className="block truncate text-[11px] text-[var(--text-muted)] transition group-hover:text-[var(--text-soft)]">
                             {item.description}
@@ -541,7 +553,7 @@ export default function Layout({ children }: LayoutProps) {
                 className={cn(
                   'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium transition',
                   location.pathname.startsWith('/demo')
-                    ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                    ? 'border border-sky-300/20 bg-sky-400/10 text-sky-200'
                     : 'text-[var(--text-muted)]'
                 )}
               >

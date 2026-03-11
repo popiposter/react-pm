@@ -105,43 +105,68 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen text-[var(--app-fg)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_28%),radial-gradient(circle_at_bottom_right,var(--success-soft),transparent_28%)]" />
-      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-4 py-6 sm:py-8 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(300px,0.9fr)] lg:items-start lg:gap-6">
-          <section className="app-surface-strong rounded-[1.75rem] p-5 sm:p-7">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--accent)_10%,transparent),transparent_42%),radial-gradient(circle_at_top_right,color-mix(in_oklab,var(--accent)_14%,transparent),transparent_26%),radial-gradient(circle_at_bottom_left,color-mix(in_oklab,var(--success-text)_12%,transparent),transparent_24%)]" />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1500px] flex-col justify-center px-4 py-6 sm:px-5 sm:py-8 xl:px-8 2xl:px-10">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_380px] xl:items-start xl:gap-6">
+          <section className="app-surface-strong p-5 sm:p-7 xl:p-8">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-200">
                 <Sparkles className="h-3.5 w-3.5" />
                 Демо-центр
               </span>
               {appConfig.features.demoBranding && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--success-text)]">
-                  Показ продукта
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                  Презентационный контур
                 </span>
               )}
             </div>
 
-            <div className="mt-5 space-y-2">
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
-                Демо-сценарий
-              </p>
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Подготовить демонстрацию и быстро перейти в рабочий flow
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
-                Этот экран собирает все презентационные действия в одном месте, чтобы рабочие
-                страницы табелей оставались чистыми и прикладными.
-              </p>
+            <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
+              <div className="space-y-2">
+                <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                  Демо-сценарий
+                </p>
+                <h1 className="max-w-3xl text-2xl font-semibold tracking-tight sm:text-3xl xl:text-[2.2rem] xl:leading-[1.05]">
+                  Подготовить демонстрацию и быстро перейти в рабочий flow
+                </h1>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
+                  Этот экран собирает все презентационные действия в одном месте, чтобы рабочие
+                  страницы табелей оставались чистыми и прикладными.
+                </p>
+              </div>
+              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                  Быстрый статус
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                      Режим
+                    </p>
+                    <p className="mt-2 text-sm font-semibold">
+                      {appConfig.isDemoMode ? 'demo' : 'prod'}
+                    </p>
+                  </div>
+                  <div className="border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                      Сессия
+                    </p>
+                    <p className="mt-2 text-sm font-semibold">
+                      {auth.isAuthenticated ? 'Активна' : 'Не начата'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+            <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 xl:p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
-                  Быстрый доступ
+                  Учетные данные
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-                  Логин по умолчанию:
-                  <span className="ml-2 inline-flex rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-2.5 py-1 text-xs text-[var(--accent)]">
+                <p className="mt-3 text-sm leading-6 text-[var(--text-soft)]">
+                  Для быстрого старта используйте
+                  <span className="ml-2 inline-flex rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-xs text-sky-200">
                     {appConfig.defaults.username} / {appConfig.defaults.password}
                   </span>
                 </p>
@@ -150,11 +175,11 @@ export default function DemoPage() {
                   значения дают самый предсказуемый сценарий.
                 </p>
               </div>
-              <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 xl:p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
-                  Состояние
+                  Поведение маршрута
                 </p>
-                <p className="mt-2 text-sm text-[var(--app-fg)]">
+                <p className="mt-3 text-sm text-[var(--app-fg)]">
                   {auth.isAuthenticated
                     ? 'Сессия уже активна, можно сразу открывать журнал или день.'
                     : 'Сессии нет, поэтому рабочие экраны откроются через обычный login.'}
@@ -170,14 +195,14 @@ export default function DemoPage() {
                 onClick={() => void handleSeedDemoData()}
                 disabled={!appConfig.features.demoDataTools || seedDemoData.isPending}
                 variant="secondary"
-                className="h-11 justify-start rounded-2xl border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20 disabled:opacity-60"
+                className="h-11 justify-start border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20 disabled:opacity-60"
               >
                 <DatabaseZap className="h-4 w-4" />
                 Заполнить базу
               </Button>
               <Button
                 onClick={() => void handleOpenJournal()}
-                className="h-11 justify-start rounded-2xl bg-white text-slate-950 hover:bg-slate-100"
+                className="h-11 justify-start bg-white text-slate-950 hover:bg-slate-100"
               >
                 <FileSpreadsheet className="h-4 w-4" />
                 Открыть журнал
@@ -185,7 +210,7 @@ export default function DemoPage() {
               <Button
                 onClick={() => void handleOpenToday()}
                 variant="secondary"
-                className="h-11 justify-start rounded-2xl"
+                className="h-11 justify-start"
               >
                 <FolderClock className="h-4 w-4" />
                 Открыть сегодня
@@ -194,7 +219,7 @@ export default function DemoPage() {
                 onClick={() => void handleResetDemoData()}
                 disabled={!appConfig.features.demoDataTools || resetDemoData.isPending}
                 variant="secondary"
-                className="h-11 justify-start rounded-2xl border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20 disabled:opacity-60"
+                className="h-11 justify-start border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20 disabled:opacity-60"
               >
                 <RefreshCcw className="h-4 w-4" />
                 Сбросить базу
@@ -202,24 +227,27 @@ export default function DemoPage() {
             </div>
           </section>
 
-          <section className="app-surface rounded-[1.75rem] p-5 sm:p-7">
+          <section className="app-surface p-5 sm:p-6 xl:sticky xl:top-24 xl:p-6">
             <div className="space-y-4">
+              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                Как показывать
+              </p>
               <h2 className="text-lg font-semibold">Рекомендуемый сценарий показа</h2>
               <div className="grid gap-3">
-                <div className="rounded-[1.1rem] border border-sky-300/15 bg-sky-400/10 p-4">
+                <div className="border border-sky-300/15 bg-sky-400/10 p-4">
                   <p className="text-sm font-medium">1. Подготовить демо-данные</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                     Заполните локальную базу, чтобы журнал и редактор сразу выглядели правдоподобно.
                   </p>
                 </div>
-                <div className="rounded-[1.1rem] border border-emerald-300/15 bg-emerald-400/10 p-4">
+                <div className="border border-emerald-300/15 bg-emerald-400/10 p-4">
                   <p className="text-sm font-medium">2. Войти и открыть журнал</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                     После логина основной user path уже идет через обычные рабочие страницы без
                     лишнего onboarding внутри них.
                   </p>
                 </div>
-                <div className="rounded-[1.1rem] border border-amber-300/15 bg-amber-400/10 p-4">
+                <div className="border border-amber-300/15 bg-amber-400/10 p-4">
                   <p className="flex items-center gap-2 text-sm font-medium">
                     <WifiOff className="h-4 w-4" />
                     3. При необходимости показать offline flow
@@ -231,7 +259,7 @@ export default function DemoPage() {
                 </div>
               </div>
 
-              <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
                 <p className="text-sm leading-6 text-[var(--text-muted)]">
                   Рабочий вход остается доступен по маршруту{' '}
                   <Link
@@ -249,7 +277,7 @@ export default function DemoPage() {
               <Button
                 onClick={() => void handleOpenJournal()}
                 variant="secondary"
-                className="h-11 w-full rounded-2xl"
+                className="h-11 w-full"
               >
                 Перейти в рабочий контур
                 <ArrowRight className="h-4 w-4" />
