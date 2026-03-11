@@ -110,7 +110,7 @@ export default function DemoPage() {
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_380px] xl:items-start xl:gap-6">
           <section className="app-surface-strong p-5 sm:p-7 xl:p-8">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-sky-200">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-sky-400/12 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)] dark:text-sky-200">
                 <Sparkles className="h-3.5 w-3.5" />
                 Демо-центр
               </span>
@@ -134,12 +134,12 @@ export default function DemoPage() {
                   страницы табелей оставались чистыми и прикладными.
                 </p>
               </div>
-              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+              <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_72%,var(--panel-bg)_28%)] p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
                   Быстрый статус
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3">
+                  <div className="border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 py-3 shadow-[0_10px_28px_-22px_var(--shadow-color)]">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
                       Режим
                     </p>
@@ -147,7 +147,7 @@ export default function DemoPage() {
                       {appConfig.isDemoMode ? 'demo' : 'prod'}
                     </p>
                   </div>
-                  <div className="border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3">
+                  <div className="border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 py-3 shadow-[0_10px_28px_-22px_var(--shadow-color)]">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
                       Сессия
                     </p>
@@ -160,22 +160,22 @@ export default function DemoPage() {
             </div>
 
             <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 xl:p-5">
+              <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_74%,var(--panel-bg)_26%)] p-4 xl:p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
                   Учетные данные
                 </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--text-soft)]">
                   Для быстрого старта используйте
-                  <span className="ml-2 inline-flex rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-xs text-sky-200">
+                  <span className="ml-2 inline-flex rounded-full border border-sky-300/25 bg-sky-400/12 px-2.5 py-1 text-xs text-[var(--accent)] dark:text-sky-200">
                     {appConfig.defaults.username} / {appConfig.defaults.password}
                   </span>
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                   Demo auth по-прежнему принимает любую непустую пару логин/пароль, но эти
                   значения дают самый предсказуемый сценарий.
                 </p>
               </div>
-              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 xl:p-5">
+              <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_74%,var(--panel-bg)_26%)] p-4 xl:p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
                   Поведение маршрута
                 </p>
@@ -184,7 +184,7 @@ export default function DemoPage() {
                     ? 'Сессия уже активна, можно сразу открывать журнал или день.'
                     : 'Сессии нет, поэтому рабочие экраны откроются через обычный login.'}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                   В `prod`-режиме этот маршрут можно отключить через `VITE_APP_MODE=prod`.
                 </p>
               </div>
@@ -234,20 +234,20 @@ export default function DemoPage() {
               </p>
               <h2 className="text-lg font-semibold">Рекомендуемый сценарий показа</h2>
               <div className="grid gap-3">
-                <div className="border border-sky-300/15 bg-sky-400/10 p-4">
+                <div className="border border-sky-300/20 bg-sky-400/12 p-4">
                   <p className="text-sm font-medium">1. Подготовить демо-данные</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                     Заполните локальную базу, чтобы журнал и редактор сразу выглядели правдоподобно.
                   </p>
                 </div>
-                <div className="border border-emerald-300/15 bg-emerald-400/10 p-4">
+                <div className="border border-emerald-300/20 bg-emerald-400/12 p-4">
                   <p className="text-sm font-medium">2. Войти и открыть журнал</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
                     После логина основной user path уже идет через обычные рабочие страницы без
                     лишнего onboarding внутри них.
                   </p>
                 </div>
-                <div className="border border-amber-300/15 bg-amber-400/10 p-4">
+                <div className="border border-amber-300/20 bg-amber-400/12 p-4">
                   <p className="flex items-center gap-2 text-sm font-medium">
                     <WifiOff className="h-4 w-4" />
                     3. При необходимости показать offline flow
@@ -259,8 +259,8 @@ export default function DemoPage() {
                 </div>
               </div>
 
-              <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
-                <p className="text-sm leading-6 text-[var(--text-muted)]">
+              <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_76%,var(--panel-bg)_24%)] p-4">
+                <p className="text-sm leading-6 text-[var(--text-soft)]">
                   Рабочий вход остается доступен по маршруту{' '}
                   <Link
                     to="/login"
