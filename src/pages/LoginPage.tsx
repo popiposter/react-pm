@@ -1,17 +1,17 @@
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { useRouter } from '@tanstack/react-router';
 import {
   AlertTriangle,
   ArrowRight,
-  DatabaseZap,
-  Globe2,
+  BriefcaseBusiness,
   LockKeyhole,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { appConfig } from '../config/app-config';
 import { useAuth } from '../features/auth/auth';
-import { useSeedDemoData } from '../hooks/useSeedDemoData';
 import { getDefaultTimesheetsSearch } from '../routes/_authenticated/timesheets';
 import type { LoginRedirectReason } from '../routes/login';
 
@@ -45,9 +45,8 @@ export function LoginPage({
 }) {
   const router = useRouter();
   const auth = useAuth();
-  const seedDemoData = useSeedDemoData();
-  const [username, setUsername] = useState('demo.user');
-  const [password, setPassword] = useState('demo');
+  const [username, setUsername] = useState<string>(appConfig.defaults.username);
+  const [password, setPassword] = useState<string>(appConfig.defaults.password);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const reasonContent = reason ? loginReasonContent[reason] : null;
 
@@ -67,7 +66,7 @@ export function LoginPage({
     try {
       await auth.login({ username, password });
       toast.success('Вход выполнен', {
-        description: 'Демо-сессия активна. Можно работать с защищенными страницами.',
+        description: 'Сессия активна. Можно переходить к защищенным страницам.',
       });
       await navigateAfterLogin();
     } catch (error) {
@@ -75,22 +74,6 @@ export function LoginPage({
       toast.error('Ошибка входа', { description: message });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleSeedDemoData = async () => {
-    toast.loading('Подготавливаем демо-данные...', { id: 'seed-demo' });
-
-    try {
-      const result = await seedDemoData.mutateAsync();
-      toast.success('Демо-база готова', {
-        id: 'seed-demo',
-        description: `Добавлено ${result.timesheetsCount} табелей и ${result.tasksCount} задач.`,
-      });
-    } catch {
-      toast.error('Не удалось подготовить демо-данные', {
-        id: 'seed-demo',
-      });
     }
   };
 
@@ -105,10 +88,12 @@ export function LoginPage({
                 <LockKeyhole className="h-3.5 w-3.5" />
                 Рабочее место
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--success-text)]">
-                <Globe2 className="h-3.5 w-3.5" />
-                Демо-режим
-              </span>
+              {appConfig.features.demoBranding && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--success-text)]">
+                  <BriefcaseBusiness className="h-3.5 w-3.5" />
+                  Вход в систему
+                </span>
+              )}
             </div>
 
             <div className="mt-5 space-y-2">
@@ -119,36 +104,27 @@ export function LoginPage({
                 Войти в приложение
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
-                Войдите в демо-рабочее место и сразу переходите к журналу табелей. Значения по
-                умолчанию уже подставлены.
+                Войдите в рабочее место и сразу переходите к журналу табелей. Если нужно
+                подготовить демонстрацию, отдельный демо-центр доступен вне основного входа.
               </p>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-              <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+            <div className="mt-5 rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+              <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
-                  Доступ
+                  Учетные данные
                 </p>
                 <p className="mt-2 text-sm text-[var(--app-fg)]">
-                  Для быстрого входа используйте
+                  Для быстрого старта сейчас подставлены
                   <span className="ml-2 inline-flex rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-2.5 py-1 text-xs text-[var(--accent)]">
-                    demo.user / demo
+                    {appConfig.defaults.username} / {appConfig.defaults.password}
                   </span>
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
-                  Демо-авторизация принимает любую непустую пару логин/пароль, но стандартные значения
-                  дают самый предсказуемый сценарий.
+                  До подключения production auth используется локальный demo transport, поэтому
+                  подойдет любая непустая пара логин/пароль.
                 </p>
               </div>
-              <Button
-                onClick={() => void handleSeedDemoData()}
-                disabled={seedDemoData.isPending}
-                variant="secondary"
-                className="h-11 rounded-2xl"
-              >
-                <DatabaseZap className="h-4 w-4" />
-                Подготовить демо
-              </Button>
             </div>
 
             {reasonContent && (
@@ -207,13 +183,13 @@ export function LoginPage({
 
           <section className="app-surface rounded-[1.75rem] p-5 sm:p-7">
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Что уже можно показать</h2>
+              <h2 className="text-lg font-semibold">Что доступно после входа</h2>
               <div className="grid gap-3">
                 <div className="rounded-[1.1rem] border border-sky-300/15 bg-sky-400/10 p-4">
                   <p className="text-sm font-medium">Журнал табелей и редактор дня</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-                    После входа можно открыть день, внести часы и пройти весь основной flow без
-                    реального backend.
+                    После входа можно открыть день, внести часы и пройти основной рабочий путь без
+                    лишней навигации.
                   </p>
                 </div>
                 <div className="rounded-[1.1rem] border border-emerald-300/15 bg-emerald-400/10 p-4">
@@ -223,10 +199,18 @@ export function LoginPage({
                     заложены в архитектуре.
                   </p>
                 </div>
-                <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 text-sm leading-6 text-[var(--text-muted)]">
-                  Это публичное демо. Не вводите реальные пароли, персональные данные или
-                  чувствительную служебную информацию.
-                </div>
+                {appConfig.features.demoRoute && (
+                  <div className="rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 text-sm leading-6 text-[var(--text-muted)]">
+                    Нужен презентационный сценарий, seed/reset демо-базы или подсказки по offline
+                    flow?
+                    <Link
+                      to="/demo"
+                      className="ml-2 font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+                    >
+                      Открыть демо-центр
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </section>

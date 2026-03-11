@@ -1,23 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   ArrowRight,
   CalendarRange,
   CircleCheckBig,
   Clock3,
-  DatabaseZap,
   FileSearch,
   FileSpreadsheet,
   Filter,
   NotebookPen,
   Plus,
-  RefreshCcw,
   Search,
-  Sparkles,
-  WifiOff,
-  X,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { TimesheetsDesktopTable } from '../components/timesheets/TimesheetsDesktopTable';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -28,10 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import { appConfig } from '../config/app-config';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
-import { useResetDemoData } from '../hooks/useResetDemoData';
-import { useSeedDemoData } from '../hooks/useSeedDemoData';
 import type { Timesheet } from '../api/mockBackend';
 import { cn } from '../lib/utils';
 import {
@@ -85,7 +78,6 @@ const statusFilterOptions: Array<{
 ];
 
 const startOfToday = () => new Date().toISOString().split('T')[0];
-const DEMO_ONBOARDING_KEY = 'timesheets:dismiss-demo-onboarding';
 
 const matchesSearch = (timesheet: Timesheet, query: string) => {
   const normalizedQuery = query.trim().toLowerCase();
@@ -146,15 +138,6 @@ export default function TimesheetsList() {
   const searchQuery = search.q;
   const { data: timesheets = [], isLoading } = useTimesheets(selectedMonth);
   const { data: syncStatus } = useSyncStatus();
-  const seedDemoData = useSeedDemoData();
-  const resetDemoData = useResetDemoData();
-  const [showDemoOnboarding, setShowDemoOnboarding] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true;
-    }
-
-    return window.localStorage.getItem(DEMO_ONBOARDING_KEY) !== 'dismissed';
-  });
 
   const filteredTimesheets = useMemo(() => {
     return [...timesheets]
@@ -166,66 +149,6 @@ export default function TimesheetsList() {
   const activeSummary = useMemo(() => summaryCards(filteredTimesheets), [filteredTimesheets]);
   const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim().length > 0;
   const isEmptyMonth = !isLoading && filteredTimesheets.length === 0 && !hasActiveFilters;
-  const hasAnyTimesheets = timesheets.length > 0;
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    if (showDemoOnboarding) {
-      window.localStorage.removeItem(DEMO_ONBOARDING_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(DEMO_ONBOARDING_KEY, 'dismissed');
-  }, [showDemoOnboarding]);
-
-  const handleSeedDemoData = async () => {
-    toast.loading('Заполняем демо-базу...', { id: 'seed-demo-list' });
-
-    try {
-      const result = await seedDemoData.mutateAsync();
-      toast.success('Демо-данные готовы', {
-        id: 'seed-demo-list',
-        description: `Добавлено ${result.timesheetsCount} табелей и ${result.tasksCount} задач.`,
-      });
-    } catch {
-      toast.error('Не удалось заполнить демо-базу', {
-        id: 'seed-demo-list',
-        description: 'Попробуйте повторить действие еще раз.',
-      });
-    }
-  };
-
-  const handleResetDemoData = async () => {
-    const shouldReset =
-      typeof window === 'undefined'
-        ? true
-        : window.confirm(
-            'Сбросить демо-базу? Все локальные табели и очередь синхронизации будут очищены.'
-          );
-
-    if (!shouldReset) {
-      return;
-    }
-
-    toast.loading('Сбрасываем демо-базу...', { id: 'reset-demo-list' });
-
-    try {
-      const result = await resetDemoData.mutateAsync();
-      toast.success('Демо-база очищена', {
-        id: 'reset-demo-list',
-        description: `Удалено табелей: ${result.clearedTimesheetsCount}. Справочник задач оставлен для нового старта.`,
-      });
-      setShowDemoOnboarding(true);
-    } catch {
-      toast.error('Не удалось сбросить демо-базу', {
-        id: 'reset-demo-list',
-        description: 'Попробуйте повторить действие еще раз.',
-      });
-    }
-  };
 
   const updateSearch = (
     patch: Partial<{
@@ -248,70 +171,6 @@ export default function TimesheetsList() {
 
   return (
     <section className="space-y-5 xl:space-y-6">
-      {showDemoOnboarding && (
-        <div className="app-surface overflow-hidden rounded-[1.35rem] border-sky-300/20 bg-[linear-gradient(135deg,var(--accent-soft),transparent_72%)]">
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-            <div className="space-y-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-[var(--panel-bg-strong)] px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
-                <Sparkles className="h-3.5 w-3.5" />
-                Демо-сценарии
-              </span>
-              <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                Для показа приложения обычно хватает трех действий: заполнить демо-базу, открыть
-                день и при необходимости показать работу без сети.
-              </p>
-            </div>
-            <Button
-              onClick={() => setShowDemoOnboarding(false)}
-              variant="secondary"
-              size="icon"
-              className="h-10 w-10 shrink-0 self-start rounded-2xl"
-              aria-label="Скрыть onboarding"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="grid gap-2 border-t border-[var(--panel-border)] px-4 py-3 sm:grid-cols-3 sm:px-5 lg:px-6">
-            <Button
-              onClick={() => void handleSeedDemoData()}
-              disabled={seedDemoData.isPending}
-              variant="secondary"
-              className="justify-start border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
-            >
-              <DatabaseZap className="h-4 w-4" />
-              Заполнить демо-данными
-            </Button>
-            <Button
-              onClick={() =>
-                void navigate({
-                  to: '/timesheet/$date',
-                  params: { date: startOfToday() },
-                })
-              }
-              variant="secondary"
-              className="justify-start border-sky-300/20 bg-sky-400/10 text-[var(--accent)] hover:bg-sky-400/20"
-            >
-              <Plus className="h-4 w-4" />
-              Открыть табель на сегодня
-            </Button>
-            <Button
-              onClick={() =>
-                toast('Как показать работу без сети', {
-                  description:
-                    'Отключите сеть в DevTools или на устройстве, сохраните табель и затем вернитесь в онлайн, чтобы показать ожидающую синхронизацию и ручной запуск отправки.',
-                })
-              }
-              variant="secondary"
-              className="justify-start border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)] hover:bg-amber-400/20"
-            >
-              <WifiOff className="h-4 w-4" />
-              Подсказка по офлайн-режиму
-            </Button>
-          </div>
-        </div>
-      )}
-
       <div className="app-surface overflow-hidden rounded-[1.25rem]">
         <div className="grid gap-4 px-4 py-4 sm:px-5 xl:grid-cols-[minmax(0,1.9fr)_300px] xl:px-6">
           <div className="space-y-3">
@@ -354,35 +213,14 @@ export default function TimesheetsList() {
                 Сбросить фильтры
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button
-                onClick={() => void handleSeedDemoData()}
-                disabled={seedDemoData.isPending}
-                variant="secondary"
-                className="border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                Заполнить демо-данными
-              </Button>
-              <Button
-                onClick={() => void handleResetDemoData()}
-                disabled={resetDemoData.isPending || (!hasAnyTimesheets && !syncStatus?.pendingCount)}
-                variant="secondary"
-                className="border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20 disabled:opacity-60"
-              >
-                <RefreshCcw className="h-4 w-4" />
-                Сбросить демо-базу
-              </Button>
             </div>
-            <div className="flex flex-wrap gap-2.5">
-              <div className="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/10 px-4 py-2 text-sm text-[var(--accent)]">
-                Публичное демо на локальных данных.
-              </div>
-              {syncStatus && syncStatus.pendingCount > 0 && (
+            {syncStatus && syncStatus.pendingCount > 0 && (
+              <div className="flex flex-wrap gap-2.5">
                 <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2 text-sm text-[var(--warning-text)]">
                   Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
@@ -518,20 +356,11 @@ export default function TimesheetsList() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">Пока нет табелей за этот месяц</h3>
               <p className="max-w-md text-sm leading-6 text-[var(--text-muted)]">
-                Можно создать первый табель вручную или в один клик заполнить локальную базу
-                реалистичными демо-данными для показа приложения.
+                Можно создать первый табель вручную и начать работу с периодом без дополнительных
+                экранов настройки.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                onClick={() => void handleSeedDemoData()}
-                disabled={seedDemoData.isPending}
-                variant="secondary"
-                className="border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] hover:bg-emerald-400/20"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                Заполнить демо-данными
-              </Button>
               <Button
                 onClick={() =>
                   navigate({
@@ -544,6 +373,11 @@ export default function TimesheetsList() {
                 <Plus className="h-4 w-4" />
                 Создать первый табель
               </Button>
+              {appConfig.features.demoRoute && (
+                <Button onClick={() => navigate({ to: '/demo' })} variant="secondary">
+                  Открыть демо-центр
+                </Button>
+              )}
             </div>
           </div>
         ) : (

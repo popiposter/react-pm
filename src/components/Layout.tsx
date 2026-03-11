@@ -342,9 +342,6 @@ export default function Layout({ children }: LayoutProps) {
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="hidden rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1.5 text-sm text-[var(--accent)] lg:flex lg:items-center lg:gap-2">
-                  <span>Публичное демо</span>
-                </div>
                 {canInstall && (
                   <>
                     <button

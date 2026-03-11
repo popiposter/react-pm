@@ -84,6 +84,7 @@ Repository overview:
 - `AGENTS.md` - working rules and architecture constraints for coding agents
 - `.docs/architecture.md` - architecture and roadmap
 - `.docs/demo-and-auth.md` - auth and demo mode behavior
+- `.docs/demo-mode-strategy.md` - separation of demo presentation and daily work mode
 - `.docs/onec-integration-plan.md` - backend integration direction
 - `.docs/product-review-plan.md` - current UX/product backlog from live review
 
@@ -164,6 +165,7 @@ These are easy to violate accidentally. Treat them as hard constraints unless pr
 ## Current Product Truths
 
 - The app is currently a single-user demo workspace.
+- Demo presentation flow is now being separated from the main working routes through `/demo` and `appConfig`.
 - Roles like `admin`, `manager`, and `user` are not implemented yet.
 - Demo login accepts any non-empty username and password.
 - Default login values shown in UI are `demo.user` / `demo`.
@@ -175,6 +177,7 @@ These are easy to violate accidentally. Treat them as hard constraints unless pr
 Active product goal:
 
 - move from “good demo” to “fast daily work tool”
+- keep demo affordances available, but outside the main working path
 
 Current UX priorities are tracked in:
 
@@ -245,6 +248,7 @@ If a decision becomes large or controversial, move it to an ADR-style document i
 - Confirmed Russian as the default visible UI language for the current product stage.
 - Improved the mobile timesheet editor flow so newly added rows auto-reveal into the working area.
 - Added a browser-driven PWA install prompt UX in the app shell for supported platforms.
+- Added `appConfig` and started separating `/demo` from the main working routes.
 
 ## Current Work Log
 
@@ -255,14 +259,15 @@ Keep this short. Only active or recently active work belongs here.
 - Phase 1 UX tightening of login and timesheets journal
 - editor layout compression and mobile ergonomics pass
 - mobile safe-area and PWA shell polish
+- demo mode split and app mode hardening
 - preserving offline-first architecture while improving product clarity
 
 ### Next likely work
 
-- finish the next mobile editor ergonomics pass
-- continue UI language unification
+- continue app-mode cleanup across shell and auth UX
 - evaluate install UX and additional PWA-specific affordances
 - add screenshot-based visual checkpoints
+- extend smoke coverage to `/demo`
 
 ## Open Questions
 

@@ -56,6 +56,7 @@ Offline-first PWA для ввода и редактирования табеле
 - [Архитектура и roadmap](.docs/architecture.md)
 - [План интеграции с 1С](.docs/onec-integration-plan.md)
 - [Авторизация и демо-режим](.docs/demo-and-auth.md)
+- [Стратегия demo mode](.docs/demo-mode-strategy.md)
 - [Деплой и GitHub Pages](.docs/deployment.md)
 - [Product review backlog](.docs/product-review-plan.md)
 
@@ -110,6 +111,7 @@ VITE_AUTH_TRANSPORT=demo
 VITE_SYNC_TRANSPORT=local
 VITE_ONEC_BASE_URL=
 VITE_APP_BASE_PATH=/
+VITE_APP_MODE=demo
 ```
 
 Значения:
@@ -118,6 +120,7 @@ VITE_APP_BASE_PATH=/
 - `VITE_SYNC_TRANSPORT=local|onec`
 - `VITE_ONEC_BASE_URL` используется будущими transport-адаптерами 1С
 - `VITE_APP_BASE_PATH` нужен для деплоя в подкаталог, например на GitHub Pages
+- `VITE_APP_MODE=prod` скрывает demo route и demo-affordances из основного UI по умолчанию
 
 ## Как войти
 
@@ -128,7 +131,7 @@ VITE_APP_BASE_PATH=/
   - пароль: `demo`
 - Фактически demo transport принимает любую непустую пару логин/пароль.
 - После входа создается локальная демо-сессия с access token, refresh token и временем истечения.
-- Это публичное демо, поэтому не используйте реальные рабочие пароли и чувствительные данные.
+- Для подготовки демонстрации используйте отдельный маршрут `/demo`.
 
 Подробно:
 

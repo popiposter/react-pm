@@ -16,8 +16,12 @@ const validateSearch = (search: Record<string, unknown>) => ({
 
 export const Route = createFileRoute('/login')({
   validateSearch,
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     if (context.auth.isAuthenticated) {
+      if (search.redirect?.startsWith('/')) {
+        throw redirect({ href: search.redirect });
+      }
+
       throw redirect({ to: '/timesheets', search: getDefaultTimesheetsSearch() });
     }
   },
