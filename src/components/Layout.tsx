@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import {
-  Clock3,
   Download,
   FileSpreadsheet,
   FolderClock,
@@ -21,6 +20,7 @@ import { useSyncStatus } from '../hooks/useSyncStatus';
 import { useAuth } from '../features/auth/auth';
 import { usePwaInstallPrompt } from '../features/pwa/usePwaInstallPrompt';
 import { useTheme, type ThemeMode } from '../features/theme/theme';
+import brandLogo from '../assets/brand-logo.svg';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,6 +32,14 @@ const navigation = [
     label: 'Табели',
     description: 'Список и быстрый доступ',
     icon: FileSpreadsheet,
+  },
+];
+
+const quickActions = [
+  {
+    label: 'Табель на сегодня',
+    description: 'Открыть текущий рабочий день',
+    icon: FolderClock,
   },
 ];
 
@@ -220,6 +228,13 @@ export default function Layout({ children }: LayoutProps) {
     themeOptions.find((option) => option.value === themeMode) ?? themeOptions[2];
   const CurrentThemeIcon = currentThemeOption.icon;
 
+  const handleOpenToday = async () => {
+    await navigate({
+      to: '/timesheet/$date',
+      params: { date: startOfToday() },
+    });
+  };
+
   return (
     <div className="min-h-screen text-[var(--app-fg)]">
       <div className="pointer-events-none absolute inset-0" />
@@ -227,96 +242,163 @@ export default function Layout({ children }: LayoutProps) {
       <div className="relative flex min-h-screen w-full">
         <aside
           className={cn(
-            'app-surface-strong hidden shrink-0 border-r px-4 py-5 transition-[width,padding] duration-200 xl:flex xl:flex-col',
-            isSidebarCollapsed ? 'w-20 items-center' : 'w-72 2xl:w-80'
+            'hidden shrink-0 px-4 py-5 transition-[width,padding] duration-200 xl:flex',
+            isSidebarCollapsed ? 'w-24' : 'w-[20.5rem] 2xl:w-[22.5rem]'
           )}
         >
-          <div className={cn('w-full space-y-4', isSidebarCollapsed && 'flex flex-col items-center space-y-3')}>
-            <button
-              type="button"
-              onClick={() => setIsSidebarCollapsed((value) => !value)}
-              title={isSidebarCollapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
-              className={cn(
-                'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]',
-                !isSidebarCollapsed && 'self-start'
-              )}
-            >
-              {isSidebarCollapsed ? (
-                <PanelLeftOpen className="h-4 w-4" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" />
-              )}
-            </button>
-            <div className={cn('flex items-start gap-3', isSidebarCollapsed && 'flex-col items-center gap-3')}>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-inset ring-[var(--panel-border)]">
-                <Clock3 className="h-6 w-6" />
+          <div
+            className={cn(
+              'flex h-full w-full gap-4',
+              isSidebarCollapsed ? 'justify-center' : 'items-stretch'
+            )}
+          >
+            <div className="app-surface-strong flex w-14 shrink-0 flex-col items-center rounded-[1.6rem] px-2 py-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/95 shadow-[0_12px_32px_-18px_rgba(0,0,0,0.45)]">
+                <img src={brandLogo} alt="Логотип Проектные табели" className="h-6 w-6 object-contain" />
               </div>
-              {!isSidebarCollapsed && (
+              <button
+                type="button"
+                onClick={() => setIsSidebarCollapsed((value) => !value)}
+                title={isSidebarCollapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
+                className="mt-3 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+              >
+                {isSidebarCollapsed ? (
+                  <PanelLeftOpen className="h-4 w-4" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" />
+                )}
+              </button>
+
+              <nav className="mt-4 flex w-full flex-1 flex-col items-center gap-2">
+                {navigation.map((item) => {
+                  const isActive =
+                    (item.href === '/timesheets' && location.pathname === '/') ||
+                    location.pathname === item.href ||
+                    (item.href !== '/' && location.pathname.startsWith(item.href));
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      title={item.label}
+                      className={cn(
+                        'inline-flex h-11 w-11 items-center justify-center rounded-2xl border transition',
+                        isActive
+                          ? 'border-[var(--accent)]/25 bg-[var(--accent-soft)] text-[var(--accent)] shadow-[0_14px_32px_-22px_var(--shadow-color)]'
+                          : 'border-transparent text-[var(--text-muted)] hover:border-[var(--panel-border)] hover:bg-[var(--panel-muted)] hover:text-[var(--app-fg)]'
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {syncStatus && syncStatus.pendingCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => void handleRunSync()}
+                  title={`Ожидают синхронизации: ${syncStatus.pendingCount}`}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)] transition hover:bg-amber-400/20"
+                >
+                  <Wifi className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {!isSidebarCollapsed && (
+              <div className="app-surface-strong flex min-w-0 flex-1 flex-col rounded-[1.9rem] px-5 py-4">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--text-muted)]">
                     Рабочее место
                   </p>
-                  <h1 className="max-w-[10rem] text-[1.9rem] font-semibold leading-10 tracking-tight">
+                  <h1 className="mt-2 text-[1.85rem] font-semibold leading-9 tracking-tight">
                     Проектные табели
                   </h1>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {!isSidebarCollapsed && (
-            <div className="app-surface mt-6 rounded-[1rem] p-4">
-              <p className="text-sm text-[var(--text-soft)]">
-                Плотный рабочий интерфейс для ежедневного учета времени без лишнего визуального
-                шума.
-              </p>
-            </div>
-          )}
+                <div className="mt-6">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[var(--text-muted)]">
+                    Навигация
+                  </p>
+                  <nav className="mt-3 space-y-2">
+                    {navigation.map((item) => {
+                      const isActive =
+                        (item.href === '/timesheets' && location.pathname === '/') ||
+                        location.pathname === item.href ||
+                        (item.href !== '/' && location.pathname.startsWith(item.href));
+                      const Icon = item.icon;
 
-          <nav className={cn('mt-6 space-y-2', isSidebarCollapsed && 'w-full')}>
-            {navigation.map((item) => {
-              const isActive =
-                (item.href === '/timesheets' && location.pathname === '/') ||
-                location.pathname === item.href ||
-                (item.href !== '/' && location.pathname.startsWith(item.href));
-              const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          className={cn(
+                            'flex items-start gap-3 rounded-2xl border px-4 py-3 transition',
+                            isActive
+                              ? 'border-[var(--accent)]/30 bg-[var(--accent-soft)] text-[var(--app-fg)]'
+                              : 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl',
+                              isActive ? 'bg-white/10 text-[var(--accent)]' : 'bg-black/10 text-[var(--text-muted)]'
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium">{item.label}</p>
+                            <p className="mt-1 text-sm text-[var(--text-muted)]">{item.description}</p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </nav>
+                </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  title={isSidebarCollapsed ? item.label : undefined}
-                  className={cn(
-                    'flex rounded-xl border px-3 py-3 transition',
-                    isSidebarCollapsed
-                      ? 'items-center justify-center'
-                      : 'items-start gap-3',
-                    isActive
-                      ? 'border-[var(--accent)]/30 bg-[var(--accent-soft)] text-[var(--app-fg)]'
-                      : 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
+                <div className="mt-6">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[var(--text-muted)]">
+                    Быстрые действия
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    {quickActions.map((action) => {
+                      const Icon = action.icon;
+
+                      return (
+                        <button
+                          key={action.label}
+                          type="button"
+                          onClick={() => void handleOpenToday()}
+                          className="flex w-full items-start gap-3 rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-3 text-left text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+                        >
+                          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium">{action.label}</p>
+                            <p className="mt-1 text-sm text-[var(--text-muted)]">{action.description}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-6">
+                  {syncStatus && syncStatus.pendingCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void handleRunSync()}
+                      className="inline-flex w-full items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm font-medium text-[var(--warning-text)] transition hover:bg-amber-400/20"
+                    >
+                      Ожидают синхронизации: {syncStatus.pendingCount}
+                    </button>
                   )}
-                >
-                  <Icon className="mt-0.5 h-5 w-5 shrink-0" />
-                  {!isSidebarCollapsed && (
-                    <div>
-                      <p className="font-medium">{item.label}</p>
-                      <p className="mt-1 text-sm text-[var(--text-muted)]">{item.description}</p>
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className={cn('mt-auto flex flex-col gap-2', isSidebarCollapsed && 'items-center')}>
-            {!isSidebarCollapsed && syncStatus && syncStatus.pendingCount > 0 && (
-              <button
-                type="button"
-                onClick={() => void handleRunSync()}
-                className="inline-flex items-center justify-center rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2.5 text-sm font-medium text-[var(--warning-text)] transition hover:bg-amber-400/20"
-              >
-                Ожидают синхронизации: {syncStatus.pendingCount}
-              </button>
+                </div>
+              </div>
             )}
           </div>
         </aside>
@@ -330,8 +412,8 @@ export default function Layout({ children }: LayoutProps) {
           >
             <div className="mx-auto flex w-full max-w-[1560px] items-center justify-between px-4 py-2.5 sm:px-5 xl:px-8 xl:py-3 2xl:max-w-[1720px] 2xl:px-10">
               <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
-                  <Clock3 className="h-4.5 w-4.5" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-white/90 xl:hidden">
+                  <img src={brandLogo} alt="Логотип Проектные табели" className="h-4.5 w-4.5 object-contain" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold sm:text-base xl:text-lg">Учет рабочего времени</h2>
