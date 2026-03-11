@@ -228,22 +228,17 @@ export default function Layout({ children }: LayoutProps) {
         <aside
           className={cn(
             'app-surface-strong hidden shrink-0 border-r px-4 py-5 transition-[width,padding] duration-200 xl:flex xl:flex-col',
-            isSidebarCollapsed ? 'w-20 items-center' : 'w-72'
+            isSidebarCollapsed ? 'w-20 items-center' : 'w-72 2xl:w-80'
           )}
         >
-          <div
-            className={cn(
-              'flex items-start justify-between gap-3',
-              isSidebarCollapsed && 'w-full flex-col items-center gap-3'
-            )}
-          >
+          <div className={cn('w-full space-y-4', isSidebarCollapsed && 'flex flex-col items-center space-y-3')}>
             <button
               type="button"
               onClick={() => setIsSidebarCollapsed((value) => !value)}
               title={isSidebarCollapsed ? 'Развернуть навигацию' : 'Свернуть навигацию'}
               className={cn(
                 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]',
-                isSidebarCollapsed && 'order-[-1]'
+                !isSidebarCollapsed && 'self-start'
               )}
             >
               {isSidebarCollapsed ? (
@@ -252,18 +247,20 @@ export default function Layout({ children }: LayoutProps) {
                 <PanelLeftClose className="h-4 w-4" />
               )}
             </button>
-            <div className={cn('flex items-center gap-3', isSidebarCollapsed && 'flex-col gap-3')}>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-inset ring-[var(--panel-border)]">
-              <Clock3 className="h-6 w-6" />
-            </div>
-            {!isSidebarCollapsed && (
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">
-                  Рабочее место
-                </p>
-                <h1 className="text-xl font-semibold">Проектные табели</h1>
+            <div className={cn('flex items-start gap-3', isSidebarCollapsed && 'flex-col items-center gap-3')}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-inset ring-[var(--panel-border)]">
+                <Clock3 className="h-6 w-6" />
               </div>
-            )}
+              {!isSidebarCollapsed && (
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                    Рабочее место
+                  </p>
+                  <h1 className="max-w-[10rem] text-[1.9rem] font-semibold leading-10 tracking-tight">
+                    Проектные табели
+                  </h1>
+                </div>
+              )}
             </div>
           </div>
 
@@ -331,7 +328,7 @@ export default function Layout({ children }: LayoutProps) {
               isMobileChromeHidden && '-translate-y-full xl:translate-y-0'
             )}
           >
-            <div className="flex items-center justify-between px-4 py-2.5 sm:px-5 xl:px-8 xl:py-3">
+            <div className="mx-auto flex w-full max-w-[1560px] items-center justify-between px-4 py-2.5 sm:px-5 xl:px-8 xl:py-3 2xl:max-w-[1720px] 2xl:px-10">
               <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--accent)] xl:hidden">
                   <Clock3 className="h-4.5 w-4.5" />
@@ -451,7 +448,14 @@ export default function Layout({ children }: LayoutProps) {
                 : 'pb-[var(--mobile-nav-content-offset)]'
             )}
           >
-            {children}
+            <div
+              className={cn(
+                'mx-auto w-full',
+                isEditorRoute ? 'max-w-[1540px] 2xl:max-w-[1680px]' : 'max-w-[1480px] 2xl:max-w-[1640px]'
+              )}
+            >
+              {children}
+            </div>
           </main>
         </div>
       </div>
@@ -467,7 +471,7 @@ export default function Layout({ children }: LayoutProps) {
           <Link
             to="/timesheets"
             search={{
-              month: new Date().toISOString().slice(0, 7),
+              period: new Date().toISOString().slice(0, 7),
               status: 'all',
               q: '',
             }}

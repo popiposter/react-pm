@@ -8,10 +8,10 @@ export const tasksQueryOptions = () =>
     staleTime: 1000 * 60 * 10,
   });
 
-export const timesheetsQueryOptions = (month: string) =>
+export const timesheetsQueryOptions = (period: string) =>
   queryOptions({
-    queryKey: ['timesheets', month],
-    queryFn: () => appRepository.timesheets.getTimesheets(month),
+    queryKey: ['timesheets', period],
+    queryFn: () => appRepository.timesheets.getTimesheets(period),
     staleTime: 1000 * 60 * 5,
   });
 

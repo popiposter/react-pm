@@ -110,6 +110,19 @@ Screens:
 - `src/pages/TimesheetsList.tsx`
 - `src/pages/TimesheetEditor.tsx`
 
+Workspace UI primitives:
+
+- `src/components/workspace/PageBreadcrumbs.tsx`
+- `src/components/workspace/EntityPageHeader.tsx`
+- `src/components/workspace/DocumentActionBar.tsx`
+- `src/components/workspace/DocumentTableToolbar.tsx`
+- `src/components/workspace/DocumentTableFrame.tsx`
+- `src/components/workspace/DocumentDataTable.tsx`
+
+Document list search primitives:
+
+- `src/features/documents/listSearch.ts`
+
 Auth:
 
 - `src/features/auth/auth.tsx`
@@ -127,6 +140,7 @@ UI-facing hooks:
 - `src/hooks/useTimesheets.ts`
 - `src/hooks/useTimesheet.ts`
 - `src/hooks/useSaveTimesheet.ts`
+- `src/hooks/useBulkUpdateTimesheets.ts`
 - `src/hooks/useTasks.ts`
 - `src/hooks/useSeedDemoData.ts`
 - `src/hooks/useResetDemoData.ts`
@@ -190,6 +204,7 @@ Highest priority items right now:
 - reduce mobile editor friction
 - strengthen information hierarchy
 - polish mobile safe-area behavior and PWA shell integration
+- refine timesheet row ergonomics on mobile and desktop
 
 ## Development Commands
 
@@ -212,12 +227,40 @@ Browser testing:
 - `npm run test:e2e:headed`
 - `npm run test:e2e:ui`
 
+Current high-value browser coverage already includes:
+
+- demo entry and login flow
+- desktop editor save / leave / delete / copy / offline-sync journeys
+- mobile add-row and duplicate-row flows
+- prod-mode smoke for hidden demo route
+
 ## Testing Strategy
 
 Use the smallest sufficient layer:
 
 - unit / business logic: Vitest
 - UI behavior: React Testing Library
+
+## Current Work Log
+
+### 2026-03-11
+
+- Timesheet editor rows were refined for denser daily use:
+  project name is visible in row summaries, mobile row actions moved from a detached bottom sheet to a compact in-card menu, description editing is multiline, and `endTime` is now directly editable.
+- Drag-and-drop feedback was improved with a dedicated drag preview overlay and stronger row dragging states.
+- Drop targets are now highlighted during row reordering, so users can see both the dragged row and the intended insertion point.
+- Time inputs now follow the browser locale more explicitly through `lang`, while display labels use `Intl.DateTimeFormat`.
+- Browser tests were updated for the new row actions and stabilized against the shared shell headings by scoping editor assertions to `main`.
+- Wide-screen layout was tightened for `login` and the authenticated shell through larger content bounds and centered max-width containers.
+- Desktop document screens now start using shared workspace primitives:
+  breadcrumbs and a reusable entity header were added, table operations were grouped more consistently, row open is available by double click, and sort state is visible in the timesheets table.
+- The intended desktop document pattern is now:
+  breadcrumbs -> entity header -> action bar -> table toolbar -> table/list body.
+- For desktop lists, the emerging standard is:
+  sticky table header, visible sort state, row selection, double-click open, column visibility menu.
+- `TimesheetsDesktopTable` is now intentionally thin and should mainly describe document-specific columns, while shared desktop table behavior lives in `DocumentDataTable`.
+- Timesheets list search now uses a shared `period + status + q` schema, with reusable normalizers intended for future document lists.
+- Bulk document operations are now part of the desktop list direction; the first implemented batch actions for timesheets are submit and approve.
 - real browser flows on desktop, mobile, and production-mode smoke: Playwright
 
 Current browser smoke coverage includes:

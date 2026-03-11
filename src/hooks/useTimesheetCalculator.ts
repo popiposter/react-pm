@@ -100,6 +100,17 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   }, []);
 
+  const normalizeDuration = useCallback((startTime: string, endTime: string): number => {
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+
+    if (endMinutes <= startMinutes) {
+      return 0;
+    }
+
+    return endMinutes - startMinutes;
+  }, [timeToMinutes]);
+
   // Recalculate all rows from a given index
   const recalculateFromIndex = useCallback((rowsToUpdate: TimesheetRow[], startIndex: number): TimesheetRow[] => {
     const newRows = [...rowsToUpdate];
@@ -134,12 +145,20 @@ export const useTimesheetCalculator = (initialRows: TimesheetRow[]): TimesheetCa
   const updateRow = useCallback((index: number, updatedRow: Partial<TimesheetRow>) => {
     setRows(prevRows => {
       const newRows = [...prevRows];
-      newRows[index] = { ...newRows[index], ...updatedRow } as TimesheetRow;
+      const currentRow = newRows[index];
+      const mergedRow = { ...currentRow, ...updatedRow } as TimesheetRow;
+
+      // Editing endTime should update duration first, then cascade later rows.
+      if (typeof updatedRow.endTime === 'string' && updatedRow.duration === undefined) {
+        mergedRow.duration = normalizeDuration(mergedRow.startTime, updatedRow.endTime);
+      }
+
+      newRows[index] = mergedRow;
 
       // Always recalculate from the updated index
       return recalculateFromIndex(newRows, index);
     });
-  }, [recalculateFromIndex]);
+  }, [normalizeDuration, recalculateFromIndex]);
 
   // Add a new row
   const addRow = useCallback((row: AddRowInput) => {

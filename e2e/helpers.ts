@@ -36,8 +36,10 @@ export async function openTodayEditorFromDemo(page: Page) {
   await page.getByRole('button', { name: 'Войти' }).click();
 
   await expect(page).toHaveURL(/\/timesheet\//);
-  await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Рабочие записи за день' })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('heading', { name: /Табель за/i })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('heading', { name: 'Рабочие записи за день' })
+  ).toBeVisible();
 }
 
 export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {
@@ -50,7 +52,7 @@ export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {
   await page.getByRole('button', { name: 'Войти' }).click();
 
   await expect(page).toHaveURL(new RegExp(`/timesheet/${date}`));
-  await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('heading', { name: /Табель за/i })).toBeVisible();
 }
 
 export async function addValidDesktopRow(
@@ -68,6 +70,6 @@ export async function addValidDesktopRow(
 }
 
 export async function saveTimesheet(page: Page) {
-  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-  await expect(page.getByText('Сохранено')).toBeVisible();
+  await page.getByRole('button', { name: 'Записать', exact: true }).click();
+  await expect(page.getByLabel('Notifications alt+T').getByText('Сохранено')).toBeVisible();
 }

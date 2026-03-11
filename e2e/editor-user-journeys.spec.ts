@@ -14,10 +14,10 @@ test('editor blocks saving when a row is incomplete', async ({ page }) => {
   await openTodayEditorFromDemo(page);
 
   await page.getByRole('button', { name: 'Добавить строку' }).click();
-  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await page.getByRole('button', { name: 'Записать', exact: true }).click();
 
   await expect(page.getByText('Нужно проверить строки табеля')).toBeVisible();
-  await expect(page.getByText('Проблемных строк: 1').first()).toBeVisible();
+  await expect(page.getByText('Ошибок в строках: 1').first()).toBeVisible();
   await expect(page).toHaveURL(/\/timesheet\//);
 });
 
@@ -27,8 +27,8 @@ test('user can add a row and save the timesheet', async ({ page }) => {
   await addValidDesktopRow(page, 'Подготовка и проверка рабочего сценария');
   await saveTimesheet(page);
 
-  await expect(page.getByText('Все изменения сохранены').first()).toBeVisible();
-  await expect(page.getByText('Черновик не сохранен')).toHaveCount(0);
+  await expect(page.getByLabel('Notifications alt+T').getByText('Сохранено')).toBeVisible();
+  await expect(page.getByText('Есть несохраненные изменения')).toHaveCount(0);
 });
 
 test('user can cancel leaving a dirty editor', async ({ page }) => {
@@ -53,7 +53,7 @@ test('user can leave a dirty editor without saving', async ({ page }) => {
   await page.getByRole('button', { name: 'Уйти без сохранения' }).click();
 
   await expect(page).toHaveURL(/\/timesheets/);
-  await expect(page.getByRole('heading', { name: /Журнал табелей/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Табели$/i })).toBeVisible();
 });
 
 test('user can save and leave from the dirty-state modal', async ({ page }) => {
@@ -64,7 +64,7 @@ test('user can save and leave from the dirty-state modal', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'У вас есть несохраненные изменения' })).toBeVisible();
   await page.getByRole('button', { name: 'Сохранить и уйти' }).click();
 
-  await expect(page.getByText('Сохранено')).toBeVisible();
+  await expect(page.getByLabel('Notifications alt+T').getByText('Сохранено')).toBeVisible();
   await expect(page).toHaveURL(/\/timesheets/);
 });
 
@@ -72,9 +72,9 @@ test('user can save and close from the editor toolbar', async ({ page }) => {
   await openTodayEditorFromDemo(page);
   await addValidDesktopRow(page, 'Закрытие после явного сохранения');
 
-  await page.getByRole('button', { name: 'Сохранить и закрыть' }).click();
+  await page.getByRole('button', { name: 'Записать и закрыть' }).click();
 
-  await expect(page.getByText('Сохранено')).toBeVisible();
+  await expect(page.getByLabel('Notifications alt+T').getByText('Сохранено')).toBeVisible();
   await expect(page).toHaveURL(/\/timesheets/);
 });
 
@@ -111,9 +111,9 @@ test('offline save shows local-save message and sync can be run later', async ({
   await addValidDesktopRow(page, 'Офлайн-сохранение для очереди синхронизации');
 
   await context.setOffline(true);
-  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await page.getByRole('button', { name: 'Записать', exact: true }).click();
 
-  await expect(page.getByText('Сохранено')).toBeVisible();
+  await expect(page.getByLabel('Notifications alt+T').getByText('Сохранено')).toBeVisible();
   await expect(page.getByText('Табель сохранен локально (нет сети)')).toBeVisible();
   await expect(page.getByText('Ожидают синхронизации: 1')).toBeVisible();
 

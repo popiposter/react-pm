@@ -7,7 +7,7 @@ import TimesheetsList from '../pages/TimesheetsList';
 
 const navigateMock = vi.fn();
 const useSearchMock = vi.fn(() => ({
-  month: '2026-03',
+  period: '2026-03',
   status: 'all',
   q: '',
 }));
@@ -100,7 +100,7 @@ describe('TimesheetsList', () => {
         to: '/timesheets',
         replace: true,
         search: {
-          month: '2026-03',
+          period: '2026-03',
           status: 'all',
           q: 'а',
         },
@@ -119,7 +119,7 @@ describe('TimesheetsList', () => {
         to: '/timesheets',
         replace: true,
         search: {
-          month: '2026-03',
+          period: '2026-03',
           status: 'approved',
           q: '',
         },

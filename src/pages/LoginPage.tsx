@@ -82,9 +82,9 @@ export function LoginPage({
   return (
     <div className="min-h-screen text-[var(--app-fg)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_28%),radial-gradient(circle_at_bottom_right,var(--success-soft),transparent_28%)]" />
-      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-4 py-6 sm:py-8 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(300px,0.92fr)] lg:items-start lg:gap-6">
-          <section className="app-surface-strong rounded-[1.75rem] p-5 sm:p-7">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1560px] flex-col justify-center px-4 py-6 sm:py-8 lg:px-8 2xl:max-w-[1760px] 2xl:px-10">
+        <div className="grid gap-5 xl:grid-cols-[minmax(620px,0.98fr)_minmax(360px,0.82fr)] xl:items-start xl:gap-8 2xl:grid-cols-[minmax(700px,1fr)_minmax(420px,0.8fr)] 2xl:gap-10">
+          <section className="app-surface-strong rounded-[1.75rem] p-5 sm:p-7 xl:p-8 2xl:p-10">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
                 <LockKeyhole className="h-3.5 w-3.5" />
@@ -112,7 +112,7 @@ export function LoginPage({
               </p>
             </div>
 
-            <div className="mt-5 rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+            <div className="mt-5 rounded-[1.1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 2xl:p-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
                   Учетные данные
@@ -153,7 +153,7 @@ export function LoginPage({
               </div>
             )}
 
-            <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+            <form className="mt-6 max-w-xl space-y-5 2xl:max-w-2xl" onSubmit={handleSubmit}>
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-[var(--app-fg)]">Логин</span>
                 <Input
@@ -191,10 +191,10 @@ export function LoginPage({
             </form>
           </section>
 
-          <section className="app-surface rounded-[1.75rem] p-5 sm:p-7">
+          <section className="app-surface rounded-[1.75rem] p-5 sm:p-7 xl:sticky xl:top-10 xl:p-8 2xl:p-9">
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">Что доступно после входа</h2>
-              <div className="grid gap-3">
+              <div className="grid gap-3 2xl:gap-4">
                 <div className="rounded-[1.1rem] border border-sky-300/15 bg-sky-400/10 p-4">
                   <p className="text-sm font-medium">Журнал табелей и редактор дня</p>
                   <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">

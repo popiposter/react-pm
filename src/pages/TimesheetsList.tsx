@@ -3,6 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   ArrowRight,
   CalendarRange,
+  CheckCheck,
   CircleCheckBig,
   Clock3,
   FileSearch,
@@ -15,6 +16,10 @@ import {
 import { TimesheetsDesktopTable } from '../components/timesheets/TimesheetsDesktopTable';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { DocumentActionBar } from '../components/workspace/DocumentActionBar';
+import { DocumentTableToolbar } from '../components/workspace/DocumentTableToolbar';
+import { EntityPageHeader } from '../components/workspace/EntityPageHeader';
+import { PageBreadcrumbs } from '../components/workspace/PageBreadcrumbs';
 import {
   Select,
   SelectContent,
@@ -23,14 +28,14 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { appConfig } from '../config/app-config';
+import { getCurrentMonthPeriod } from '../features/documents/listSearch';
+import { useBulkUpdateTimesheets } from '../hooks/useBulkUpdateTimesheets';
 import { useTimesheets } from '../hooks/useTimesheets';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import type { Timesheet } from '../api/mockBackend';
 import { cn } from '../lib/utils';
-import {
-  getCurrentMonth,
-  type TimesheetStatusFilter,
-} from '../routes/_authenticated/timesheets';
+import { type TimesheetStatusFilter } from '../routes/_authenticated/timesheets';
+import { toast } from 'sonner';
 
 const formatTimesheetDate = (date: string) =>
   new Date(date).toLocaleDateString('ru-RU', {
@@ -133,11 +138,12 @@ const summaryCards = (timesheets: Timesheet[]) => {
 export default function TimesheetsList() {
   const navigate = useNavigate();
   const search = useSearch({ from: '/_authenticated/timesheets' });
-  const selectedMonth = search.month;
+  const selectedPeriod = search.period;
   const statusFilter = search.status;
   const searchQuery = search.q;
-  const { data: timesheets = [], isLoading } = useTimesheets(selectedMonth);
+  const { data: timesheets = [], isLoading } = useTimesheets(selectedPeriod);
   const { data: syncStatus } = useSyncStatus();
+  const bulkUpdateMutation = useBulkUpdateTimesheets();
 
   const filteredTimesheets = useMemo(() => {
     return [...timesheets]
@@ -152,7 +158,7 @@ export default function TimesheetsList() {
 
   const updateSearch = (
     patch: Partial<{
-      month: string;
+      period: string;
       status: TimesheetStatusFilter;
       q: string;
     }>,
@@ -161,7 +167,7 @@ export default function TimesheetsList() {
     void navigate({
       to: '/timesheets',
       search: {
-        month: patch.month ?? selectedMonth,
+        period: patch.period ?? selectedPeriod,
         status: patch.status ?? statusFilter,
         q: patch.q ?? searchQuery,
       },
@@ -171,38 +177,51 @@ export default function TimesheetsList() {
 
   return (
     <section className="space-y-5 xl:space-y-6">
-      <div className="app-surface overflow-hidden rounded-[1.25rem]">
-        <div className="grid gap-4 px-4 py-4 sm:px-5 xl:grid-cols-[minmax(0,1.9fr)_300px] xl:px-6">
-          <div className="space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
-              <CalendarRange className="h-3.5 w-3.5" />
-              Журнал табелей
-            </span>
-            <div className="space-y-2">
-              <h1 className="max-w-3xl text-2xl font-semibold tracking-tight xl:text-[1.75rem]">
-                Журнал табелей для ежедневной работы без лишней навигации.
-              </h1>
-              <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                Откройте нужный день, заведите часы и быстро вернитесь к нужному табелю.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2.5">
-              <Button
-                onClick={() =>
-                  navigate({
-                    to: '/timesheet/$date',
-                    params: { date: startOfToday() },
-                  })
-                }
-                className="bg-white text-slate-950 hover:bg-slate-100"
-              >
-                <Plus className="h-4 w-4" />
-                Создать табель на сегодня
-              </Button>
+      <EntityPageHeader
+        breadcrumbs={
+          <PageBreadcrumbs
+            items={[
+              { label: 'Документы' },
+              { label: 'Табели' },
+            ]}
+          />
+        }
+        eyebrow={
+          <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
+            <CalendarRange className="h-3.5 w-3.5" />
+            Журнал табелей
+          </span>
+        }
+        title="Табели"
+        titleMeta={
+          <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-soft)]">
+            <span>Рабочий список документов за период.</span>
+            {syncStatus && syncStatus.pendingCount > 0 && (
+              <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-[var(--warning-text)]">
+                Ожидают синхронизации: {syncStatus.pendingCount}
+              </span>
+            )}
+          </div>
+        }
+        actions={
+          <DocumentActionBar className="xl:justify-start">
+            <Button
+              onClick={() =>
+                navigate({
+                  to: '/timesheet/$date',
+                  params: { date: startOfToday() },
+                })
+              }
+              className="bg-white text-slate-950 hover:bg-slate-100"
+            >
+              <Plus className="h-4 w-4" />
+              Создать табель на сегодня
+            </Button>
+            {hasActiveFilters && (
               <Button
                 onClick={() => {
                   updateSearch({
-                    month: getCurrentMonth(),
+                    period: getCurrentMonthPeriod(),
                     status: 'all',
                     q: '',
                   });
@@ -213,107 +232,130 @@ export default function TimesheetsList() {
                 Сбросить фильтры
                 <ArrowRight className="h-4 w-4" />
               </Button>
-            </div>
-            {syncStatus && syncStatus.pendingCount > 0 && (
-              <div className="flex flex-wrap gap-2.5">
-                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-2 text-sm text-[var(--warning-text)]">
-                  Есть локальные изменения, ожидающие синхронизации: {syncStatus.pendingCount}
+            )}
+          </DocumentActionBar>
+        }
+      />
+
+      <div className="grid gap-3 xl:grid-cols-4">
+        {activeSummary.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <div
+              key={item.label}
+              className={cn(
+                'app-surface rounded-[1rem] border border-[var(--panel-border)] bg-gradient-to-br p-4',
+                item.accent
+              )}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold">{item.value}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-2.5">
+                  <Icon className="h-4.5 w-4.5" />
                 </div>
               </div>
-            )}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-            {activeSummary.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.label}
-                  className={cn(
-                    'rounded-[1rem] border border-[var(--panel-border)] bg-gradient-to-br p-3.5',
-                    item.accent
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">
-                        {item.label}
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold">{item.value}</p>
-                    </div>
-                    <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] p-2.5">
-                      <Icon className="h-4.5 w-4.5" />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="app-surface rounded-[1.25rem] p-4 sm:p-5">
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">Журнал</p>
               <h2 className="mt-1 text-xl font-semibold">Табели за рабочий период</h2>
             </div>
-            <div className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
-              Период: {formatMonthLabel(selectedMonth)}
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
+              <CalendarRange className="h-4 w-4" />
+              Период: {formatMonthLabel(selectedPeriod)}
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px] xl:grid-cols-[minmax(0,1fr)_180px_180px]">
-            <label className="relative block">
-              <span className="sr-only">Поиск по табелям</span>
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-              <Input
-                value={searchQuery}
-                onChange={(event) => updateSearch({ q: event.target.value })}
-                placeholder="Поиск по дате или описанию"
-                className="h-11 rounded-xl bg-[var(--panel-muted)] pl-10 pr-4"
-              />
-            </label>
+          <DocumentTableToolbar
+            filters={
+              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_220px_220px] xl:items-end">
+              <label className="space-y-2">
+                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <Search className="h-3.5 w-3.5" />
+                  Поиск
+                </span>
+                <div className="relative block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(event) => updateSearch({ q: event.target.value })}
+                    placeholder="Поиск по дате или описанию"
+                    className="h-11 rounded-xl bg-[var(--panel-bg-strong)] pl-10 pr-4"
+                  />
+                </div>
+              </label>
 
-            <label className="space-y-2">
-              <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                <CalendarRange className="h-3.5 w-3.5" />
-                Месяц
-              </span>
-              <Input
-                type="month"
-                value={selectedMonth}
-                onChange={(event) => updateSearch({ month: event.target.value })}
-                className="h-11 rounded-xl bg-[var(--panel-muted)] [color-scheme:light_dark]"
-              />
-            </label>
+              <label className="space-y-2">
+                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <CalendarRange className="h-3.5 w-3.5" />
+                  Период
+                </span>
+                <Input
+                  type="month"
+                  value={selectedPeriod}
+                  onChange={(event) => updateSearch({ period: event.target.value })}
+                  className="h-11 rounded-xl bg-[var(--panel-bg-strong)] [color-scheme:light_dark]"
+                />
+              </label>
 
-            <label className="space-y-2">
-              <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                <Filter className="h-3.5 w-3.5" />
-                Статус
-              </span>
-              <Select
-                value={statusFilter}
-                onValueChange={(value) =>
-                  updateSearch({ status: value as TimesheetStatusFilter })
-                }
-              >
-                <SelectTrigger aria-label="Статус" className="h-11 rounded-xl bg-[var(--panel-muted)]">
-                  <SelectValue placeholder="Все статусы" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusFilterOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-          </div>
+              <label className="space-y-2">
+                <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <Filter className="h-3.5 w-3.5" />
+                  Статус
+                </span>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) =>
+                    updateSearch({ status: value as TimesheetStatusFilter })
+                  }
+                >
+                  <SelectTrigger
+                    aria-label="Статус"
+                    className="h-11 rounded-xl bg-[var(--panel-bg-strong)]"
+                  >
+                    <SelectValue placeholder="Все статусы" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusFilterOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              </div>
+            }
+            actions={
+              <>
+                <Button
+                  onClick={() => {
+                    updateSearch({
+                      period: getCurrentMonthPeriod(),
+                      status: 'all',
+                      q: '',
+                    });
+                  }}
+                  variant="secondary"
+                  className="h-11 rounded-xl"
+                >
+                  Сбросить
+                </Button>
+              </>
+            }
+          />
         </div>
 
         {isLoading ? (
@@ -432,6 +474,52 @@ export default function TimesheetsList() {
 
             <TimesheetsDesktopTable
               timesheets={filteredTimesheets}
+              bulkActions={({ selectedRows, clearSelection }) => (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-10 rounded-lg"
+                    disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
+                    onClick={() => {
+                      toast.promise(
+                        bulkUpdateMutation
+                          .mutateAsync({ timesheets: selectedRows, status: 'submitted' })
+                          .then(() => clearSelection()),
+                        {
+                          loading: 'Отправляем выбранные табели...',
+                          success: `Табелей обновлено: ${selectedRows.length}`,
+                          error: 'Не удалось обновить выбранные табели',
+                        }
+                      );
+                    }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    Отправить
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-10 rounded-lg"
+                    disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
+                    onClick={() => {
+                      toast.promise(
+                        bulkUpdateMutation
+                          .mutateAsync({ timesheets: selectedRows, status: 'approved' })
+                          .then(() => clearSelection()),
+                        {
+                          loading: 'Утверждаем выбранные табели...',
+                          success: `Табелей утверждено: ${selectedRows.length}`,
+                          error: 'Не удалось утвердить выбранные табели',
+                        }
+                      );
+                    }}
+                  >
+                    <CheckCheck className="h-4 w-4" />
+                    Утвердить
+                  </Button>
+                </>
+              )}
               onOpenTimesheet={(date) =>
                 navigate({
                   to: '/timesheet/$date',

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -23,6 +23,9 @@ import { toast } from 'sonner';
 import type { Task, TimesheetRow } from '../api/mockBackend';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { DocumentActionBar } from '../components/workspace/DocumentActionBar';
+import { EntityPageHeader } from '../components/workspace/EntityPageHeader';
+import { PageBreadcrumbs } from '../components/workspace/PageBreadcrumbs';
 import {
   Select,
   SelectContent,
@@ -53,6 +56,10 @@ interface RowEditorProps {
   row: TimesheetRow;
   index: number;
   taskGroups: GroupedTasks[];
+  taskLookup: Map<string, Task>;
+  activeRowId: string | null;
+  overRowId: string | null;
+  highlightedRowId: string | null;
   updateRow: (index: number, row: Partial<TimesheetRow>) => void;
   requestRemoveRow: (index: number) => void;
   duplicateRow: (row: TimesheetRow) => void;
@@ -86,6 +93,9 @@ const minutesToHours = (minutes: number): string => {
 const createRowId = () =>
   `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+const userLocale =
+  typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'ru-RU';
+
 const dispatchDirtyStateChange = (isDirty: boolean, date: string) => {
   window.dispatchEvent(
     new CustomEvent('timesheet-dirty-change', {
@@ -117,6 +127,20 @@ const getTaskLabel = (taskGroups: GroupedTasks[], taskId: string): string => {
   }
 
   return 'Задача не выбрана';
+};
+
+const getTaskProjectName = (taskLookup: Map<string, Task>, taskId: string) =>
+  taskLookup.get(taskId)?.projectName || 'Без проекта';
+
+const formatTimeLabel = (time: string) => {
+  const [hours = '0', minutes = '0'] = time.split(':');
+  const value = new Date();
+  value.setHours(Number(hours), Number(minutes), 0, 0);
+
+  return new Intl.DateTimeFormat(userLocale, {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(value);
 };
 
 const getTotalHours = (rows: TimesheetRow[]) =>
@@ -166,6 +190,7 @@ const NativeTaskSelect = ({
 }) => (
   <select
     ref={selectRef}
+    lang={userLocale}
     value={value}
     onChange={(event) => onChange(event.target.value)}
     className="h-10 w-full rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] outline-none [color-scheme:light_dark]"
@@ -196,6 +221,7 @@ const TimeField = ({
 }) => (
   <Input
     type="time"
+    lang={userLocale}
     step={300}
     value={value}
     readOnly={readOnly}
@@ -238,27 +264,57 @@ const DescriptionField = ({
   value,
   onChange,
   className,
+  rows = 2,
 }: {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  rows?: number;
 }) => (
-  <Input
-    type="text"
+  <textarea
     value={value}
-    onChange={(event) => onChange(event.target.value)}
+    rows={rows}
+    onChange={(event) => {
+      event.currentTarget.style.height = '0px';
+      event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+      onChange(event.target.value);
+    }}
     placeholder="Описание работ"
     className={cn(
-      'h-10 w-full rounded-lg bg-[var(--panel-muted)]',
+      'min-h-10 w-full resize-none rounded-lg border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15',
       className
     )}
   />
+);
+
+const DragRowPreview = ({
+  row,
+  taskGroups,
+  taskLookup,
+}: {
+  row: TimesheetRow;
+  taskGroups: GroupedTasks[];
+  taskLookup: Map<string, Task>;
+}) => (
+  <div className="w-[min(320px,calc(100vw-2rem))] rotate-1 rounded-[1rem] border border-[var(--accent)]/25 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_70px_-36px_var(--shadow-color)]">
+    <p className="truncate text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+      {getTaskProjectName(taskLookup, row.taskId)}
+    </p>
+    <p className="mt-1 truncate text-sm font-semibold">{getTaskLabel(taskGroups, row.taskId)}</p>
+    <p className="mt-2 text-sm text-[var(--text-soft)]">
+      {formatTimeLabel(row.startTime)} - {formatTimeLabel(row.endTime)} · {minutesToHours(row.duration)} ч
+    </p>
+  </div>
 );
 
 const SortableDesktopRow = ({
   row,
   index,
   taskGroups,
+  taskLookup,
+  activeRowId,
+  overRowId,
+  highlightedRowId,
   updateRow,
   requestRemoveRow,
   validationErrors,
@@ -266,6 +322,8 @@ const SortableDesktopRow = ({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
   });
+  const isDropTarget = overRowId === row.id && activeRowId !== row.id;
+  const isHighlighted = highlightedRowId === row.id;
 
   return (
     <tr
@@ -276,8 +334,10 @@ const SortableDesktopRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'border-t border-[var(--panel-border)] align-top transition hover:bg-[var(--panel-hover)]',
-        validationErrors.length > 0 && 'bg-amber-400/[0.06]'
+        'relative border-t border-[var(--panel-border)] align-top transition hover:bg-[var(--panel-hover)]',
+        validationErrors.length > 0 && 'bg-amber-400/[0.06]',
+        isDropTarget && 'bg-sky-400/[0.07] shadow-[inset_0_2px_0_0_var(--accent)]',
+        isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
     >
       <td className="px-2 py-2 text-center">
@@ -292,12 +352,17 @@ const SortableDesktopRow = ({
         </button>
       </td>
       <td className="px-2 py-2">
-        <TaskSelect
-          value={row.taskId}
-          onChange={(value) => updateRow(index, { taskId: value })}
-          taskGroups={taskGroups}
-          className="h-9 rounded-md bg-[var(--panel-bg)]"
-        />
+        <div className="space-y-1.5">
+          <TaskSelect
+            value={row.taskId}
+            onChange={(value) => updateRow(index, { taskId: value })}
+            taskGroups={taskGroups}
+            className="h-9 rounded-md bg-[var(--panel-bg)]"
+          />
+          <p className="truncate px-1 text-xs text-[var(--text-muted)]">
+            {getTaskProjectName(taskLookup, row.taskId)}
+          </p>
+        </div>
       </td>
       <td className="px-2 py-2">
         <TimeField
@@ -307,20 +372,25 @@ const SortableDesktopRow = ({
         />
       </td>
       <td className="px-2 py-2">
-        <TimeField value={row.endTime} readOnly className="h-9 rounded-md bg-[var(--panel-bg)]" />
+        <TimeField
+          value={row.endTime}
+          onChange={(value) => updateRow(index, { endTime: value })}
+          className="h-9 rounded-md bg-[var(--panel-bg)]"
+        />
       </td>
       <td className="px-2 py-2">
         <DurationField
           value={row.duration}
           onChange={(value) => updateRow(index, { duration: value })}
-          className="[&_input]:h-9 [&_input]:rounded-md [&_input]:bg-[var(--panel-bg)]"
+          className="max-w-28 [&_input]:h-9 [&_input]:rounded-md [&_input]:bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2">
         <DescriptionField
           value={row.description || ''}
           onChange={(value) => updateRow(index, { description: value })}
-          className="h-9 rounded-md bg-[var(--panel-bg)]"
+          rows={1}
+          className="min-h-9 rounded-md bg-[var(--panel-bg)]"
         />
       </td>
       <td className="px-2 py-2 text-right">
@@ -347,6 +417,10 @@ const SortableMobileRow = ({
   row,
   index,
   taskGroups,
+  taskLookup,
+  activeRowId,
+  overRowId,
+  highlightedRowId,
   updateRow,
   requestRemoveRow,
   duplicateRow,
@@ -359,8 +433,11 @@ const SortableMobileRow = ({
   const [isExpanded, setIsExpanded] = useState(validationErrors.length > 0);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const taskLabel = getTaskLabel(taskGroups, row.taskId);
+  const projectName = getTaskProjectName(taskLookup, row.taskId);
   const articleRef = useRef<HTMLElement | null>(null);
   const taskSelectRef = useRef<HTMLSelectElement | null>(null);
+  const isDropTarget = overRowId === row.id && activeRowId !== row.id;
+  const isHighlighted = highlightedRowId === row.id;
 
   useEffect(() => {
     if (!shouldAutoReveal) {
@@ -392,69 +469,134 @@ const SortableMobileRow = ({
         opacity: isDragging ? 0.55 : 1,
       }}
       className={cn(
-        'rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4',
-        validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.08]'
+        'relative rounded-[1rem] border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 transition-all duration-200',
+        validationErrors.length > 0 && 'border-amber-300/20 bg-amber-400/[0.08]',
+        isDragging && 'scale-[1.01] shadow-[0_20px_48px_-32px_var(--shadow-color)]',
+        isDropTarget && 'border-sky-300/35 bg-sky-400/[0.09] ring-2 ring-sky-300/20',
+        isHighlighted && 'animate-[pulse_0.7s_ease-out_1] border-emerald-300/25 bg-emerald-400/[0.08]'
       )}
     >
-      <div className="flex items-start gap-3">
+      {isDropTarget && (
+        <div className="pointer-events-none absolute inset-x-4 top-0 h-1 -translate-y-1/2 rounded-full bg-[var(--accent)]/80 shadow-[0_0_0_4px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
+      )}
+
+      {isActionsOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-10 bg-transparent"
+            aria-label="Закрыть меню действий"
+            onClick={() => setIsActionsOpen(false)}
+          />
+          <div className="app-surface-strong absolute right-3 top-12 z-20 min-w-56 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150 rounded-[1.1rem] p-2 shadow-[0_18px_48px_-24px_var(--shadow-color)]">
+            <div className="border-b border-[var(--panel-border)] px-2 pb-2 pt-1">
+              <p className="text-sm font-semibold">{taskLabel}</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">{projectName}</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                {formatTimeLabel(row.startTime)} - {formatTimeLabel(row.endTime)}, {minutesToHours(row.duration)} ч
+              </p>
+            </div>
+            <div className="mt-2 space-y-1">
+              <Button
+                onClick={() => {
+                  duplicateRow(row);
+                  setIsActionsOpen(false);
+                }}
+                variant="ghost"
+                className="h-10 w-full justify-start rounded-xl"
+              >
+                <Copy className="h-4 w-4" />
+                Скопировать
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsExpanded((value) => !value);
+                  setIsActionsOpen(false);
+                }}
+                variant="ghost"
+                className="h-10 w-full justify-start rounded-xl"
+              >
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {isExpanded ? 'Свернуть' : 'Показать детали'}
+              </Button>
+              <Button
+                onClick={() => {
+                  requestRemoveRow(index);
+                  setIsActionsOpen(false);
+                }}
+                variant="ghost"
+                className="h-10 w-full justify-start rounded-xl text-[var(--danger-text)] hover:bg-rose-400/10 hover:text-[var(--danger-text)]"
+              >
+                <Trash2 className="h-4 w-4" />
+                Удалить строку
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="relative">
         <Button
           {...attributes}
           {...listeners}
           variant="secondary"
           size="icon"
-          className="mt-0.5 h-9 w-9 shrink-0 rounded-xl text-[var(--text-muted)]"
+          className="absolute left-0 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 rounded-xl text-[var(--text-muted)]"
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
         </Button>
+        <Button
+          onClick={() => setIsActionsOpen(true)}
+          variant="ghost"
+          size="icon"
+          className="absolute right-0 top-0 z-[1] h-8 w-8 rounded-full text-[var(--text-muted)]"
+          aria-label="Действия со строкой"
+        >
+          <Ellipsis className="h-4 w-4" />
+        </Button>
         <button
           type="button"
           onClick={() => setIsExpanded((value) => !value)}
-          className="min-w-0 flex-1 rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-3 text-left transition active:scale-[0.99]"
+          className="min-w-0 w-full rounded-[0.9rem] border border-[var(--panel-border)] bg-[var(--panel-bg)] py-3 pl-11 pr-11 text-left transition duration-200 active:scale-[0.99]"
           aria-expanded={isExpanded}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{taskLabel}</p>
-              <div className="mt-1 flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                <span>{row.startTime}</span>
-                <span>&rarr;</span>
-                <span>{row.endTime}</span>
-                <span className="rounded-full bg-[var(--panel-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-soft)]">
-                  {minutesToHours(row.duration)} ч
-                </span>
+          <div className="min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                  {projectName}
+                </p>
+                <p className="mt-1 truncate text-sm font-semibold">{taskLabel}</p>
               </div>
-              <p className="mt-2 line-clamp-1 text-sm text-[var(--text-soft)]">
-                {row.description || 'Без описания работ'}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
               {validationErrors.length > 0 && (
                 <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-[var(--warning-text)]">
                   {validationErrors.length} проблема
                 </span>
               )}
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-sm text-[var(--text-muted)]">
+              <span>{formatTimeLabel(row.startTime)}</span>
+              <span>&rarr;</span>
+              <span>{formatTimeLabel(row.endTime)}</span>
+              <span className="rounded-full bg-[var(--panel-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-soft)]">
+                {minutesToHours(row.duration)} ч
+              </span>
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
+                <ChevronUp className="ml-auto h-4 w-4 text-[var(--text-muted)] transition-transform duration-200" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />
+                <ChevronDown className="ml-auto h-4 w-4 text-[var(--text-muted)] transition-transform duration-200" />
               )}
             </div>
+            <p className="mt-2 line-clamp-2 text-sm leading-5 text-[var(--text-soft)]">
+              {row.description || 'Без описания работ'}
+            </p>
           </div>
         </button>
-        <Button
-          onClick={() => setIsActionsOpen(true)}
-          variant="secondary"
-          size="icon"
-          className="mt-0.5 h-9 w-9 shrink-0 rounded-xl"
-          aria-label="Действия со строкой"
-        >
-          <Ellipsis className="h-4 w-4" />
-        </Button>
       </div>
 
       {isExpanded && (
-        <div className="mt-4 space-y-4 border-t border-[var(--panel-border)] pt-4">
+        <div className="mt-4 space-y-4 border-t border-[var(--panel-border)] pt-4 animate-in fade-in-0 slide-in-from-top-1 duration-200">
           <div className="space-y-2">
             <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
               Задача
@@ -481,18 +623,31 @@ const SortableMobileRow = ({
               <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
                 Окончание
               </label>
-              <TimeField value={row.endTime} readOnly />
+              <TimeField
+                value={row.endTime}
+                onChange={(value) => updateRow(index, { endTime: value })}
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              Длительность
-            </label>
-            <DurationField
-              value={row.duration}
-              onChange={(value) => updateRow(index, { duration: value })}
-            />
+          <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-3">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Длительность
+              </label>
+              <DurationField
+                value={row.duration}
+                onChange={(value) => updateRow(index, { duration: value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                Проект
+              </label>
+              <div className="flex h-10 items-center rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--text-soft)]">
+                {projectName}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -502,78 +657,15 @@ const SortableMobileRow = ({
             <DescriptionField
               value={row.description || ''}
               onChange={(value) => updateRow(index, { description: value })}
+              rows={3}
             />
           </div>
-
-          <Button
-            onClick={() => duplicateRow(row)}
-            variant="secondary"
-            className="h-10 rounded-xl"
-          >
-            <Copy className="h-4 w-4" />
-            Повторить запись в конец
-          </Button>
 
           {validationErrors.length > 0 && (
             <div className="rounded-2xl border border-amber-300/20 bg-amber-400/10 px-3 py-2 text-sm text-[var(--warning-text)]">
               {validationErrors.join(' • ')}
             </div>
           )}
-        </div>
-      )}
-
-      {isActionsOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-end bg-slate-950/45 backdrop-blur-[2px]">
-          <button
-            type="button"
-            className="absolute inset-0"
-            aria-label="Закрыть меню действий"
-            onClick={() => setIsActionsOpen(false)}
-          />
-          <div className="app-surface-strong relative w-full rounded-t-[1.5rem] border-b-0 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-24px_80px_-48px_var(--shadow-color)]">
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--panel-border)]" />
-            <div className="space-y-2">
-              <div className="px-1 pb-2">
-                <p className="text-sm font-semibold">{taskLabel}</p>
-                <p className="mt-1 text-sm text-[var(--text-muted)]">
-                  {row.startTime} - {row.endTime}, {minutesToHours(row.duration)} ч
-                </p>
-              </div>
-              <Button
-                onClick={() => {
-                  duplicateRow(row);
-                  setIsActionsOpen(false);
-                }}
-                variant="secondary"
-                className="h-11 w-full justify-start rounded-2xl"
-              >
-                <Copy className="h-4 w-4" />
-                Повторить запись
-              </Button>
-              <Button
-                onClick={() => {
-                  setIsExpanded((value) => !value);
-                  setIsActionsOpen(false);
-                }}
-                variant="secondary"
-                className="h-11 w-full justify-start rounded-2xl"
-              >
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                {isExpanded ? 'Свернуть детали' : 'Показать детали'}
-              </Button>
-              <Button
-                onClick={() => {
-                  requestRemoveRow(index);
-                  setIsActionsOpen(false);
-                }}
-                variant="secondary"
-                className="h-11 w-full justify-start rounded-2xl border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)] hover:bg-rose-400/20"
-              >
-                <Trash2 className="h-4 w-4" />
-                Удалить строку
-              </Button>
-            </div>
-          </div>
         </div>
       )}
     </article>
@@ -626,6 +718,7 @@ export default function TimesheetEditor() {
       return acc;
     }, [] as GroupedTasks[]);
   }, [tasks]);
+  const taskLookup = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
 
   const rowsWithValidation = useMemo(
     () =>
@@ -638,6 +731,12 @@ export default function TimesheetEditor() {
 
   const invalidRowsCount = rowsWithValidation.filter((row) => row.errors.length > 0).length;
   const totalHours = useMemo(() => getTotalHours(rows), [rows]);
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
+  const [overRowId, setOverRowId] = useState<string | null>(null);
+  const activeRow = useMemo(
+    () => rows.find((row) => row.id === activeRowId) ?? null,
+    [activeRowId, rows]
+  );
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -685,7 +784,14 @@ export default function TimesheetEditor() {
 
     if (!rows.some((row) => row.id === freshMobileRowId)) {
       setFreshMobileRowId(null);
+      return;
     }
+
+    const clearHighlightTimeout = window.setTimeout(() => {
+      setFreshMobileRowId((current) => (current === freshMobileRowId ? null : current));
+    }, 1600);
+
+    return () => window.clearTimeout(clearHighlightTimeout);
   }, [freshMobileRowId, rows]);
 
   const showSaveSuccess = useCallback(() => {
@@ -932,6 +1038,8 @@ export default function TimesheetEditor() {
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveRowId(null);
+    setOverRowId(null);
     if (!over) return;
 
     const activeIndex = rows.findIndex((row) => row.id === active.id);
@@ -956,97 +1064,55 @@ export default function TimesheetEditor() {
     );
   }
 
-  const statusToneClass =
-    invalidRowsCount > 0
-      ? 'border-rose-300/20 bg-rose-400/10 text-[var(--danger-text)]'
-      : isDirty
-        ? 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
-        : 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]';
-
-  const statusSummary =
-    invalidRowsCount > 0
-      ? `Нужно исправить строк: ${invalidRowsCount}`
-      : isDirty
-        ? 'Есть несохраненные изменения'
-        : 'Все изменения сохранены';
-
   return (
     <section className="space-y-3 pb-[var(--mobile-editor-bar-offset)] xl:space-y-4 xl:pb-0">
-      <div className="app-surface overflow-hidden rounded-[1rem]">
-        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 xl:flex-row xl:items-start xl:justify-between xl:px-6">
-          <div className="space-y-2.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
-                Табель
-              </span>
-              <span
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
-                  isOnline
-                    ? 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
-                    : 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
-                )}
-              >
-                {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-                {isOnline ? 'Онлайн' : 'Офлайн'}
-              </span>
-              {isDirty && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-[var(--warning-text)]">
-                  Черновик не сохранен
-                </span>
+      <EntityPageHeader
+        breadcrumbs={
+          <PageBreadcrumbs
+            items={[
+              { label: 'Документы' },
+              { label: 'Табели', to: '/timesheets' },
+              { label: formatEditorDate(date) },
+            ]}
+          />
+        }
+        eyebrow={
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
+              Табель
+            </span>
+            <span
+              className={cn(
+                'inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                isOnline
+                  ? 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
+                  : 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
               )}
-              {invalidRowsCount > 0 && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-2.5 py-1 text-[11px] font-medium text-[var(--danger-text)]">
-                  Проблемных строк: {invalidRowsCount}
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <h1 className="text-[1.75rem] font-semibold tracking-tight xl:text-[1.8rem]">
-                Табель за {formatEditorDate(date)}
-              </h1>
-              <p className="max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
-                Ввод часов, перестановка строк и быстрое сохранение в одном рабочем экране.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <div
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm',
-                  isOnline
-                    ? 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
-                    : 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
-                )}
-              >
-                {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-                <span>
-                  {isOnline
-                    ? 'Сохранение и синхронизация доступны'
-                    : 'Офлайн-режим: изменения сохранятся локально'}
-                </span>
-              </div>
-              <div
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm',
-                  statusToneClass
-                )}
-              >
-                <AlertTriangle className="h-4 w-4" />
-                <span>{statusSummary}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden flex-wrap gap-2.5 xl:flex xl:max-w-2xl xl:justify-end">
-            <Button
-              onClick={handleCopy}
-              variant="secondary"
             >
-              <Copy className="h-4 w-4" />
-              Копировать на сегодня
-            </Button>
+              {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+              {isOnline ? 'Онлайн' : 'Офлайн'}
+            </span>
+            <span
+              className={cn(
+                'inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                isDirty
+                  ? 'border-amber-300/20 bg-amber-400/10 text-[var(--warning-text)]'
+                  : 'border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)]'
+              )}
+            >
+              {isDirty ? 'Есть несохраненные изменения' : 'Сохранено'}
+            </span>
+            {invalidRowsCount > 0 && (
+              <span className="inline-flex items-center gap-2 rounded-full border border-rose-300/20 bg-rose-400/10 px-2.5 py-1 text-[11px] font-medium text-[var(--danger-text)]">
+                Ошибок в строках: {invalidRowsCount}
+              </span>
+            )}
+          </div>
+        }
+        title={`Табель за ${formatEditorDate(date)}`}
+        actionsClassName="xl:justify-start"
+        actions={
+          <DocumentActionBar className="xl:w-full xl:justify-start">
             <Button
               onClick={() =>
                 navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() })
@@ -1057,24 +1123,28 @@ export default function TimesheetEditor() {
               <ArrowLeft className="h-4 w-4" />
               К списку
             </Button>
+            <Button onClick={handleCopy} variant="secondary">
+              <Copy className="h-4 w-4" />
+              Копировать на сегодня
+            </Button>
             <Button
               onClick={() => void handleSave(false)}
               disabled={saveMutation.isPending}
               className="border border-white/10 bg-white text-slate-950 hover:bg-slate-100"
             >
               <Save className="h-4 w-4" />
-              Сохранить
+              Записать
             </Button>
             <Button
               onClick={() => void handleSave(true)}
               disabled={saveMutation.isPending}
             >
               <Save className="h-4 w-4" />
-              Сохранить и закрыть
+              Записать и закрыть
             </Button>
-          </div>
-        </div>
-      </div>
+          </DocumentActionBar>
+        }
+      />
 
       <div className="xl:hidden">
         <div className="grid grid-cols-3 gap-2">
@@ -1127,7 +1197,16 @@ export default function TimesheetEditor() {
           </Button>
         </div>
 
-        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragStart={({ active }) => setActiveRowId(String(active.id))}
+          onDragOver={({ over }) => setOverRowId(over ? String(over.id) : null)}
+          onDragCancel={() => {
+            setActiveRowId(null);
+            setOverRowId(null);
+          }}
+          onDragEnd={onDragEnd}
+        >
           <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
             {rows.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
@@ -1156,6 +1235,10 @@ export default function TimesheetEditor() {
                       row={row}
                       index={index}
                       taskGroups={taskGroups}
+                      taskLookup={taskLookup}
+                      activeRowId={activeRowId}
+                      overRowId={overRowId}
+                      highlightedRowId={freshMobileRowId}
                       updateRow={updateRow}
                       requestRemoveRow={handleRequestRemoveRow}
                       duplicateRow={handleDuplicateRow}
@@ -1192,6 +1275,10 @@ export default function TimesheetEditor() {
                           row={row}
                           index={index}
                           taskGroups={taskGroups}
+                          taskLookup={taskLookup}
+                          activeRowId={activeRowId}
+                          overRowId={overRowId}
+                          highlightedRowId={freshMobileRowId}
                           updateRow={updateRow}
                           requestRemoveRow={handleRequestRemoveRow}
                           duplicateRow={handleDuplicateRow}
@@ -1206,6 +1293,15 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
+          <DragOverlay dropAnimation={null}>
+            {activeRow ? (
+              <DragRowPreview
+                row={activeRow}
+                taskGroups={taskGroups}
+                taskLookup={taskLookup}
+              />
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
 

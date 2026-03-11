@@ -4,31 +4,27 @@ import { createFileRoute } from '@tanstack/react-router';
 import { lazyRouteComponent } from '@tanstack/react-router';
 import { TimesheetsListSkeleton } from '../../components/pending/TimesheetsListSkeleton';
 import { timesheetsQueryOptions } from '../../data/queryOptions';
+import {
+  createEnumSearchNormalizer,
+  getCurrentMonthPeriod,
+  normalizeMonthPeriod,
+  normalizeTextQuery,
+} from '../../features/documents/listSearch';
 
 export type TimesheetStatusFilter = 'all' | 'draft' | 'submitted' | 'approved';
-
-export const getCurrentMonth = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};
-
-const isValidMonth = (value: string) => /^\d{4}-\d{2}$/.test(value);
-
-const isValidStatus = (value: string): value is TimesheetStatusFilter =>
-  ['all', 'draft', 'submitted', 'approved'].includes(value);
+const normalizeTimesheetStatus = createEnumSearchNormalizer<TimesheetStatusFilter>(
+  ['all', 'draft', 'submitted', 'approved'],
+  'all'
+);
 
 export const validateTimesheetsSearch = (search: Record<string, unknown>) => ({
-  month:
-    typeof search.month === 'string' && isValidMonth(search.month)
-      ? search.month
-      : getCurrentMonth(),
-  status:
-    typeof search.status === 'string' && isValidStatus(search.status) ? search.status : 'all',
-  q: typeof search.q === 'string' ? search.q.trim().slice(0, 120) : '',
+  period: normalizeMonthPeriod(search.period ?? search.month),
+  status: normalizeTimesheetStatus(search.status),
+  q: normalizeTextQuery(search.q),
 });
 
 export const getDefaultTimesheetsSearch = () => ({
-  month: getCurrentMonth(),
+  period: getCurrentMonthPeriod(),
   status: 'all' as const,
   q: '',
 });
@@ -36,9 +32,10 @@ export const getDefaultTimesheetsSearch = () => ({
 export const Route = createFileRoute('/_authenticated/timesheets')({
   validateSearch: validateTimesheetsSearch,
   loaderDeps: ({ search }) => ({
-    month: search.month,
+    period: search.period,
   }),
-  loader: ({ context, deps }) => context.queryClient.ensureQueryData(timesheetsQueryOptions(deps.month)),
+  loader: ({ context, deps }) =>
+    context.queryClient.ensureQueryData(timesheetsQueryOptions(deps.period)),
   pendingComponent: TimesheetsListSkeleton,
   component: lazyRouteComponent(() => import('../../pages/TimesheetsList')),
 });
