@@ -236,6 +236,7 @@ Current high-value browser coverage already includes:
 - mobile add-row and duplicate-row flows
 - prod-mode smoke for hidden demo route
 - screenshot baselines for `login`, `demo`, `timesheets`, and `editor` on desktop/mobile
+- visual regression is intentionally separated from the main functional CI so ordinary browser verification is not blocked by snapshot churn
 
 ## Testing Strategy
 

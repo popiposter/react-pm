@@ -149,7 +149,7 @@ VITE_APP_MODE=demo
 
 В проект подключен `Playwright` для smoke-проверок и живого просмотра интерфейса в браузере.
 
-- `npm run test:e2e` запускает сценарии headless
+- `npm run test:e2e` запускает функциональные browser-сценарии headless без visual regression
 - `npm run test:e2e:mobile` прогоняет mobile project и mobile-specific сценарии
 - `npm run test:e2e:prod` проверяет production-mode smoke с `VITE_APP_MODE=prod`
 - `npm run test:e2e:visual` проверяет screenshot baselines для `login`, `demo`, `journal`, `editor` на desktop и mobile
@@ -158,6 +158,11 @@ VITE_APP_MODE=demo
 - `npm run test:e2e:ui` открывает Playwright UI runner для локальной отладки
 
 Playwright сам поднимает Vite dev server, поэтому отдельно запускать `npm run dev` для e2e не нужно.
+
+CI теперь разделен:
+
+- основной `CI` гоняет lint, build, functional browser tests и prod smoke
+- visual regression вынесен в отдельный workflow, чтобы snapshot-изменения не краснили каждый обычный push в `main`
 
 Текущее browser coverage уже проверяет:
 
