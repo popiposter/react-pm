@@ -86,6 +86,14 @@ const minutesToHours = (minutes: number): string => {
 const createRowId = () =>
   `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+const dispatchDirtyStateChange = (isDirty: boolean, date: string) => {
+  window.dispatchEvent(
+    new CustomEvent('timesheet-dirty-change', {
+      detail: { isDirty, date },
+    })
+  );
+};
+
 const getRowValidationErrors = (row: TimesheetRow): string[] => {
   const errors: string[] = [];
 
@@ -667,11 +675,7 @@ export default function TimesheetEditor() {
   }, [timesheet?.id, timesheet?.rows, setIsDirty]);
 
   useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent('timesheet-dirty-change', {
-        detail: { isDirty, date: date || '' },
-      })
-    );
+    dispatchDirtyStateChange(isDirty, date || '');
   }, [date, isDirty]);
 
   useEffect(() => {
@@ -743,6 +747,7 @@ export default function TimesheetEditor() {
         });
 
         setIsDirty(false);
+        dispatchDirtyStateChange(false, date);
         showSaveSuccess();
 
         if (navigationResolver?.proceed) {
@@ -751,6 +756,7 @@ export default function TimesheetEditor() {
         }
 
         if (shouldNavigateBack) {
+          await new Promise((resolve) => window.setTimeout(resolve, 0));
           await navigate({ to: '/timesheets', search: getDefaultTimesheetsSearch() });
         }
       } catch (error: unknown) {
@@ -836,6 +842,7 @@ export default function TimesheetEditor() {
       });
 
       setIsDirty(false);
+      dispatchDirtyStateChange(false, date);
       setConflictModalOpened(false);
 
       toast.success('Перезаписано', {

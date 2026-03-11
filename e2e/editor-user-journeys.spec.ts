@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { addValidDesktopRow, openTodayEditorFromDemo, saveTimesheet } from './helpers';
+import {
+  addValidDesktopRow,
+  dateDaysAgo,
+  openEditorForDateAfterDemoSeed,
+  openTodayEditorFromDemo,
+  saveTimesheet,
+  todayDate,
+} from './helpers';
 
 test('editor blocks saving when a row is incomplete', async ({ page }) => {
   await openTodayEditorFromDemo(page);
@@ -57,4 +64,61 @@ test('user can save and leave from the dirty-state modal', async ({ page }) => {
 
   await expect(page.getByText('Сохранено')).toBeVisible();
   await expect(page).toHaveURL(/\/timesheets/);
+});
+
+test('user can save and close from the editor toolbar', async ({ page }) => {
+  await openTodayEditorFromDemo(page);
+  await addValidDesktopRow(page, 'Закрытие после явного сохранения');
+
+  await page.getByRole('button', { name: 'Сохранить и закрыть' }).click();
+
+  await expect(page.getByText('Сохранено')).toBeVisible();
+  await expect(page).toHaveURL(/\/timesheets/);
+});
+
+test('user can delete a row after confirmation', async ({ page }) => {
+  await openTodayEditorFromDemo(page);
+  await addValidDesktopRow(page, 'Строка для удаления');
+
+  const rowsBeforeDelete = page.locator('tbody tr');
+  const initialCount = await rowsBeforeDelete.count();
+  expect(initialCount).toBeGreaterThan(0);
+
+  await rowsBeforeDelete.last().getByRole('button', { name: 'Удалить строку' }).click();
+  await expect(page.getByRole('heading', { name: 'Удалить строку?' })).toBeVisible();
+  await page.getByText('Удалить строку', { exact: true }).last().click();
+
+  await expect(page.getByText('Строка удалена')).toBeVisible();
+  await expect(page.locator('tbody tr')).toHaveCount(initialCount - 1);
+});
+
+test('user can copy an existing timesheet to today', async ({ page }) => {
+  const yesterday = dateDaysAgo(1);
+  const today = todayDate();
+
+  await openEditorForDateAfterDemoSeed(page, yesterday);
+  await page.getByRole('button', { name: 'Копировать на сегодня' }).click();
+
+  await expect(page.getByText('Копия создана')).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/timesheet/${today}`));
+  await expect(page.getByRole('heading', { name: /Табель за/i })).toBeVisible();
+});
+
+test('offline save shows local-save message and sync can be run later', async ({ page, context }) => {
+  await openTodayEditorFromDemo(page);
+  await addValidDesktopRow(page, 'Офлайн-сохранение для очереди синхронизации');
+
+  await context.setOffline(true);
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+
+  await expect(page.getByText('Сохранено')).toBeVisible();
+  await expect(page.getByText('Табель сохранен локально (нет сети)')).toBeVisible();
+  await expect(page.getByText('Ожидают синхронизации: 1')).toBeVisible();
+
+  await context.setOffline(false);
+  await page.getByText('Ожидают синхронизации: 1').click();
+
+  await expect(page.getByText('Синхронизация завершена')).toBeVisible();
+  await expect(page.getByText(/Осталось в очереди: 0|Синхронизировано: 1, очередь пуста/)).toBeVisible();
+  await expect(page.getByText('Ожидают синхронизации: 1')).toHaveCount(0);
 });

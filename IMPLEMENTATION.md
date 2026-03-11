@@ -227,6 +227,10 @@ Current browser smoke coverage includes:
 - editor save validation
 - editor save success
 - dirty-navigation modal flows: cancel, discard, save-and-leave
+- explicit save-and-close flow
+- row deletion with confirmation
+- copy current timesheet to today
+- offline save with pending sync and manual sync run
 
 ## Known Risks And Watchouts
 
@@ -253,6 +257,7 @@ If a decision becomes large or controversial, move it to an ADR-style document i
 - Added a browser-driven PWA install prompt UX in the app shell for supported platforms.
 - Added `appConfig` and started separating `/demo` from the main working routes.
 - Hardened `prod` mode so login no longer pre-fills demo credentials and `/demo` is excluded from production-like bundle output by default.
+- Fixed a blocker timing issue so `Сохранить и закрыть` now actually leaves the editor after a successful save.
 
 ## Current Work Log
 
