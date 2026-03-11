@@ -17,6 +17,39 @@ export async function loginAsDemoUser(page: Page) {
   await expect(page).toHaveURL(/\/timesheets/);
 }
 
+export async function setUiShellState(
+  page: Page,
+  options: {
+    theme?: 'light' | 'dark' | 'auto';
+    sidebarCollapsed?: boolean;
+  } = {}
+) {
+  await page.addInitScript((state) => {
+    if (state.theme) {
+      window.localStorage.setItem('timesheets:theme-mode', state.theme);
+    }
+
+    if (typeof state.sidebarCollapsed === 'boolean') {
+      window.localStorage.setItem(
+        'timesheets:sidebar-collapsed',
+        String(state.sidebarCollapsed)
+      );
+    }
+  }, options);
+}
+
+export async function openLoginPageForVisuals(
+  page: Page,
+  options: {
+    theme?: 'light' | 'dark' | 'auto';
+    sidebarCollapsed?: boolean;
+  } = {}
+) {
+  await setUiShellState(page, options);
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { name: 'Войти в приложение' })).toBeVisible();
+}
+
 export async function seedDemoDataFromDemo(page: Page) {
   await page.goto('/demo');
   await expect(page.getByRole('heading', { name: /Подготовить демонстрацию/i })).toBeVisible();
@@ -42,6 +75,42 @@ export async function openTodayEditorFromDemo(page: Page) {
   await expect(
     page.getByRole('main').getByRole('heading', { name: 'Рабочие записи за день' })
   ).toBeVisible({ timeout: 15000 });
+}
+
+export async function openDemoCenterForVisuals(
+  page: Page,
+  options: {
+    theme?: 'light' | 'dark' | 'auto';
+    sidebarCollapsed?: boolean;
+  } = {}
+) {
+  await setUiShellState(page, options);
+  await page.goto('/demo');
+  await expect(page.getByRole('heading', { name: /Подготовить демонстрацию/i })).toBeVisible();
+}
+
+export async function openJournalForVisuals(
+  page: Page,
+  options: {
+    theme?: 'light' | 'dark' | 'auto';
+    sidebarCollapsed?: boolean;
+  } = {}
+) {
+  await setUiShellState(page, options);
+  await loginAsDemoUser(page);
+  await expect(page.getByRole('heading', { name: /^Табели за/i })).toBeVisible();
+}
+
+export async function openTodayEditorForVisuals(
+  page: Page,
+  options: {
+    theme?: 'light' | 'dark' | 'auto';
+    sidebarCollapsed?: boolean;
+  } = {}
+) {
+  await setUiShellState(page, options);
+  await openTodayEditorFromDemo(page);
+  await expect(page.getByRole('button', { name: 'Добавить строку' })).toBeVisible();
 }
 
 export async function openEditorForDateAfterDemoSeed(page: Page, date: string) {

@@ -224,6 +224,8 @@ Browser testing:
 - `npm run test:e2e`
 - `npm run test:e2e:mobile`
 - `npm run test:e2e:prod`
+- `npm run test:e2e:visual`
+- `npm run test:e2e:visual:update`
 - `npm run test:e2e:headed`
 - `npm run test:e2e:ui`
 
@@ -233,6 +235,7 @@ Current high-value browser coverage already includes:
 - desktop editor save / leave / delete / copy / offline-sync journeys
 - mobile add-row and duplicate-row flows
 - prod-mode smoke for hidden demo route
+- screenshot baselines for `login`, `demo`, `timesheets`, and `editor` on desktop/mobile
 
 ## Testing Strategy
 
@@ -308,6 +311,7 @@ If a decision becomes large or controversial, move it to an ADR-style document i
 - Fixed a blocker timing issue so `Сохранить и закрыть` now actually leaves the editor after a successful save.
 - Added mobile Playwright coverage and a dedicated production-mode Playwright smoke config.
 - Added a CI workflow that runs lint, build, desktop/mobile browser tests, and prod-mode smoke.
+- Added screenshot-based Playwright checkpoints with committed baselines for `login`, `demo`, `timesheets`, and `editor`.
 
 ## Current Work Log
 
@@ -325,7 +329,7 @@ Keep this short. Only active or recently active work belongs here.
 
 - add confirm and capability rules for batch actions
 - persist table preferences and saved views
-- expand visual regression checkpoints for `login`, `timesheets`, and `editor`
+- keep visual regression baselines current and extend them only for stable high-value screens/states
 - validate the next document list against the same shared workspace pattern
 
 ## Open Questions
