@@ -13,6 +13,7 @@ import {
   NotebookPen,
   Plus,
   Search,
+  X,
 } from 'lucide-react';
 import { TimesheetsDesktopTable } from '../components/timesheets/TimesheetsDesktopTable';
 import { Button } from '../components/ui/button';
@@ -245,6 +246,31 @@ const statusFilterOptions: Array<{
   { value: 'approved', label: 'Утвержденные' },
 ];
 
+const statusFilterMeta: Record<
+  TimesheetStatusFilter,
+  { label: string; dotClassName: string; triggerClassName?: string }
+> = {
+  all: {
+    label: 'Все статусы',
+    dotClassName: 'bg-[var(--text-muted)]/70',
+  },
+  draft: {
+    label: 'Черновики',
+    dotClassName: 'bg-slate-400',
+    triggerClassName: 'border-slate-300/20 bg-slate-400/10',
+  },
+  submitted: {
+    label: 'Отправленные',
+    dotClassName: 'bg-sky-300',
+    triggerClassName: 'border-sky-300/20 bg-sky-400/10',
+  },
+  approved: {
+    label: 'Утвержденные',
+    dotClassName: 'bg-emerald-300',
+    triggerClassName: 'border-emerald-300/20 bg-emerald-400/10',
+  },
+};
+
 const startOfToday = () => new Date().toISOString().split('T')[0];
 
 const matchesSearch = (timesheet: Timesheet, query: string) => {
@@ -475,26 +501,58 @@ export default function TimesheetsList() {
                     <Filter className="h-3.5 w-3.5" />
                     Статус
                   </span>
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value) =>
-                      updateSearch({ status: value as TimesheetStatusFilter })
-                    }
-                  >
-                    <SelectTrigger
-                      aria-label="Статус"
-                      className="h-11 w-full min-w-[220px] bg-[var(--panel-bg-strong)]"
+                  <div className="grid grid-cols-[minmax(0,1fr)_36px] gap-2">
+                    <Select
+                      value={statusFilter}
+                      onValueChange={(value) =>
+                        updateSearch({ status: value as TimesheetStatusFilter })
+                      }
                     >
-                      <SelectValue placeholder="Все статусы" className="truncate" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusFilterOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <SelectTrigger
+                        aria-label="Статус"
+                        className={cn(
+                          'h-11 w-full min-w-[220px] bg-[var(--panel-bg-strong)]',
+                          statusFilter !== 'all' && statusFilterMeta[statusFilter].triggerClassName
+                        )}
+                      >
+                        <span className="flex min-w-0 items-center gap-2.5">
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'h-2.5 w-2.5 shrink-0 rounded-full',
+                              statusFilterMeta[statusFilter].dotClassName
+                            )}
+                          />
+                          <SelectValue placeholder="Все статусы" className="truncate">
+                            {statusFilterMeta[statusFilter].label}
+                          </SelectValue>
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusFilterOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <button
+                      type="button"
+                      onClick={() => updateSearch({ status: 'all' })}
+                      disabled={statusFilter === 'all'}
+                      className={cn(
+                        'inline-flex h-11 w-9 items-center justify-center border transition',
+                        statusFilter === 'all'
+                          ? 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)] opacity-45'
+                          : 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]'
+                      )}
+                      aria-label="Сбросить статусный фильтр"
+                      title="Сбросить статусный фильтр"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </label>
 
                 <div className="flex min-w-0 flex-col gap-2">
