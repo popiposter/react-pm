@@ -15,7 +15,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import brandLogo from '../assets/brand-logo.svg';
+import BrandLogo from '../assets/brand-logo.svg?react';
 import { appConfig } from '../config/app-config';
 import { useAuth } from '../features/auth/auth';
 import { usePwaInstallPrompt } from '../features/pwa/usePwaInstallPrompt';
@@ -44,10 +44,6 @@ const formatLocalDate = (value = new Date()) => {
 };
 
 const startOfToday = () => formatLocalDate();
-const brandMarkMask = {
-  maskImage: `url(${brandLogo})`,
-  WebkitMaskImage: `url(${brandLogo})`,
-} as const;
 
 export default function Layout({ children }: LayoutProps) {
   const auth = useAuth();
@@ -277,20 +273,18 @@ export default function Layout({ children }: LayoutProps) {
                   title="Развернуть навигацию"
                   className="group/brand relative inline-flex h-10 w-10 items-center justify-center border border-transparent text-[var(--text-soft)] transition hover:border-[var(--panel-border)] hover:bg-[var(--panel-hover)]"
                 >
-                  <span
+                  <BrandLogo
                     aria-hidden="true"
-                    className="brand-mark h-6 w-6 transition-opacity duration-200 group-hover/brand:opacity-0"
-                    style={brandMarkMask}
+                    className="h-6 w-6 shrink-0 text-[var(--brand-mark-color)] transition-opacity duration-200 group-hover/brand:opacity-0"
                   />
                   <PanelLeftOpen className="absolute h-4 w-4 opacity-0 transition-opacity duration-200 group-hover/brand:opacity-100" />
                 </button>
               ) : (
                 <>
                   <div className="flex h-10 w-10 items-center justify-center">
-                    <span
+                    <BrandLogo
                       aria-hidden="true"
-                      className="brand-mark h-6 w-6"
-                      style={brandMarkMask}
+                      className="h-6 w-6 shrink-0 text-[var(--brand-mark-color)]"
                     />
                   </div>
                   <button
@@ -400,10 +394,9 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex h-16 w-full items-center justify-between px-4 sm:px-5 xl:px-8 2xl:px-10">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center xl:hidden">
-                  <span
+                  <BrandLogo
                     aria-hidden="true"
-                    className="brand-mark h-[18px] w-[18px]"
-                    style={brandMarkMask}
+                    className="h-[18px] w-[18px] shrink-0 text-[var(--brand-mark-color)]"
                   />
                 </div>
                 <h2 className="text-sm font-semibold sm:text-base xl:text-[1.35rem]">Проектные табели</h2>

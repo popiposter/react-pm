@@ -165,16 +165,3 @@ textarea {
   backdrop-filter: blur(16px);
   box-shadow: 0 8px 32px -16px var(--shadow-color);
 }
-
-.brand-mark {
-  display: inline-block;
-  background: var(--brand-mark-color);
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-  min-width: 1em;
-  min-height: 1em;
-}
