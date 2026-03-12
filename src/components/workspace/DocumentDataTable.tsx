@@ -105,12 +105,12 @@ export function DocumentDataTable<TData>({
       <DocumentTableFrame
         summary={
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
+            <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
               {primarySort?.desc ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
               Сортировка: {sortLabel}
             </span>
             {selectedCount > 0 && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-2 text-sm text-[var(--accent)]">
+              <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 py-2 text-sm text-[var(--accent)]">
                 Выбрано строк: {selectedCount}
               </span>
             )}
@@ -149,7 +149,7 @@ export function DocumentDataTable<TData>({
                     .map((column) => (
                       <label
                         key={column.id}
-                        className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm transition hover:bg-[var(--panel-hover)]"
+                        className="flex cursor-pointer items-center gap-3 rounded-[var(--badge-radius)] px-3 py-2 text-sm transition hover:bg-[var(--panel-hover)]"
                       >
                         <input
                           type="checkbox"
@@ -165,9 +165,9 @@ export function DocumentDataTable<TData>({
           </div>
         }
       >
-        <div className="max-h-[70vh] overflow-auto border border-[var(--panel-border)]">
+        <div className="max-h-[calc(100vh-22rem)] overflow-auto border border-[var(--panel-border)]">
           <table className="min-w-full border-collapse">
-            <thead className="bg-[var(--panel-muted)] text-left text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
+            <thead className="bg-[var(--panel-muted)] text-left text-xs uppercase tracking-[0.06em] text-[var(--text-muted)]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -180,7 +180,7 @@ export function DocumentDataTable<TData>({
                           <button
                             type="button"
                             onClick={header.column.getToggleSortingHandler()}
-                            className="inline-flex items-center gap-2 transition hover:text-[var(--app-fg)]"
+                            className="inline-flex items-center gap-1.5 rounded-[var(--badge-radius)] px-1.5 py-1 transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                             {header.column.getIsSorted() === 'asc' ? (
@@ -188,7 +188,7 @@ export function DocumentDataTable<TData>({
                             ) : header.column.getIsSorted() === 'desc' ? (
                               <ArrowDown className="h-3.5 w-3.5 text-[var(--accent)]" />
                             ) : (
-                              <ArrowUpDown className="h-3.5 w-3.5" />
+                              <ArrowUpDown className="h-3.5 w-3.5 text-[var(--text-muted)]" />
                             )}
                           </button>
                         ) : (
@@ -204,11 +204,13 @@ export function DocumentDataTable<TData>({
               {table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  onDoubleClick={() => onRowDoubleClick?.(row.original)}
+                  onClick={() => onRowDoubleClick?.(row.original)}
                   className={cn(
-                    'border-t border-[var(--panel-border)] transition hover:bg-[var(--panel-hover)]',
+                    'border-t border-[var(--panel-border)] transition-colors duration-100',
                     onRowDoubleClick && 'cursor-pointer',
-                    row.getIsSelected() && 'bg-sky-400/[0.06]'
+                    row.getIsSelected()
+                      ? 'bg-[var(--accent-soft)]'
+                      : 'hover:bg-[var(--panel-hover)]'
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (

@@ -1,13 +1,17 @@
-import type { InputHTMLAttributes } from 'react';
+import * as React from 'react';
 import { cn } from '../../lib/utils';
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement>;
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export function Input({ className, ...props }: InputProps) {
+export function Input({ className, type, ...props }: InputProps) {
   return (
     <input
+      type={type}
       className={cn(
-        'flex h-9 w-full rounded-none border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 text-sm text-[var(--app-fg)] shadow-none outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-300/40 focus:ring-2 focus:ring-sky-400/15 disabled:cursor-not-allowed disabled:opacity-60',
+        'flex h-9 w-full rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 py-1 text-sm text-[var(--app-fg)] transition-colors',
+        'placeholder:text-[var(--text-muted)]',
+        'focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20',
+        'disabled:opacity-50 disabled:cursor-not-allowed',
         className
       )}
       {...props}

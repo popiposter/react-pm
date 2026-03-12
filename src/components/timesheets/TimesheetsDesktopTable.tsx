@@ -5,7 +5,6 @@ import {
 } from '@tanstack/react-table';
 import { ArrowRight } from 'lucide-react';
 import type { Timesheet } from '../../api/mockBackend';
-import { cn } from '../../lib/utils';
 import { DocumentDataTable } from '../workspace/DocumentDataTable';
 
 const formatTimesheetDate = (date: string) =>
@@ -23,15 +22,18 @@ const getTotalHours = (rows: Timesheet['rows']): number => {
 const statusConfig: Record<Timesheet['status'], { label: string; className: string }> = {
   draft: {
     label: 'Черновик',
-    className: 'border-slate-400/20 bg-slate-400/10 text-[var(--neutral-text)]',
+    className:
+      'rounded-[var(--badge-radius)] border border-slate-400/20 bg-slate-400/10 text-[var(--neutral-text)] px-2.5 py-0.5 text-xs font-medium',
   },
   submitted: {
     label: 'Отправлен',
-    className: 'border-sky-300/20 bg-sky-400/15 text-[var(--accent)]',
+    className:
+      'rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--accent-soft)] text-[var(--accent)] px-2.5 py-0.5 text-xs font-medium',
   },
   approved: {
     label: 'Утвержден',
-    className: 'border-emerald-300/20 bg-emerald-400/15 text-[var(--success-text)]',
+    className:
+      'rounded-[var(--badge-radius)] border border-emerald-400/20 bg-[var(--success-soft)] text-[var(--success-text)] px-2.5 py-0.5 text-xs font-medium',
   },
 };
 
@@ -74,16 +76,7 @@ export function TimesheetsDesktopTable({
         cell: ({ getValue }) => {
           const status = getValue() as Timesheet['status'];
 
-          return (
-            <span
-              className={cn(
-                'rounded-full border px-2.5 py-1 text-xs font-medium',
-                statusConfig[status].className
-              )}
-            >
-              {statusConfig[status].label}
-            </span>
-          );
+          return <span className={statusConfig[status].className}>{statusConfig[status].label}</span>;
         },
       }),
       columnHelper.display({

@@ -3,22 +3,26 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sky-400/20 disabled:pointer-events-none disabled:opacity-60',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/30 disabled:pointer-events-none disabled:opacity-55 active:scale-[0.98]',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--accent)] text-white shadow-[0_16px_36px_-22px_var(--shadow-color)] hover:bg-[var(--accent-strong)]',
+          'rounded-[var(--control-radius)] bg-[var(--cta)] text-[var(--cta-text)] shadow-[0_4px_14px_-6px_rgba(223,90,35,0.4)] hover:bg-[var(--cta-strong)]',
+        primary:
+          'rounded-[var(--control-radius)] bg-[var(--accent)] text-white shadow-[0_4px_14px_-6px_var(--accent-soft)] hover:bg-[var(--accent-strong)]',
         secondary:
-          'border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--app-fg)] hover:bg-[var(--panel-hover)]',
-        ghost: 'text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]',
-        destructive: 'bg-rose-500 text-white hover:bg-rose-600',
+          'rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--app-fg)] hover:bg-[var(--panel-hover)]',
+        ghost:
+          'rounded-[var(--control-radius)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]',
+        destructive:
+          'rounded-[var(--control-radius)] bg-rose-600 text-white hover:bg-rose-700',
       },
       size: {
-        sm: 'h-8 px-3 text-sm',
-        default: 'h-9 px-3.5 text-sm',
-        lg: 'h-10 px-4 text-sm',
-        icon: 'h-8 w-8',
+        sm: 'h-8 px-3 text-xs',
+        default: 'h-9 px-4 text-sm',
+        lg: 'h-10 px-5 text-sm',
+        icon: 'h-9 w-9',
       },
     },
     defaultVariants: {

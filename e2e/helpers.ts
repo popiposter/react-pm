@@ -131,6 +131,19 @@ export async function openTodayEditorForVisuals(
   await setUiShellState(page, options);
   await openTodayEditorFromDemo(page);
   await expect(page.getByRole('button', { name: 'Добавить строку' })).toBeVisible();
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.dataset.mobileChrome = 'visible';
+    window.dispatchEvent(
+      new CustomEvent('mobile-chrome-change', {
+        detail: { hidden: false },
+      })
+    );
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  });
+  await page.waitForTimeout(150);
   await hideToastsForVisuals(page);
 }
 

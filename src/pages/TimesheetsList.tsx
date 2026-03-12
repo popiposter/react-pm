@@ -116,7 +116,7 @@ function PeriodPicker({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+      <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch overflow-hidden rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
         <button
           type="button"
           onClick={() => onChange(shiftPeriod(period, -1))}
@@ -153,13 +153,13 @@ function PeriodPicker({
             <button
               type="button"
               onClick={() => setPickerYear((value) => value - 1)}
-              className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
               aria-label="Предыдущий год"
             >
               <ArrowRight className="h-4 w-4 rotate-180" />
             </button>
             <div className="text-center">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+              <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Рабочий период
               </p>
               <p className="mt-1 text-base font-semibold">{pickerYear}</p>
@@ -167,7 +167,7 @@ function PeriodPicker({
             <button
               type="button"
               onClick={() => setPickerYear((value) => value + 1)}
-              className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
               aria-label="Следующий год"
             >
               <ArrowRight className="h-4 w-4" />
@@ -188,7 +188,7 @@ function PeriodPicker({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    'inline-flex h-10 items-center justify-center border px-3 text-sm transition',
+                    'inline-flex h-10 items-center justify-center rounded-[var(--badge-radius)] border px-3 text-sm transition',
                     isSelected
                       ? 'border-sky-300/20 bg-sky-400/10 text-[var(--accent)]'
                       : 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]'
@@ -228,15 +228,18 @@ const getTotalHours = (rows: Timesheet['rows']): number => {
 const statusConfig: Record<Timesheet['status'], { label: string; className: string }> = {
   draft: {
     label: 'Черновик',
-    className: 'border-slate-400/20 bg-slate-400/10 text-[var(--neutral-text)]',
+    className:
+      'rounded-[var(--badge-radius)] border border-slate-400/20 bg-slate-400/10 text-[var(--neutral-text)] px-2.5 py-0.5 text-xs font-medium',
   },
   submitted: {
     label: 'Отправлен',
-    className: 'border-sky-300/20 bg-sky-400/15 text-[var(--accent)]',
+    className:
+      'rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--accent-soft)] text-[var(--accent)] px-2.5 py-0.5 text-xs font-medium',
   },
   approved: {
     label: 'Утвержден',
-    className: 'border-emerald-300/20 bg-emerald-400/15 text-[var(--success-text)]',
+    className:
+      'rounded-[var(--badge-radius)] border border-emerald-400/20 bg-[var(--success-soft)] text-[var(--success-text)] px-2.5 py-0.5 text-xs font-medium',
   },
 };
 
@@ -347,6 +350,9 @@ export default function TimesheetsList() {
 
   const activeSummary = useMemo(() => summaryCards(filteredTimesheets), [filteredTimesheets]);
   const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim().length > 0;
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const activeFilterCount =
+    (statusFilter !== 'all' ? 1 : 0) + (searchQuery.trim().length > 0 ? 1 : 0);
   const isEmptyMonth = !isLoading && filteredTimesheets.length === 0 && !hasActiveFilters;
 
   const updateSearch = (
@@ -380,7 +386,7 @@ export default function TimesheetsList() {
           />
         }
         eyebrow={
-          <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)]">
+          <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--accent)]">
             <CalendarRange className="h-3.5 w-3.5" />
             Журнал табелей
           </span>
@@ -388,7 +394,7 @@ export default function TimesheetsList() {
         title={
           <span className="flex flex-wrap items-center gap-3">
             <span>Табели за</span>
-            <span className="inline-flex items-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-base font-medium text-[var(--text-soft)] xl:text-lg">
+            <span className="inline-flex items-center rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-base font-medium text-[var(--text-soft)] xl:text-lg">
               {formatMonthLabel(selectedPeriod)}
             </span>
           </span>
@@ -397,7 +403,7 @@ export default function TimesheetsList() {
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-soft)]">
             <span>Откройте нужный день, быстро проверьте статус и продолжайте работу.</span>
             {syncStatus && syncStatus.pendingCount > 0 && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-[var(--warning-text)]">
+              <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-[var(--warning-text)]">
                 Ожидают синхронизации: {syncStatus.pendingCount}
               </span>
             )}
@@ -424,6 +430,7 @@ export default function TimesheetsList() {
                     status: 'all',
                     q: '',
                   });
+                  setIsMobileFiltersOpen(false);
                 }}
                 variant="secondary"
                 className="text-[var(--text-soft)]"
@@ -450,12 +457,12 @@ export default function TimesheetsList() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">
+                  <p className="text-xs uppercase tracking-[0.06em] text-[var(--text-soft)]">
                     {item.label}
                   </p>
                   <p className="mt-2 text-2xl font-semibold">{item.value}</p>
                 </div>
-                <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-bg-strong)_84%,var(--panel-muted)_16%)] p-2.5">
+                <div className="rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-bg-strong)_84%,var(--panel-muted)_16%)] p-2.5">
                   <Icon className="h-4.5 w-4.5" />
                 </div>
               </div>
@@ -468,16 +475,48 @@ export default function TimesheetsList() {
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">Журнал</p>
+              <p className="text-sm uppercase tracking-[0.08em] text-[var(--text-muted)]">Журнал</p>
               <h2 className="mt-1 text-xl font-semibold">Список табелей</h2>
             </div>
           </div>
 
-          <DocumentTableToolbar
-            filters={
-              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.25fr)_280px_220px_160px] xl:items-end">
+          <div className="flex items-center justify-between gap-3 xl:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileFiltersOpen((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+            >
+              <Filter className="h-4 w-4" />
+              <span>Фильтры</span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--cta)] px-1.5 text-[10px] font-semibold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-[var(--text-muted)] transition-transform duration-200',
+                  isMobileFiltersOpen && 'rotate-180'
+                )}
+              />
+            </button>
+
+            <span className="text-sm text-[var(--text-muted)]">Найдено: {filteredTimesheets.length}</span>
+          </div>
+
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-300 ease-in-out xl:block xl:overflow-visible',
+              isMobileFiltersOpen
+                ? 'max-h-[600px] opacity-100'
+                : 'max-h-0 opacity-0 xl:max-h-none xl:opacity-100'
+            )}
+          >
+            <DocumentTableToolbar
+              filters={
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1.25fr)_280px_220px_160px] xl:items-end">
                 <label className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                     <Search className="h-3.5 w-3.5" />
                     Поиск
                   </span>
@@ -493,15 +532,21 @@ export default function TimesheetsList() {
                 </label>
 
                 <label className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                     <CalendarRange className="h-3.5 w-3.5" />
                     Период
                   </span>
-                  <PeriodPicker period={selectedPeriod} onChange={(period) => updateSearch({ period })} />
+                  <PeriodPicker
+                    period={selectedPeriod}
+                    onChange={(period) => {
+                      updateSearch({ period });
+                      setIsMobileFiltersOpen(false);
+                    }}
+                  />
                 </label>
 
                 <label className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                     <Filter className="h-3.5 w-3.5" />
                     Статус
                   </span>
@@ -560,17 +605,18 @@ export default function TimesheetsList() {
                 </label>
 
                 <div className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                     <ArrowRight className="h-3.5 w-3.5" />
                     Действия
                   </span>
                   <Button
                     onClick={() => {
                       updateSearch({
-                         period: getLocalMonthPeriod(),
+                        period: getLocalMonthPeriod(),
                         status: 'all',
                         q: '',
                       });
+                      setIsMobileFiltersOpen(false);
                     }}
                     variant="secondary"
                     className="h-11 w-full"
@@ -578,21 +624,22 @@ export default function TimesheetsList() {
                     Сбросить
                   </Button>
                 </div>
-              </div>
-            }
-            actions={
-              <>
-                <span className="inline-flex h-10 items-center border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 text-sm text-[var(--text-soft)]">
-                  Найдено: {filteredTimesheets.length}
-                </span>
-                {hasActiveFilters && (
-                  <span className="inline-flex h-10 items-center border border-sky-300/20 bg-sky-400/10 px-3 text-sm text-[var(--accent)]">
-                    Фильтры активны
+                </div>
+              }
+              actions={
+                <>
+                  <span className="hidden xl:inline-flex h-10 items-center rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 text-sm text-[var(--text-soft)]">
+                    Найдено: {filteredTimesheets.length}
                   </span>
-                )}
-              </>
-            }
-          />
+                  {hasActiveFilters && (
+                    <span className="inline-flex h-10 items-center rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 text-sm text-[var(--accent)]">
+                      Фильтры активны
+                    </span>
+                  )}
+                </>
+              }
+            />
+          </div>
         </div>
 
         {isLoading ? (
@@ -606,7 +653,7 @@ export default function TimesheetsList() {
           </div>
         ) : filteredTimesheets.length === 0 && hasActiveFilters ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+            <div className="rounded-[var(--surface-radius)] border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
               <FileSearch className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
@@ -629,7 +676,7 @@ export default function TimesheetsList() {
           </div>
         ) : isEmptyMonth ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
+            <div className="rounded-[var(--surface-radius)] border border-dashed border-[var(--panel-border)] bg-[var(--panel-muted)] p-6">
               <FileSpreadsheet className="h-10 w-10 text-[var(--text-muted)]" />
             </div>
             <div className="space-y-2">
@@ -670,7 +717,7 @@ export default function TimesheetsList() {
                       params: { date: timesheet.date },
                     })
                   }
-                  className="app-surface p-4 text-left transition active:scale-[0.99]"
+                  className="app-surface p-4 text-left transition active:scale-[0.99] active:bg-[var(--panel-hover)]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -681,12 +728,7 @@ export default function TimesheetsList() {
                         Строк: {timesheet.rows.length} · Часов: {getTotalHours(timesheet.rows)}
                       </p>
                     </div>
-                    <span
-                      className={cn(
-                        'rounded-full border px-3 py-1 text-xs font-medium',
-                        statusConfig[timesheet.status].className
-                      )}
-                    >
+                    <span className={statusConfig[timesheet.status].className}>
                       {statusConfig[timesheet.status].label}
                     </span>
                   </div>
@@ -694,7 +736,7 @@ export default function TimesheetsList() {
                     <span className="line-clamp-1">
                       {timesheet.rows[0]?.description || 'Без описания работ'}
                     </span>
-                    <ArrowRight className="h-4 w-4 shrink-0" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
                   </div>
                 </button>
               ))}

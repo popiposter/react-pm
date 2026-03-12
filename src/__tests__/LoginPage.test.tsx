@@ -19,6 +19,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>();
   return {
     ...actual,
+    Link: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
     useRouter: () => ({
       history: {
         push: vi.fn(),
@@ -47,8 +48,8 @@ describe('LoginPage', () => {
   it('shows public demo warning and default credentials', () => {
     render(<LoginPage />);
 
-    expect(screen.getByText('Public demo')).toBeInTheDocument();
-    expect(screen.getByText(/Это публичная демо-страница/)).toBeInTheDocument();
+    expect(screen.getByText('Рабочее место')).toBeInTheDocument();
+    expect(screen.getByText(/Для быстрого старта сейчас подставлены/)).toBeInTheDocument();
     expect(screen.getByText(/demo\.user \/ demo/)).toBeInTheDocument();
   });
 });

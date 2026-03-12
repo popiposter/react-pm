@@ -324,7 +324,7 @@ export default function Layout({ children }: LayoutProps) {
                     to={item.href}
                     title={item.label}
                     className={cn(
-                      'group relative flex items-center border border-transparent text-[var(--text-soft)] transition',
+                      'group relative flex items-center rounded-[var(--control-radius)] border border-transparent text-[var(--text-soft)] transition',
                       isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-12 gap-3 px-3.5',
                       isActive
                         ? item.tone === 'demo'
@@ -336,18 +336,21 @@ export default function Layout({ children }: LayoutProps) {
                     {!isSidebarCollapsed && (
                       <span
                         className={cn(
-                          'absolute inset-y-2 left-0 w-0.5 bg-transparent transition',
+                          'absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-transparent transition-all duration-200',
                           isActive && 'bg-[var(--accent)]'
                         )}
                       />
                     )}
                     <Icon className="h-5 w-5 shrink-0" />
+                    {isSidebarCollapsed && isActive && (
+                      <span className="absolute right-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[var(--accent)]" />
+                    )}
                     {!isSidebarCollapsed && (
                       <span className="min-w-0">
                         <span className="flex items-center gap-2">
                           <span className="block truncate text-sm font-medium">{item.label}</span>
                           {item.tone === 'demo' ? (
-                            <span className="inline-flex border border-sky-300/20 bg-sky-400/10 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-sky-200">
+                            <span className="inline-flex border border-sky-300/20 bg-sky-400/10 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.06em] text-sky-200">
                               demo
                             </span>
                           ) : null}
@@ -371,7 +374,7 @@ export default function Layout({ children }: LayoutProps) {
                   onClick={() => void handleRunSync()}
                   title={`Ожидают синхронизации: ${syncStatus.pendingCount}`}
                   className={cn(
-                    'inline-flex items-center border border-transparent text-[var(--warning-text)] transition hover:border-amber-300/20 hover:bg-amber-400/10',
+                    'inline-flex items-center rounded-[var(--control-radius)] border border-transparent text-[var(--warning-text)] transition hover:border-amber-300/20 hover:bg-amber-400/10',
                     isSidebarCollapsed ? 'h-11 w-11 justify-center' : 'h-11 w-full gap-3 px-3.5'
                   )}
                 >
@@ -412,7 +415,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       type="button"
                       onClick={() => void handleInstallApp()}
-                      className="hidden h-9 items-center gap-2 border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
+                      className="hidden h-9 items-center gap-2 rounded-[var(--control-radius)] border border-emerald-300/20 bg-emerald-400/10 px-3 text-sm text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:inline-flex"
                     >
                       <Download className="h-4 w-4" />
                       Установить
@@ -420,7 +423,7 @@ export default function Layout({ children }: LayoutProps) {
                     <button
                       type="button"
                       onClick={() => void handleInstallApp()}
-                      className="inline-flex h-9 w-9 items-center justify-center border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--control-radius)] border border-emerald-300/20 bg-emerald-400/10 text-[var(--success-text)] transition hover:bg-emerald-400/20 lg:hidden"
                       aria-label="Установить приложение"
                       title="Установить приложение"
                     >
@@ -438,7 +441,7 @@ export default function Layout({ children }: LayoutProps) {
                         ? 'Сервер доступен'
                         : 'Оффлайн-режим'
                   }
-                  className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] transition hover:bg-[var(--panel-hover)]"
                 >
                   {isOnline ? (
                     <Wifi
@@ -484,7 +487,7 @@ export default function Layout({ children }: LayoutProps) {
                                 setIsAccountMenuOpen(false);
                               }}
                               className={cn(
-                                'flex w-full items-center gap-3 px-3 py-2 text-sm transition',
+                                'flex w-full items-center gap-3 rounded-[var(--badge-radius)] px-3 py-2 text-sm transition',
                                 isActive
                                   ? 'bg-[var(--accent-soft)] text-[var(--app-fg)]'
                                   : 'text-[var(--text-soft)] hover:bg-[var(--panel-hover)]'
@@ -500,7 +503,7 @@ export default function Layout({ children }: LayoutProps) {
                         <button
                           type="button"
                           onClick={() => void handleLogout()}
-                          className="flex w-full items-center gap-3 px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
+                          className="flex w-full items-center gap-3 rounded-[var(--badge-radius)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
                         >
                           <LogOut className="h-4 w-4" />
                           <span>Выйти</span>
@@ -551,7 +554,7 @@ export default function Layout({ children }: LayoutProps) {
                 q: '',
               }}
               className={cn(
-                'relative flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium transition',
+                'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheets')
                   ? 'text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
@@ -559,8 +562,8 @@ export default function Layout({ children }: LayoutProps) {
             >
               <span
                 className={cn(
-                  'absolute inset-x-7 top-0 h-0.5 bg-transparent transition',
-                  location.pathname.startsWith('/timesheets') && 'bg-[var(--accent)]'
+                  'absolute bottom-0.5 left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-transparent transition-all duration-200',
+                  location.pathname.startsWith('/timesheets') ? 'w-5 bg-[var(--accent)]' : 'w-0'
                 )}
               />
               <FileSpreadsheet className="h-4.5 w-4.5" />
@@ -570,7 +573,7 @@ export default function Layout({ children }: LayoutProps) {
               to="/timesheet/$date"
               params={{ date: startOfToday() }}
               className={cn(
-                'relative flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium transition',
+                'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheet/')
                   ? 'text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
@@ -578,8 +581,8 @@ export default function Layout({ children }: LayoutProps) {
             >
               <span
                 className={cn(
-                  'absolute inset-x-7 top-0 h-0.5 bg-transparent transition',
-                  location.pathname.startsWith('/timesheet/') && 'bg-[var(--accent)]'
+                  'absolute bottom-0.5 left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-transparent transition-all duration-200',
+                  location.pathname.startsWith('/timesheet/') ? 'w-5 bg-[var(--accent)]' : 'w-0'
                 )}
               />
               <FolderClock className="h-4.5 w-4.5" />
@@ -589,7 +592,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 to="/demo"
                 className={cn(
-                  'relative flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium transition',
+                  'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
                   location.pathname.startsWith('/demo')
                     ? 'text-sky-200'
                     : 'text-[var(--text-muted)]'
@@ -597,8 +600,8 @@ export default function Layout({ children }: LayoutProps) {
               >
                 <span
                   className={cn(
-                      'absolute inset-x-7 top-0 h-0.5 bg-transparent transition',
-                    location.pathname.startsWith('/demo') && 'bg-sky-300'
+                    'absolute bottom-0.5 left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-transparent transition-all duration-200',
+                    location.pathname.startsWith('/demo') ? 'w-5 bg-sky-300' : 'w-0'
                   )}
                 />
                 <Presentation className="h-4.5 w-4.5" />

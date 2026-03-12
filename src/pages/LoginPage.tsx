@@ -86,12 +86,12 @@ export function LoginPage({
         <div className="grid gap-5 xl:grid-cols-[minmax(620px,0.98fr)_minmax(360px,0.82fr)] xl:items-start xl:gap-8 2xl:grid-cols-[minmax(700px,1fr)_minmax(420px,0.8fr)] 2xl:gap-10">
           <section className="app-surface-strong p-5 sm:p-7 xl:p-8 2xl:p-10">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--accent)]">
                 <LockKeyhole className="h-3.5 w-3.5" />
                 Рабочее место
               </span>
               {appConfig.features.demoBranding && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--success-text)]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--success-text)]">
                   <BriefcaseBusiness className="h-3.5 w-3.5" />
                   Вход в систему
                 </span>
@@ -99,7 +99,7 @@ export function LoginPage({
             </div>
 
             <div className="mt-5 space-y-2">
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
+              <p className="text-sm uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Авторизация
               </p>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -114,7 +114,7 @@ export function LoginPage({
 
             <div className="mt-5 border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4 2xl:p-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Учетные данные
                 </p>
                 <p className="mt-2 text-sm text-[var(--app-fg)]">

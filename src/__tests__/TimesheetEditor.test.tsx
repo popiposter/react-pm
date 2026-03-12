@@ -14,12 +14,20 @@ vi.mock('sonner', () => ({
 
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  closestCenter: vi.fn(),
+  DragOverlay: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  closestCorners: vi.fn(),
+  useSensor: vi.fn(() => ({})),
+  useSensors: vi.fn((...sensors) => sensors),
+  PointerSensor: function PointerSensor() {},
+  TouchSensor: function TouchSensor() {},
+  KeyboardSensor: function KeyboardSensor() {},
+  MeasuringStrategy: { Always: 'Always' },
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
   SortableContext: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   verticalListSortingStrategy: vi.fn(),
+  sortableKeyboardCoordinates: vi.fn(),
   useSortable: () => ({
     attributes: {},
     listeners: {},
@@ -91,6 +99,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-router')>();
   return {
     ...actual,
+    Link: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
     useParams: () => ({ date: '2023-01-01' }),
     useNavigate: () => vi.fn(),
   };
@@ -100,8 +109,8 @@ describe('TimesheetEditor Component', () => {
   it('renders the editor header', () => {
     render(<TimesheetEditor />);
 
-    expect(screen.getByText('Табель за 1 января 2023 г.')).toBeInTheDocument();
-    expect(screen.getByText('Сохранить и закрыть')).toBeInTheDocument();
+    expect(screen.getByText('1 января 2023')).toBeInTheDocument();
+    expect(screen.getByText('Записать и закрыть')).toBeInTheDocument();
   });
 
   it('renders the add row action and empty state', () => {

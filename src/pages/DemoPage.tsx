@@ -110,12 +110,12 @@ export default function DemoPage() {
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_380px] xl:items-start xl:gap-6">
           <section className="app-surface-strong p-5 sm:p-7 xl:p-8">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-sky-400/12 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--accent)] dark:text-sky-200">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-300/25 bg-sky-400/12 px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--accent)] dark:text-sky-200">
                 <Sparkles className="h-3.5 w-3.5" />
                 Демо-центр
               </span>
               {appConfig.features.demoBranding && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--text-soft)]">
                   Презентационный контур
                 </span>
               )}
@@ -123,7 +123,7 @@ export default function DemoPage() {
 
             <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
               <div className="space-y-2">
-                <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                <p className="text-sm uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Демо-сценарий
                 </p>
                 <h1 className="max-w-3xl text-2xl font-semibold tracking-tight sm:text-3xl xl:text-[2.2rem] xl:leading-[1.05]">
@@ -135,7 +135,7 @@ export default function DemoPage() {
                 </p>
               </div>
               <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_72%,var(--panel-bg)_28%)] p-4">
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Быстрый статус
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3">
@@ -161,7 +161,7 @@ export default function DemoPage() {
 
             <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_74%,var(--panel-bg)_26%)] p-4 xl:p-5">
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Учетные данные
                 </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--text-soft)]">
@@ -176,7 +176,7 @@ export default function DemoPage() {
                 </p>
               </div>
               <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-muted)_74%,var(--panel-bg)_26%)] p-4 xl:p-5">
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                <p className="text-xs uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Поведение маршрута
                 </p>
                 <p className="mt-3 text-sm text-[var(--app-fg)]">
@@ -229,7 +229,7 @@ export default function DemoPage() {
 
           <section className="app-surface p-5 sm:p-6 xl:sticky xl:top-24 xl:p-6">
             <div className="space-y-4">
-              <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-muted)]">
+              <p className="text-sm uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Как показывать
               </p>
               <h2 className="text-lg font-semibold">Рекомендуемый сценарий показа</h2>
