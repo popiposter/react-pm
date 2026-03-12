@@ -15,8 +15,8 @@ import {
   type DragOverEvent,
 } from '@dnd-kit/core';
 import {
-  restrictToFirstScrollableAncestor,
   restrictToVerticalAxis,
+  restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import {
   sortableKeyboardCoordinates,
@@ -58,6 +58,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useSaveTimesheet } from '../hooks/useSaveTimesheet';
 import { useTasks } from '../hooks/useTasks';
 import { useTimesheet } from '../hooks/useTimesheet';
@@ -444,7 +445,7 @@ const MobileDragOverlayContent = ({
     initial={{ scale: 1, rotate: 0 }}
     animate={{ scale: 1.04, rotate: 1 }}
     transition={DRAG_SPRING}
-    className="w-[min(92vw,26rem)] rounded-[var(--surface-radius)] border border-[var(--accent)]/30 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_64px_-28px_rgba(15,23,42,0.45)]"
+    className="w-[min(92vw,26rem)] rounded-[var(--surface-radius)] border border-[var(--accent)]/50 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.55),0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]"
   >
     <div className="flex items-start gap-3">
       <div className="mt-7 text-[var(--text-muted)]">
@@ -485,18 +486,16 @@ const SortableDesktopRow = ({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.18 : 1,
+        opacity: isDragging ? 0.4 : 1,
       }}
       className={cn(
         'relative border-t border-[var(--panel-border)] align-middle transition hover:bg-[var(--panel-hover)]',
         validationErrors.length > 0 && 'bg-amber-400/[0.06]',
-        isDragging && 'z-10 bg-[var(--panel-bg)] shadow-[inset_0_0_0_1px_rgba(74,169,255,0.2)]',
+        isDragging && 'z-10 bg-[var(--panel-muted)] shadow-[inset_0_0_0_1px_rgba(74,169,255,0.2)]',
         isDropTarget && 'bg-sky-400/[0.05]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]',
-        insertMarker === 'before' &&
-          'before:pointer-events-none before:absolute before:inset-x-0 before:-top-px before:h-0.5 before:bg-[var(--accent)]',
-        insertMarker === 'after' &&
-          'after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-[var(--accent)]'
+        insertMarker === 'before' && 'shadow-[inset_0_2px_0_0_var(--accent)]',
+        insertMarker === 'after' && 'shadow-[inset_0_-2px_0_0_var(--accent)]'
       )}
     >
       <td className="w-12 px-1.5 py-2 text-center align-middle">
@@ -625,12 +624,14 @@ const SortableMobileRow = ({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.18 : 1,
+        opacity: isDragging ? 0.4 : 1,
+        marginTop: insertMarker === 'before' ? 48 : 0,
+        marginBottom: insertMarker === 'after' ? 48 : 0,
       }}
       className={cn(
         'relative overflow-hidden border border-[var(--panel-border)] bg-[var(--panel-bg)] transition-all duration-200',
         validationErrors.length > 0 && 'bg-amber-400/[0.08]',
-        isDragging && 'z-20 shadow-[inset_0_0_0_1px_rgba(74,169,255,0.2)]',
+        isDragging && 'z-20 border-dashed border-[var(--accent)]/40 bg-transparent shadow-[inset_0_0_0_1px_rgba(74,169,255,0.2)]',
         isDropTarget && 'bg-sky-400/[0.05]',
         isHighlighted && 'animate-[pulse_0.7s_ease-out_1] bg-emerald-400/[0.08]'
       )}
@@ -638,7 +639,7 @@ const SortableMobileRow = ({
       {insertMarker && (
         <div
           className={cn(
-            'pointer-events-none absolute inset-x-3 z-[2] h-1.5 bg-[var(--accent)] shadow-[0_0_0_5px_color-mix(in_oklab,var(--accent)_18%,transparent)]',
+            'pointer-events-none absolute inset-x-3 z-[2] h-0.5 rounded-full bg-[var(--accent)] shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_25%,transparent)]',
             insertMarker === 'before' ? 'top-0 -translate-y-1/2' : 'bottom-0 translate-y-1/2'
           )}
         />
@@ -834,6 +835,7 @@ export default function TimesheetEditor() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isMobileChromeHidden, setIsMobileChromeHidden] = useState(false);
   const [freshMobileRowId, setFreshMobileRowId] = useState<string | null>(null);
+  const isDesktop = useMediaQuery('(min-width: 1280px)');
 
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   const {
@@ -1384,7 +1386,7 @@ export default function TimesheetEditor() {
         <DndContext
           collisionDetection={closestCorners}
           sensors={dndSensors}
-          modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
+          modifiers={[restrictToVerticalAxis]}
           measuring={{
             droppable: {
               strategy: MeasuringStrategy.Always,
@@ -1488,21 +1490,16 @@ export default function TimesheetEditor() {
           </SortableContext>
           <DragOverlay
             zIndex={70}
-            modifiers={[restrictToVerticalAxis]}
+            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
             dropAnimation={{
               duration: 220,
               easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
             {activeRow ? (
-              <div className="pointer-events-none">
-                <div className="xl:hidden">
-                  <MobileDragOverlayContent row={activeRow} taskLookup={taskLookup} />
-                </div>
-                <div className="hidden xl:block">
-                  <DesktopDragOverlayContent row={activeRow} taskLookup={taskLookup} />
-                </div>
-              </div>
+              isDesktop
+                ? <DesktopDragOverlayContent row={activeRow} taskLookup={taskLookup} />
+                : <MobileDragOverlayContent row={activeRow} taskLookup={taskLookup} />
             ) : null}
           </DragOverlay>
         </DndContext>
