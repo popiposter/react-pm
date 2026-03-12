@@ -16,7 +16,6 @@ import {
 } from '@dnd-kit/core';
 import {
   restrictToFirstScrollableAncestor,
-  snapCenterToCursor,
   restrictToVerticalAxis,
 } from '@dnd-kit/modifiers';
 import {
@@ -404,11 +403,8 @@ const DesktopDragOverlayContent = ({
   taskLookup: Map<string, Task>;
 }) => (
   <motion.div
-    initial={false}
-    animate={{
-      scale: 1.02,
-      rotate: 0.5,
-    }}
+    initial={{ scale: 1, rotate: 0 }}
+    animate={{ scale: 1.02, rotate: 0.5 }}
     transition={DRAG_SPRING}
     className="w-[min(1120px,88vw)] rounded-[var(--surface-radius)] border border-[var(--accent)]/30 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_64px_-28px_rgba(15,23,42,0.45)]"
   >
@@ -445,11 +441,8 @@ const MobileDragOverlayContent = ({
   taskLookup: Map<string, Task>;
 }) => (
   <motion.article
-    initial={false}
-    animate={{
-      scale: 1.04,
-      rotate: 1,
-    }}
+    initial={{ scale: 1, rotate: 0 }}
+    animate={{ scale: 1.04, rotate: 1 }}
     transition={DRAG_SPRING}
     className="w-[min(92vw,26rem)] rounded-[var(--surface-radius)] border border-[var(--accent)]/30 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_24px_64px_-28px_rgba(15,23,42,0.45)]"
   >
@@ -487,9 +480,7 @@ const SortableDesktopRow = ({
   const isHighlighted = highlightedRowId === row.id;
 
   return (
-    <motion.tr
-      layout
-      transition={DRAG_SPRING}
+    <tr
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform),
@@ -577,7 +568,7 @@ const SortableDesktopRow = ({
           </div>
         )}
       </td>
-    </motion.tr>
+    </tr>
   );
 };
 
@@ -626,12 +617,10 @@ const SortableMobileRow = ({
   }, [shouldAutoReveal]);
 
   return (
-    <motion.article
-      layout
-      transition={DRAG_SPRING}
+    <article
       ref={(node) => {
-        setNodeRef(node);
-        articleRef.current = node;
+        setNodeRef(node as HTMLElement | null);
+        articleRef.current = node as HTMLElement | null;
       }}
       style={{
         transform: CSS.Transform.toString(transform),
@@ -822,7 +811,7 @@ const SortableMobileRow = ({
           </div>
         </div>
       )}
-    </motion.article>
+    </article>
   );
 };
 
@@ -902,8 +891,8 @@ export default function TimesheetEditor() {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 120,
-        tolerance: 5,
+        delay: 250,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -1499,7 +1488,7 @@ export default function TimesheetEditor() {
           </SortableContext>
           <DragOverlay
             zIndex={70}
-            modifiers={[restrictToVerticalAxis, snapCenterToCursor]}
+            modifiers={[restrictToVerticalAxis]}
             dropAnimation={{
               duration: 220,
               easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
