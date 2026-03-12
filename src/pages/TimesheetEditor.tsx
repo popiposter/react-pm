@@ -442,8 +442,8 @@ const MobileDragOverlayContent = ({
   taskLookup: Map<string, Task>;
 }) => (
   <motion.article
-    initial={{ scale: 1, rotate: 0 }}
-    animate={{ scale: 1.04, rotate: 1 }}
+    initial={{ scale: 1 }}
+    animate={{ scale: 1.03 }}
     transition={DRAG_SPRING}
     className="w-[min(92vw,26rem)] rounded-[var(--surface-radius)] border border-[var(--accent)]/50 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.55),0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]"
   >
@@ -1386,7 +1386,6 @@ export default function TimesheetEditor() {
         <DndContext
           collisionDetection={closestCorners}
           sensors={dndSensors}
-          modifiers={[restrictToVerticalAxis]}
           measuring={{
             droppable: {
               strategy: MeasuringStrategy.Always,
@@ -1491,6 +1490,7 @@ export default function TimesheetEditor() {
           {createPortal(
             <DragOverlay
               zIndex={9999}
+              adjustScale={false}
               modifiers={[restrictToVerticalAxis]}
               dropAnimation={{
                 duration: 220,
