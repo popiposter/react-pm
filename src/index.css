@@ -157,9 +157,6 @@ textarea {
   box-shadow: 0 8px 32px -16px var(--shadow-color);
 }
 
-/* NOTE: backdrop-filter here creates a new containing block for position:fixed descendants.
-   The <header> in Layout.tsx intentionally uses inline Tailwind classes instead of this class
-   so that DragOverlay (position:fixed) positions relative to viewport, not header. */
 .app-surface-strong {
   border: 1px solid var(--panel-border);
   border-radius: var(--surface-radius);

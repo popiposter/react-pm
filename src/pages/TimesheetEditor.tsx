@@ -1365,7 +1365,7 @@ export default function TimesheetEditor() {
         }
       />
 
-      <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5">
+      <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5 [backdrop-filter:none]">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
