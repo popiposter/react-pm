@@ -15,9 +15,7 @@ import {
 import { TimesheetsDesktopTable } from '../components/timesheets/TimesheetsDesktopTable';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { DocumentActionBar } from '../components/workspace/DocumentActionBar';
 import { DocumentTableToolbar } from '../components/workspace/DocumentTableToolbar';
-import { EntityPageHeader } from '../components/workspace/EntityPageHeader';
 import { PageBreadcrumbs } from '../components/workspace/PageBreadcrumbs';
 import {
   Select,
@@ -336,75 +334,15 @@ export default function TimesheetsList() {
   };
 
   return (
-    <section className="space-y-5 xl:space-y-6">
-      <EntityPageHeader
-        breadcrumbs={
-          <PageBreadcrumbs
-            items={[
-              { label: 'Документы' },
-              { label: 'Табели' },
-            ]}
-          />
-        }
-        eyebrow={
-          <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--accent)]">
-            <CalendarRange className="h-3.5 w-3.5" />
-            Журнал табелей
-          </span>
-        }
-        title={
-          <span className="flex flex-wrap items-center gap-3">
-            <span>Табели за</span>
-            <span className="inline-flex items-center rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-base font-medium text-[var(--text-soft)] xl:text-lg">
-              {formatMonthLabel(selectedPeriod)}
-            </span>
-          </span>
-        }
-        titleMeta={
-          <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-soft)]">
-            <span>Откройте нужный день, быстро проверьте статус и продолжайте работу.</span>
-            {syncStatus && syncStatus.pendingCount > 0 && (
-              <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-[var(--warning-text)]">
-                Ожидают синхронизации: {syncStatus.pendingCount}
-              </span>
-            )}
-          </div>
-        }
-        actions={
-          <DocumentActionBar className="xl:justify-start">
-            <Button
-              onClick={() =>
-                navigate({
-                  to: '/timesheet/$date',
-                  params: { date: startOfToday() },
-                })
-              }
-            >
-              <Plus className="h-4 w-4" />
-              Создать табель на сегодня
-            </Button>
-            {hasActiveFilters && (
-              <Button
-                onClick={() => {
-                  updateSearch({
-                    period: getLocalMonthPeriod(),
-                    status: 'all',
-                    q: '',
-                  });
-                  setIsMobileFiltersOpen(false);
-                }}
-                variant="secondary"
-                className="text-[var(--text-soft)]"
-              >
-                Сбросить фильтры
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            )}
-          </DocumentActionBar>
-        }
+    <section className="flex flex-col gap-3">
+      <PageBreadcrumbs
+        items={[
+          { label: 'Документы' },
+          { label: 'Табели' },
+        ]}
       />
 
-      <div className="rounded-[var(--surface-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg)]">
+      <div className="app-surface">
         <div className="flex flex-col gap-0 border-b border-[var(--panel-border)]">
           <div className="px-4 py-2.5 xl:hidden xl:px-5">
             <div className="flex items-center justify-between gap-3">
@@ -443,7 +381,7 @@ export default function TimesheetsList() {
             >
               <DocumentTableToolbar
                 filters={
-                  <div className="grid gap-3 xl:grid-cols-[minmax(180px,400px)_240px_200px_auto] xl:items-center">
+                  <div className="grid gap-3 xl:grid-cols-[minmax(180px,400px)_240px_200px_auto_auto] xl:items-center">
                     <div className="min-w-0">
                       <div className="relative block">
                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -536,9 +474,29 @@ export default function TimesheetsList() {
                       >
                         Сбросить
                       </Button>
-                      <span className="hidden xl:inline-flex h-11 items-center self-end text-sm text-[var(--text-muted)]">
+                      <span className="hidden xl:inline-flex h-9 items-center pl-2 text-sm whitespace-nowrap text-[var(--text-muted)]">
                         Найдено: {filteredTimesheets.length}
                       </span>
+                      {(syncStatus?.pendingCount ?? 0) > 0 && (
+                        <span className="hidden xl:inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-[var(--warning-text)]">
+                          Синхронизация: {syncStatus?.pendingCount ?? 0}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center xl:justify-end">
+                      <Button
+                        onClick={() =>
+                          navigate({
+                            to: '/timesheet/$date',
+                            params: { date: startOfToday() },
+                          })
+                        }
+                        className="h-9 whitespace-nowrap"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Создать
+                      </Button>
                     </div>
                   </div>
                 }
