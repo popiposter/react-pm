@@ -440,10 +440,7 @@ const MobileDragOverlayContent = ({
   row: TimesheetRow;
   taskLookup: Map<string, Task>;
 }) => (
-  <motion.article
-    initial={{ scale: 1 }}
-    animate={{ scale: 1.03 }}
-    transition={DRAG_SPRING}
+  <article
     className="w-[min(92vw,26rem)] rounded-[var(--surface-radius)] border border-[var(--accent)]/50 bg-[var(--panel-bg-strong)] px-4 py-3 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.55),0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]"
   >
     <div className="flex items-start gap-3">
@@ -457,7 +454,7 @@ const MobileDragOverlayContent = ({
         <Ellipsis className="h-4 w-4" />
       </div>
     </div>
-  </motion.article>
+  </article>
 );
 
 const SortableDesktopRow = ({
@@ -1365,7 +1362,7 @@ export default function TimesheetEditor() {
         }
       />
 
-      <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5 [backdrop-filter:none]">
+      <div className="app-surface p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-5 ![backdrop-filter:none]">
         <div className="flex flex-col gap-3 border-b border-[var(--panel-border)] pb-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
@@ -1415,7 +1412,8 @@ export default function TimesheetEditor() {
               </div>
             ) : (
               <>
-                <div className="mt-5 space-y-3 pb-6 xl:hidden">
+                {!isDesktop && (
+                <div className="mt-5 space-y-3 pb-6">
                   {rows.map((row, index) => (
                     (() => {
                       const validationErrors =
@@ -1442,8 +1440,10 @@ export default function TimesheetEditor() {
                     })()
                   ))}
                 </div>
+                )}
 
-                <div className="mt-4 hidden overflow-x-auto border border-[var(--panel-border)] xl:block">
+                {isDesktop && (
+                <div className="mt-4 overflow-x-auto border border-[var(--panel-border)]">
                   <table className="min-w-[1040px] w-full border-collapse">
                     <thead className="bg-[var(--panel-muted)] text-left text-[11px] uppercase tracking-[0.06em] text-[var(--text-muted)]">
                       <tr>
@@ -1484,6 +1484,7 @@ export default function TimesheetEditor() {
                     </tbody>
                   </table>
                 </div>
+                )}
               </>
             )}
           </SortableContext>
