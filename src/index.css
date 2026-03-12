@@ -22,26 +22,26 @@
 
   /* App background - deep navy from brand blue */
   --app-bg:
-    radial-gradient(circle at top, rgba(0, 87, 154, 0.18), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(223, 90, 35, 0.07), transparent 22%),
-    linear-gradient(180deg, #060e18 0%, #0b1626 100%);
-  --app-fg: #e8eef8;
+    radial-gradient(circle at top, rgba(0, 87, 154, 0.20), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(223, 90, 35, 0.09), transparent 25%),
+    linear-gradient(180deg, #0d1520 0%, #111e2e 100%);
+  --app-fg: #ecf1f8;
 
   /* Surfaces */
-  --panel-bg: rgba(10, 20, 36, 0.80);
-  --panel-bg-strong: rgba(6, 14, 24, 0.92);
-  --panel-muted: rgba(255, 255, 255, 0.04);
-  --panel-border: rgba(0, 87, 154, 0.24);
-  --panel-hover: rgba(0, 87, 154, 0.10);
+  --panel-bg: rgba(15, 26, 44, 0.85);
+  --panel-bg-strong: rgba(10, 18, 30, 0.96);
+  --panel-muted: rgba(255, 255, 255, 0.055);
+  --panel-border: rgba(0, 100, 180, 0.28);
+  --panel-hover: rgba(0, 100, 180, 0.12);
 
   /* Text */
-  --text-muted: #7a92ac;
-  --text-soft: #b8cfe0;
+  --text-muted: #7e95b0;
+  --text-soft: #c2d4e4;
 
   /* Accent - lightened corporate blue for interactive states */
-  --accent: #2e9de4;
-  --accent-soft: rgba(46, 157, 228, 0.14);
-  --accent-strong: #0078c8;
+  --accent: #3aa8f0;
+  --accent-soft: rgba(58, 168, 240, 0.15);
+  --accent-strong: #0082d4;
 
   /* CTA - corporate orange for primary action buttons */
   --cta: #df5a23;
@@ -175,4 +175,6 @@ textarea {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
   -webkit-mask-size: contain;
+  min-width: 1em;
+  min-height: 1em;
 }

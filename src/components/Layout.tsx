@@ -402,7 +402,7 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="flex h-9 w-9 items-center justify-center xl:hidden">
                   <span
                     aria-hidden="true"
-                    className="brand-mark h-4.5 w-4.5"
+                    className="brand-mark h-[18px] w-[18px]"
                     style={brandMarkMask}
                   />
                 </div>
