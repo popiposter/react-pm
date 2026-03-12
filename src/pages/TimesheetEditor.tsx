@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import {
   closestCorners,
@@ -16,7 +17,6 @@ import {
 } from '@dnd-kit/core';
 import {
   restrictToVerticalAxis,
-  restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import {
   sortableKeyboardCoordinates,
@@ -1488,20 +1488,23 @@ export default function TimesheetEditor() {
               </>
             )}
           </SortableContext>
-          <DragOverlay
-            zIndex={70}
-            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
-            dropAnimation={{
-              duration: 220,
-              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            }}
-          >
-            {activeRow ? (
-              isDesktop
-                ? <DesktopDragOverlayContent row={activeRow} taskLookup={taskLookup} />
-                : <MobileDragOverlayContent row={activeRow} taskLookup={taskLookup} />
-            ) : null}
-          </DragOverlay>
+          {createPortal(
+            <DragOverlay
+              zIndex={9999}
+              modifiers={[restrictToVerticalAxis]}
+              dropAnimation={{
+                duration: 220,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+              }}
+            >
+              {activeRow ? (
+                isDesktop
+                  ? <DesktopDragOverlayContent row={activeRow} taskLookup={taskLookup} />
+                  : <MobileDragOverlayContent row={activeRow} taskLookup={taskLookup} />
+              ) : null}
+            </DragOverlay>,
+            document.body
+          )}
         </DndContext>
       </div>
 
