@@ -22,26 +22,26 @@
 
   /* App background - deep navy from brand blue */
   --app-bg:
-    radial-gradient(circle at top, rgba(0, 87, 154, 0.20), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(223, 90, 35, 0.09), transparent 25%),
-    linear-gradient(180deg, #0d1520 0%, #111e2e 100%);
-  --app-fg: #ecf1f8;
+    radial-gradient(ellipse at 20% 0%, rgba(0, 87, 154, 0.22), transparent 40%),
+    radial-gradient(ellipse at 80% 100%, rgba(223, 90, 35, 0.10), transparent 35%),
+    linear-gradient(160deg, #0e1b2e 0%, #111f30 60%, #0d1825 100%);
+  --app-fg: #edf2f9;
 
   /* Surfaces */
-  --panel-bg: rgba(15, 26, 44, 0.85);
-  --panel-bg-strong: rgba(10, 18, 30, 0.96);
-  --panel-muted: rgba(255, 255, 255, 0.055);
-  --panel-border: rgba(0, 100, 180, 0.28);
-  --panel-hover: rgba(0, 100, 180, 0.12);
+  --panel-bg: rgba(18, 30, 48, 0.88);
+  --panel-bg-strong: rgba(13, 22, 38, 0.97);
+  --panel-muted: rgba(255, 255, 255, 0.06);
+  --panel-border: rgba(80, 140, 210, 0.22);
+  --panel-hover: rgba(60, 120, 200, 0.13);
 
   /* Text */
-  --text-muted: #7e95b0;
-  --text-soft: #c2d4e4;
+  --text-muted: #7e96b2;
+  --text-soft: #c0d2e6;
 
   /* Accent - lightened corporate blue for interactive states */
-  --accent: #3aa8f0;
-  --accent-soft: rgba(58, 168, 240, 0.15);
-  --accent-strong: #0082d4;
+  --accent: #3aabf5;
+  --accent-soft: rgba(58, 171, 245, 0.15);
+  --accent-strong: #0085d8;
 
   /* CTA - corporate orange for primary action buttons */
   --cta: #df5a23;
@@ -58,7 +58,7 @@
   --danger-text: #fecdd3;
   --neutral-text: #cbd5e1;
 
-  --shadow-color: rgba(0, 14, 30, 0.55);
+  --shadow-color: rgba(5, 15, 35, 0.60);
 }
 
 :root[data-theme='light'] {
