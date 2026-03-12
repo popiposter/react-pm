@@ -118,7 +118,7 @@ export function DocumentDataTable<TData>({
               <Button
                 type="button"
                 variant="secondary"
-                className="h-10"
+                className="h-9"
                 onClick={() => setRowSelection({})}
               >
                 Снять выделение
@@ -128,10 +128,11 @@ export function DocumentDataTable<TData>({
               <button
                 type="button"
                 onClick={() => setIsColumnsMenuOpen((value) => !value)}
-                className="inline-flex h-10 items-center gap-2 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+                title="Настройка колонок"
+                aria-label="Настройка колонок"
+                className="inline-flex h-9 w-9 items-center justify-center border border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]"
               >
                 <Columns3 className="h-4 w-4" />
-                Колонки
               </button>
               {isColumnsMenuOpen && (
                 <div className="app-surface-strong absolute right-0 top-11 z-20 min-w-52 p-2 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.45)]">
@@ -157,7 +158,7 @@ export function DocumentDataTable<TData>({
           </div>
         }
       >
-        <div className="max-h-[calc(100vh-22rem)] overflow-auto border border-[var(--panel-border)]">
+        <div className="min-h-[calc(100vh-16rem)] overflow-auto border border-[var(--panel-border)]">
           <table className="min-w-full border-collapse">
             <thead className="bg-[var(--panel-muted)] text-left text-xs uppercase tracking-[0.06em] text-[var(--text-muted)]">
               {table.getHeaderGroups().map((headerGroup) => (

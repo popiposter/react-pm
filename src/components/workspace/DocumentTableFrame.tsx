@@ -13,9 +13,9 @@ export function DocumentTableFrame({
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-3 pt-1', className)}>
+    <div className={cn('space-y-2 pt-1', className)}>
       {(summary || actions) && (
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 py-2">
           <div className="min-w-0">{summary}</div>
           {actions ? <div className="shrink-0">{actions}</div> : null}
         </div>

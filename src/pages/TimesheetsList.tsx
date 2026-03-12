@@ -112,8 +112,8 @@ function PeriodPicker({
   }, [isOpen]);
 
   return (
-    <div ref={containerRef} className="relative">
-      <div className="grid h-11 grid-cols-[44px_minmax(0,1fr)_44px] items-stretch overflow-hidden rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
+      <div ref={containerRef} className="relative">
+      <div className="grid h-9 grid-cols-[36px_minmax(0,1fr)_36px] items-stretch overflow-hidden rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)]">
         <button
           type="button"
           onClick={() => onChange(shiftPeriod(period, -1))}
@@ -404,167 +404,155 @@ export default function TimesheetsList() {
         }
       />
 
-      <div className="app-surface p-4 sm:p-5">
-        <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
-          <div className="flex items-center justify-between gap-3 xl:hidden">
-            <button
-              type="button"
-              onClick={() => setIsMobileFiltersOpen((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
-            >
-              <Filter className="h-4 w-4" />
-              <span>Фильтры</span>
-              {activeFilterCount > 0 && (
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--cta)] px-1.5 text-[10px] font-semibold text-white">
-                  {activeFilterCount}
-                </span>
-              )}
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 text-[var(--text-muted)] transition-transform duration-200',
-                  isMobileFiltersOpen && 'rotate-180'
+      <div className="rounded-[var(--surface-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg)]">
+        <div className="flex flex-col gap-0 border-b border-[var(--panel-border)]">
+          <div className="px-4 py-2.5 xl:hidden xl:px-5">
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setIsMobileFiltersOpen((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 py-2 text-sm text-[var(--text-soft)] transition hover:bg-[var(--panel-hover)]"
+              >
+                <Filter className="h-4 w-4" />
+                <span>Фильтры</span>
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--cta)] px-1.5 text-[10px] font-semibold text-white">
+                    {activeFilterCount}
+                  </span>
                 )}
-              />
-            </button>
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 text-[var(--text-muted)] transition-transform duration-200',
+                    isMobileFiltersOpen && 'rotate-180'
+                  )}
+                />
+              </button>
 
-            <span className="text-sm text-[var(--text-muted)]">Найдено: {filteredTimesheets.length}</span>
+              <span className="text-sm text-[var(--text-muted)]">Найдено: {filteredTimesheets.length}</span>
+            </div>
           </div>
 
-          <div
-            className={cn(
-              'overflow-hidden transition-all duration-300 ease-in-out xl:block xl:overflow-visible',
-              isMobileFiltersOpen
-                ? 'max-h-[600px] opacity-100'
-                : 'max-h-0 opacity-0 xl:max-h-none xl:opacity-100'
-            )}
-          >
-            <DocumentTableToolbar
-              filters={
-                <div className="grid gap-3 xl:grid-cols-[minmax(200px,480px)_280px_220px_160px] xl:items-end">
-                <label className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    <Search className="h-3.5 w-3.5" />
-                    Поиск
-                  </span>
-                  <div className="relative block">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <Input
-                      value={searchQuery}
-                      onChange={(event) => updateSearch({ q: event.target.value })}
-                      placeholder="Поиск по дате или описанию"
-                      className="h-11 bg-[var(--panel-bg-strong)] pl-10 pr-4"
-                    />
-                  </div>
-                </label>
+          <div className="px-4 py-2.5 xl:px-5">
+            <div
+              className={cn(
+                'overflow-hidden transition-all duration-300 ease-in-out xl:block xl:overflow-visible',
+                isMobileFiltersOpen
+                  ? 'max-h-[600px] opacity-100'
+                  : 'max-h-0 opacity-0 xl:max-h-none xl:opacity-100'
+              )}
+            >
+              <DocumentTableToolbar
+                filters={
+                  <div className="grid gap-3 xl:grid-cols-[minmax(180px,400px)_240px_200px_auto] xl:items-center">
+                    <div className="min-w-0">
+                      <div className="relative block">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
+                        <Input
+                          value={searchQuery}
+                          onChange={(event) => updateSearch({ q: event.target.value })}
+                          placeholder="Поиск по дате или описанию"
+                          className="h-9 bg-[var(--panel-bg-strong)] pl-10 pr-4"
+                        />
+                      </div>
+                    </div>
 
-                <label className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    <CalendarRange className="h-3.5 w-3.5" />
-                    Период
-                  </span>
-                  <PeriodPicker
-                    period={selectedPeriod}
-                    onChange={(period) => {
-                      updateSearch({ period });
-                      setIsMobileFiltersOpen(false);
-                    }}
-                  />
-                </label>
+                    <div className="min-w-0">
+                      <PeriodPicker
+                        period={selectedPeriod}
+                        onChange={(period) => {
+                          updateSearch({ period });
+                          setIsMobileFiltersOpen(false);
+                        }}
+                      />
+                    </div>
 
-                <label className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    <Filter className="h-3.5 w-3.5" />
-                    Статус
-                  </span>
-                  <div className="grid grid-cols-[minmax(0,1fr)_36px] gap-2">
-                    <Select
-                      value={statusFilter}
-                      onValueChange={(value) =>
-                        updateSearch({ status: value as TimesheetStatusFilter })
-                      }
-                    >
-                      <SelectTrigger
-                        aria-label="Статус"
-                        className={cn(
-                          'h-11 w-full min-w-[220px] bg-[var(--panel-bg-strong)]',
-                          statusFilter !== 'all' && statusFilterMeta[statusFilter].triggerClassName
-                        )}
-                      >
-                        <span className="flex min-w-0 items-center gap-2.5">
-                          <span
-                            aria-hidden="true"
+                    <div className="min-w-0">
+                      <div className="grid grid-cols-[minmax(0,1fr)_36px] gap-2">
+                        <Select
+                          value={statusFilter}
+                          onValueChange={(value) =>
+                            updateSearch({ status: value as TimesheetStatusFilter })
+                          }
+                        >
+                          <SelectTrigger
+                            aria-label="Статус"
                             className={cn(
-                              'h-2.5 w-2.5 shrink-0 rounded-full',
-                              statusFilterMeta[statusFilter].dotClassName
+                              'h-9 w-full min-w-0 bg-[var(--panel-bg-strong)]',
+                              statusFilter !== 'all' && statusFilterMeta[statusFilter].triggerClassName
                             )}
-                          />
-                          <SelectValue placeholder="Все статусы" className="truncate">
-                            {statusFilterMeta[statusFilter].label}
-                          </SelectValue>
-                        </span>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusFilterOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          >
+                            <span className="flex min-w-0 items-center gap-2.5">
+                              <span
+                                aria-hidden="true"
+                                className={cn(
+                                  'h-2.5 w-2.5 shrink-0 rounded-full',
+                                  statusFilterMeta[statusFilter].dotClassName
+                                )}
+                              />
+                              <SelectValue placeholder="Все статусы" className="truncate">
+                                {statusFilterMeta[statusFilter].label}
+                              </SelectValue>
+                            </span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusFilterOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                    <button
-                      type="button"
-                      onClick={() => updateSearch({ status: 'all' })}
-                      disabled={statusFilter === 'all'}
-                      className={cn(
-                        'inline-flex h-11 w-9 items-center justify-center border transition',
-                        statusFilter === 'all'
-                          ? 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)] opacity-45'
-                          : 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]'
-                      )}
-                      aria-label="Сбросить статусный фильтр"
-                      title="Сбросить статусный фильтр"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                        <button
+                          type="button"
+                          onClick={() => updateSearch({ status: 'all' })}
+                          disabled={statusFilter === 'all'}
+                          className={cn(
+                            'inline-flex h-9 w-9 items-center justify-center border transition',
+                            statusFilter === 'all'
+                              ? 'border-[var(--panel-border)] bg-[var(--panel-muted)] text-[var(--text-muted)] opacity-45'
+                              : 'border-[var(--panel-border)] bg-[var(--panel-bg-strong)] text-[var(--text-soft)] hover:bg-[var(--panel-hover)] hover:text-[var(--app-fg)]'
+                          )}
+                          aria-label="Сбросить статусный фильтр"
+                          title="Сбросить статусный фильтр"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                      <Button
+                        onClick={() => {
+                          updateSearch({
+                            period: getLocalMonthPeriod(),
+                            status: 'all',
+                            q: '',
+                          });
+                          setIsMobileFiltersOpen(false);
+                        }}
+                        variant="secondary"
+                        className="h-9 w-full xl:w-auto"
+                      >
+                        Сбросить
+                      </Button>
+                      <span className="hidden xl:inline-flex h-11 items-center self-end text-sm text-[var(--text-muted)]">
+                        Найдено: {filteredTimesheets.length}
+                      </span>
+                    </div>
                   </div>
-                </label>
-
-                <div className="flex min-w-0 flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    <ArrowRight className="h-3.5 w-3.5" />
-                    Действия
-                  </span>
-                  <Button
-                    onClick={() => {
-                      updateSearch({
-                        period: getLocalMonthPeriod(),
-                        status: 'all',
-                        q: '',
-                      });
-                      setIsMobileFiltersOpen(false);
-                    }}
-                    variant="secondary"
-                    className="h-11 w-full"
-                  >
-                    Сбросить
-                  </Button>
-                </div>
-                <span className="hidden xl:inline-flex h-11 items-center self-end text-sm text-[var(--text-muted)]">
-                  Найдено: {filteredTimesheets.length}
-                </span>
-                </div>
-              }
-              actions={
-                <>
-                  {hasActiveFilters && (
-                    <span className="inline-flex h-10 items-center rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 text-sm text-[var(--accent)]">
-                      Фильтры активны
-                    </span>
-                  )}
-                </>
-              }
-            />
+                }
+                actions={
+                  <>
+                    {hasActiveFilters && (
+                      <span className="inline-flex h-10 items-center rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 text-sm text-[var(--accent)]">
+                        Фильтры активны
+                      </span>
+                    )}
+                  </>
+                }
+              />
+            </div>
           </div>
         </div>
 
@@ -676,7 +664,7 @@ export default function TimesheetsList() {
                     <Button
                       type="button"
                       variant="secondary"
-                      className="h-10"
+                      className="h-9"
                       disabled={bulkUpdateMutation.isPending}
                       onClick={() => {
                         toast.promise(
@@ -697,7 +685,7 @@ export default function TimesheetsList() {
                     <Button
                       type="button"
                       variant="secondary"
-                      className="h-10"
+                      className="h-9"
                       disabled={bulkUpdateMutation.isPending}
                       onClick={() => {
                         toast.promise(
