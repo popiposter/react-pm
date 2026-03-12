@@ -4,19 +4,18 @@ import {
   Download,
   FileSpreadsheet,
   FolderClock,
+  House,
   LogOut,
   MonitorCog,
   MoonStar,
   PanelLeftClose,
   PanelLeftOpen,
-  Presentation,
   SunMedium,
   Wifi,
   WifiOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import BrandLogo from '../assets/brand-logo.svg?react';
-import { appConfig } from '../config/app-config';
 import { useAuth } from '../features/auth/auth';
 import { usePwaInstallPrompt } from '../features/pwa/usePwaInstallPrompt';
 import { useTheme, type ThemeMode } from '../features/theme/theme';
@@ -29,11 +28,11 @@ interface LayoutProps {
 }
 
 interface NavigationItem {
-  href: '/timesheets' | '/demo';
+  href: '/' | '/timesheets';
   label: string;
   icon: typeof FileSpreadsheet;
   description?: string;
-  tone?: 'primary' | 'demo';
+  tone?: 'primary';
 }
 
 const formatLocalDate = (value = new Date()) => {
@@ -65,7 +64,14 @@ export default function Layout({ children }: LayoutProps) {
   const { canInstall, promptInstall } = usePwaInstallPrompt();
   const isEditorRoute = location.pathname.startsWith('/timesheet/');
   const navigation: NavigationItem[] = React.useMemo(() => {
-    const items: NavigationItem[] = [
+    return [
+      {
+        href: '/',
+        label: 'Главная',
+        icon: House,
+        description: 'Домашний экран',
+        tone: 'primary',
+      },
       {
         href: '/timesheets',
         label: 'Табели',
@@ -74,18 +80,6 @@ export default function Layout({ children }: LayoutProps) {
         tone: 'primary',
       },
     ];
-
-    if (appConfig.isDemoMode && appConfig.features.demoRoute) {
-      items.push({
-        href: '/demo',
-        label: 'Демо-центр',
-        icon: Presentation,
-        description: 'Сценарии и демо-данные',
-        tone: 'demo',
-      });
-    }
-
-    return items;
   }, []);
 
   useEffect(() => {
@@ -307,9 +301,9 @@ export default function Layout({ children }: LayoutProps) {
             >
               {navigation.map((item) => {
                 const isActive =
-                  (item.href === '/timesheets' && location.pathname === '/') ||
-                  location.pathname === item.href ||
-                  location.pathname.startsWith(item.href);
+                  item.href === '/'
+                    ? location.pathname === '/'
+                    : location.pathname === item.href || location.pathname.startsWith(item.href);
                 const Icon = item.icon;
 
                 return (
@@ -321,9 +315,7 @@ export default function Layout({ children }: LayoutProps) {
                       'group relative flex items-center rounded-[var(--control-radius)] border border-transparent text-[var(--text-soft)] transition',
                       isSidebarCollapsed ? 'h-11 w-11 justify-center px-0' : 'h-12 gap-3 px-3.5',
                       isActive
-                        ? item.tone === 'demo'
-                          ? 'border-sky-300/20 bg-sky-400/10 text-sky-200'
-                          : 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                        ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
                         : 'border-transparent hover:border-[var(--panel-border)] hover:bg-[var(--panel-muted)] hover:text-[var(--app-fg)]'
                     )}
                   >
@@ -343,11 +335,6 @@ export default function Layout({ children }: LayoutProps) {
                       <span className="min-w-0">
                         <span className="flex items-center gap-2">
                           <span className="block truncate text-sm font-medium">{item.label}</span>
-                          {item.tone === 'demo' ? (
-                            <span className="inline-flex border border-sky-300/20 bg-sky-400/10 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.06em] text-sky-200">
-                              demo
-                            </span>
-                          ) : null}
                         </span>
                         {item.description ? (
                           <span className="block truncate text-[11px] text-[var(--text-muted)] transition group-hover:text-[var(--text-soft)]">
@@ -540,6 +527,22 @@ export default function Layout({ children }: LayoutProps) {
         >
           <div className="mx-auto grid max-w-md grid-cols-3 items-center gap-0.5">
             <Link
+              to="/"
+              className={cn(
+                'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
+                location.pathname === '/' ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute bottom-0.5 left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-transparent transition-all duration-200',
+                  location.pathname === '/' ? 'w-5 bg-[var(--accent)]' : 'w-0'
+                )}
+              />
+              <House className="h-4.5 w-4.5" />
+              <span>Главная</span>
+            </Link>
+            <Link
               to="/timesheets"
               search={{
                 period: startOfToday().slice(0, 7),
@@ -581,28 +584,6 @@ export default function Layout({ children }: LayoutProps) {
               <FolderClock className="h-4.5 w-4.5" />
               <span>Сегодня</span>
             </Link>
-            {appConfig.isDemoMode && appConfig.features.demoRoute ? (
-              <Link
-                to="/demo"
-                className={cn(
-                  'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
-                  location.pathname.startsWith('/demo')
-                    ? 'text-sky-200'
-                    : 'text-[var(--text-muted)]'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute bottom-0.5 left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-transparent transition-all duration-200',
-                    location.pathname.startsWith('/demo') ? 'w-5 bg-sky-300' : 'w-0'
-                  )}
-                />
-                <Presentation className="h-4.5 w-4.5" />
-                <span>Демо</span>
-              </Link>
-            ) : (
-              <span />
-            )}
           </div>
         </nav>
       )}

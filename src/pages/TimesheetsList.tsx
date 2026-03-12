@@ -5,12 +5,9 @@ import {
   CalendarRange,
   CheckCheck,
   ChevronDown,
-  CircleCheckBig,
-  Clock3,
   FileSearch,
   FileSpreadsheet,
   Filter,
-  NotebookPen,
   Plus,
   Search,
   X,
@@ -296,41 +293,6 @@ const matchesSearch = (timesheet: Timesheet, query: string) => {
   );
 };
 
-const summaryCards = (timesheets: Timesheet[]) => {
-  const approved = timesheets.filter((timesheet) => timesheet.status === 'approved').length;
-  const draft = timesheets.filter((timesheet) => timesheet.status === 'draft').length;
-  const totalHours = Math.round(
-    timesheets.reduce((sum, timesheet) => sum + getTotalHours(timesheet.rows), 0) * 10
-  ) / 10;
-
-  return [
-    {
-      label: 'Табелей за период',
-      value: String(timesheets.length),
-      icon: FileSpreadsheet,
-      accent: 'from-sky-400/30 to-cyan-400/5',
-    },
-    {
-      label: 'Часов заведено',
-      value: `${totalHours} ч`,
-      icon: Clock3,
-      accent: 'from-emerald-400/30 to-emerald-400/5',
-    },
-    {
-      label: 'Черновиков',
-      value: String(draft),
-      icon: NotebookPen,
-      accent: 'from-amber-400/30 to-amber-400/5',
-    },
-    {
-      label: 'Утверждено',
-      value: String(approved),
-      icon: CircleCheckBig,
-      accent: 'from-fuchsia-400/30 to-fuchsia-400/5',
-    },
-  ];
-};
-
 export default function TimesheetsList() {
   const navigate = useNavigate();
   const search = useSearch({ from: '/_authenticated/timesheets' });
@@ -348,7 +310,6 @@ export default function TimesheetsList() {
       .sort((left, right) => right.date.localeCompare(left.date));
   }, [searchQuery, statusFilter, timesheets]);
 
-  const activeSummary = useMemo(() => summaryCards(filteredTimesheets), [filteredTimesheets]);
   const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim().length > 0;
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const activeFilterCount =
@@ -442,34 +403,6 @@ export default function TimesheetsList() {
           </DocumentActionBar>
         }
       />
-
-      <div className="grid gap-3 xl:grid-cols-4">
-        {activeSummary.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <div
-              key={item.label}
-              className={cn(
-                'app-surface-strong border border-[var(--panel-border)] bg-gradient-to-br p-4',
-                item.accent
-              )}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.06em] text-[var(--text-soft)]">
-                    {item.label}
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold">{item.value}</p>
-                </div>
-                <div className="rounded-[var(--control-radius)] border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-bg-strong)_84%,var(--panel-muted)_16%)] p-2.5">
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
       <div className="app-surface p-4 sm:p-5">
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
