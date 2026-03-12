@@ -93,10 +93,6 @@ export function DocumentDataTable<TData>({
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const primarySort = sorting[0];
-  const sortLabel = primarySort
-    ? `${columnLabels[primarySort.id] ?? primarySort.id}: ${primarySort.desc ? 'сначала новые' : 'сначала старые'}`
-    : 'Без сортировки';
   const selectedCount = table.getSelectedRowModel().rows.length;
   const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original);
 
@@ -104,17 +100,13 @@ export function DocumentDataTable<TData>({
     <div className="hidden xl:block">
       <DocumentTableFrame
         summary={
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm text-[var(--text-soft)]">
-              {primarySort?.desc ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
-              Сортировка: {sortLabel}
-            </span>
-            {selectedCount > 0 && (
+          selectedCount > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 py-2 text-sm text-[var(--accent)]">
                 Выбрано строк: {selectedCount}
               </span>
-            )}
-          </div>
+            </div>
+          ) : null
         }
         actions={
           <div className="flex items-center gap-2">

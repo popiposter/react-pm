@@ -406,13 +406,6 @@ export default function TimesheetsList() {
 
       <div className="app-surface p-4 sm:p-5">
         <div className="flex flex-col gap-4 border-b border-[var(--panel-border)] pb-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.08em] text-[var(--text-muted)]">Журнал</p>
-              <h2 className="mt-1 text-xl font-semibold">Список табелей</h2>
-            </div>
-          </div>
-
           <div className="flex items-center justify-between gap-3 xl:hidden">
             <button
               type="button"
@@ -557,13 +550,13 @@ export default function TimesheetsList() {
                     Сбросить
                   </Button>
                 </div>
+                <span className="hidden xl:inline-flex h-11 items-center self-end text-sm text-[var(--text-muted)]">
+                  Найдено: {filteredTimesheets.length}
+                </span>
                 </div>
               }
               actions={
                 <>
-                  <span className="hidden xl:inline-flex h-10 items-center rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-bg-strong)] px-3 text-sm text-[var(--text-soft)]">
-                    Найдено: {filteredTimesheets.length}
-                  </span>
                   {hasActiveFilters && (
                     <span className="inline-flex h-10 items-center rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 text-sm text-[var(--accent)]">
                       Фильтры активны
@@ -678,50 +671,52 @@ export default function TimesheetsList() {
             <TimesheetsDesktopTable
               timesheets={filteredTimesheets}
               bulkActions={({ selectedRows, clearSelection }) => (
-                <>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-10"
-                    disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
-                    onClick={() => {
-                      toast.promise(
-                        bulkUpdateMutation
-                          .mutateAsync({ timesheets: selectedRows, status: 'submitted' })
-                          .then(() => clearSelection()),
-                        {
-                          loading: 'Отправляем выбранные табели...',
-                          success: `Табелей обновлено: ${selectedRows.length}`,
-                          error: 'Не удалось обновить выбранные табели',
-                        }
-                      );
-                    }}
-                  >
-                    <ArrowRight className="h-4 w-4" />
-                    Отправить
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-10"
-                    disabled={bulkUpdateMutation.isPending || selectedRows.length === 0}
-                    onClick={() => {
-                      toast.promise(
-                        bulkUpdateMutation
-                          .mutateAsync({ timesheets: selectedRows, status: 'approved' })
-                          .then(() => clearSelection()),
-                        {
-                          loading: 'Утверждаем выбранные табели...',
-                          success: `Табелей утверждено: ${selectedRows.length}`,
-                          error: 'Не удалось утвердить выбранные табели',
-                        }
-                      );
-                    }}
-                  >
-                    <CheckCheck className="h-4 w-4" />
-                    Утвердить
-                  </Button>
-                </>
+                selectedRows.length === 0 ? null : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="h-10"
+                      disabled={bulkUpdateMutation.isPending}
+                      onClick={() => {
+                        toast.promise(
+                          bulkUpdateMutation
+                            .mutateAsync({ timesheets: selectedRows, status: 'submitted' })
+                            .then(() => clearSelection()),
+                          {
+                            loading: 'Отправляем выбранные табели...',
+                            success: `Табелей обновлено: ${selectedRows.length}`,
+                            error: 'Не удалось обновить выбранные табели',
+                          }
+                        );
+                      }}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      Отправить
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="h-10"
+                      disabled={bulkUpdateMutation.isPending}
+                      onClick={() => {
+                        toast.promise(
+                          bulkUpdateMutation
+                            .mutateAsync({ timesheets: selectedRows, status: 'approved' })
+                            .then(() => clearSelection()),
+                          {
+                            loading: 'Утверждаем выбранные табели...',
+                            success: `Табелей утверждено: ${selectedRows.length}`,
+                            error: 'Не удалось утвердить выбранные табели',
+                          }
+                        );
+                      }}
+                    >
+                      <CheckCheck className="h-4 w-4" />
+                      Утвердить
+                    </Button>
+                  </>
+                )
               )}
               onOpenTimesheet={(date) =>
                 navigate({
