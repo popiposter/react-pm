@@ -367,7 +367,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex min-h-screen flex-1 flex-col">
           <header
             className={cn(
-              'app-surface-strong sticky top-0 z-40 border-b pt-[var(--safe-area-top)] transition-transform duration-300 ease-out xl:pt-0',
+              'sticky top-0 z-40 border-b border-[var(--panel-border)] bg-[var(--panel-bg-strong)] pt-[var(--safe-area-top)] transition-transform duration-300 ease-out xl:pt-0',
               isMobileChromeHidden && '-translate-y-full xl:translate-y-0'
             )}
           >
