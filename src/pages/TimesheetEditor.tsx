@@ -7,7 +7,7 @@ import {
   DragOverlay,
   KeyboardSensor,
   MeasuringStrategy,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -689,6 +689,7 @@ const SortableMobileRow = ({
           variant="ghost"
           size="icon"
           className="absolute left-1.5 top-1/2 z-[1] h-8 w-8 -translate-y-1/2 cursor-grab border border-transparent text-[var(--text-muted)] touch-none active:cursor-grabbing hover:bg-[var(--panel-hover)]"
+          style={{ touchAction: 'none' }}
           aria-label="Переместить строку"
         >
           <GripVertical className="h-4 w-4" />
@@ -886,7 +887,7 @@ export default function TimesheetEditor() {
   const activeRowIndex = activeRowId ? rowIds.indexOf(activeRowId) : -1;
   const overRowIndex = overRowId ? rowIds.indexOf(overRowId) : -1;
   const dndSensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 6,
       },
