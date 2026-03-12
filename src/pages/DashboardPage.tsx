@@ -1,21 +1,17 @@
 import { useNavigate } from '@tanstack/react-router';
 import {
   ArrowRight,
-  CalendarDays,
-  CalendarRange,
-  CheckSquare,
+  CheckCircle2,
+  Clock3,
   FileSpreadsheet,
-  FolderClock,
-  Play,
+  NotebookPen,
   PlaySquare,
   Plus,
-  Workflow,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { DocumentActionBar } from '../components/workspace/DocumentActionBar';
-import { EntityPageHeader } from '../components/workspace/EntityPageHeader';
-import { PageBreadcrumbs } from '../components/workspace/PageBreadcrumbs';
 import { appConfig } from '../config/app-config';
+import { useTimesheets } from '../hooks/useTimesheets';
+import type { Timesheet } from '../api/mockBackend';
 import { getDefaultTimesheetsSearch } from '../routes/_authenticated/timesheets';
 
 const startOfToday = () => {
@@ -26,158 +22,109 @@ const startOfToday = () => {
   return `${year}-${month}-${day}`;
 };
 
-const formatTodayLabel = (value = new Date()) =>
-  value.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    weekday: 'long',
-  });
-
-const formatMonthLabel = (value = new Date()) =>
-  value.toLocaleDateString('ru-RU', {
+const formatMonthLabel = (period: string) => {
+  const [year, month] = period.split('-').map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString('ru-RU', {
     month: 'long',
     year: 'numeric',
   });
+};
+
+const getTotalHours = (rows: Timesheet['rows']): number => {
+  const totalMinutes = rows.reduce((sum, row) => sum + row.duration, 0);
+  return Math.round((totalMinutes / 60) * 10) / 10;
+};
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const today = new Date();
+  const defaultSearch = getDefaultTimesheetsSearch();
+  const { data: timesheets = [] } = useTimesheets(defaultSearch.period);
+
+  const totals = {
+    timesheets: timesheets.length,
+    hours:
+      Math.round(timesheets.reduce((sum, timesheet) => sum + getTotalHours(timesheet.rows), 0) * 10) /
+      10,
+    draft: timesheets.filter((timesheet) => timesheet.status === 'draft').length,
+    approved: timesheets.filter((timesheet) => timesheet.status === 'approved').length,
+  };
+
+  const summaryActions = [
+    {
+      key: 'timesheets',
+      label: 'Табелей',
+      value: String(totals.timesheets),
+      icon: FileSpreadsheet,
+      onClick: () =>
+        navigate({
+          to: '/timesheets',
+          search: defaultSearch,
+        }),
+    },
+    {
+      key: 'hours',
+      label: 'Часов',
+      value: `${totals.hours} ч`,
+      icon: Clock3,
+      onClick: () =>
+        navigate({
+          to: '/timesheets',
+          search: defaultSearch,
+        }),
+    },
+    {
+      key: 'draft',
+      label: 'Черновиков',
+      value: String(totals.draft),
+      icon: NotebookPen,
+      onClick: () =>
+        navigate({
+          to: '/timesheets',
+          search: {
+            ...defaultSearch,
+            status: 'draft',
+          },
+        }),
+    },
+    {
+      key: 'approved',
+      label: 'Утверждено',
+      value: String(totals.approved),
+      icon: CheckCircle2,
+      onClick: () =>
+        navigate({
+          to: '/timesheets',
+          search: {
+            ...defaultSearch,
+            status: 'approved',
+          },
+        }),
+    },
+  ] as const;
 
   return (
     <section className="space-y-5 xl:space-y-6">
-      <EntityPageHeader
-        breadcrumbs={<PageBreadcrumbs items={[{ label: 'Главная' }]} />}
-        eyebrow={
-          <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--accent)]">
-            <CalendarDays className="h-3.5 w-3.5" />
-            Рабочий стол
-          </span>
-        }
-        title="Проектные табели"
-        titleMeta={
-          <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--text-soft)]">
-            <span>Домашний экран для быстрого старта в рабочий контур.</span>
-            <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-xs text-[var(--text-soft)]">
-              <CalendarRange className="h-3.5 w-3.5" />
-              {formatMonthLabel(today)}
-            </span>
-          </div>
-        }
-        actions={
-          <DocumentActionBar className="xl:justify-start">
-            <Button
-              onClick={() =>
-                navigate({
-                  to: '/timesheet/$date',
-                  params: { date: startOfToday() },
-                })
-              }
-            >
-              <Plus className="h-4 w-4" />
-              Табель на сегодня
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() =>
-                navigate({
-                  to: '/timesheets',
-                  search: getDefaultTimesheetsSearch(),
-                })
-              }
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Открыть журнал
-            </Button>
-          </DocumentActionBar>
-        }
-      />
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <article className="app-surface-strong overflow-hidden p-5 sm:p-6 xl:p-7">
-          <div className="flex h-full flex-col justify-between gap-6">
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
-              <div className="space-y-4">
-                <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-soft)]">
-                  <FileSpreadsheet className="h-3.5 w-3.5" />
+      <article className="app-surface-strong p-5 sm:p-6 xl:p-7">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                  Текущий период
+                </p>
+                <h1 className="text-2xl font-semibold tracking-tight xl:text-[2.35rem]">
                   Табели
-                </span>
-                <div className="space-y-3">
-                  <h2 className="text-2xl font-semibold tracking-tight xl:text-[2rem]">
-                    Журнал, рабочий день и быстрый переход к нужному табелю
-                  </h2>
-                  <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
-                    Открывайте рабочий период, находите нужный день и переходите в редактор без
-                    лишних промежуточных экранов. Домашняя страница оставляет под рукой только
-                    основные рабочие входы.
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                      Основной сценарий
-                    </p>
-                    <p className="mt-2 text-sm text-[var(--app-fg)]">
-                      Журнал, фильтры, открытие табеля и быстрый переход к рабочему дню.
-                    </p>
-                  </div>
-                  <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                      Что под рукой
-                    </p>
-                    <div className="mt-2 space-y-2 text-sm text-[var(--app-fg)]">
-                      <div className="flex items-center gap-2">
-                        <Workflow className="h-4 w-4 text-[var(--accent)]" />
-                        Журнал за текущий период
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <FolderClock className="h-4 w-4 text-[var(--accent)]" />
-                        Табель на сегодня
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckSquare className="h-4 w-4 text-[var(--accent)]" />
-                        Быстрый вход в рабочий поток
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                </h1>
+                <p className="text-sm text-[var(--text-soft)]">{formatMonthLabel(defaultSearch.period)}</p>
               </div>
-              <div className="grid gap-3">
-                <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-bg-strong)_86%,var(--panel-muted)_14%)] p-4">
-                  <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    Сегодня
-                  </p>
-                  <p className="mt-2 text-lg font-semibold capitalize">{formatTodayLabel(today)}</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-                    Быстрый вход в текущий рабочий день без поиска по журналу.
-                  </p>
-                </div>
-                <div className="border border-[var(--panel-border)] bg-[color-mix(in_oklab,var(--panel-bg-strong)_84%,var(--panel-muted)_16%)] p-4">
-                  <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    Рабочий период
-                  </p>
-                  <p className="mt-2 text-lg font-semibold">{formatMonthLabel(today)}</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-                    Переходите в журнал и сразу работайте в текущем периоде по умолчанию.
-                  </p>
-                </div>
-              </div>
+              <p className="max-w-2xl text-sm leading-6 text-[var(--text-soft)]">
+                Открывайте журнал, переходите к рабочему дню и быстро смотрите ключевые итоги за
+                текущий месяц в одном месте.
+              </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
               <Button
-                onClick={() =>
-                  navigate({
-                    to: '/timesheets',
-                    search: getDefaultTimesheetsSearch(),
-                  })
-                }
-                className="h-11"
-              >
-                Открыть журнал
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="secondary"
                 onClick={() =>
                   navigate({
                     to: '/timesheet/$date',
@@ -186,59 +133,62 @@ export default function DashboardPage() {
                 }
                 className="h-11"
               >
-                <FolderClock className="h-4 w-4" />
-                Сегодня
+                <Plus className="h-4 w-4" />
+                Табель на сегодня
               </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  navigate({
+                    to: '/timesheets',
+                    search: defaultSearch,
+                  })
+                }
+                className="h-11"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Открыть журнал
+              </Button>
+              {appConfig.features.demoRoute ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate({ to: '/demo' })}
+                  className="h-11"
+                >
+                  <PlaySquare className="h-4 w-4" />
+                  Демо
+                </Button>
+              ) : null}
             </div>
           </div>
-        </article>
 
-        {appConfig.features.demoRoute ? (
-          <article className="app-surface overflow-hidden p-5 sm:p-6 xl:p-7">
-            <div className="flex h-full flex-col justify-between gap-6">
-              <div className="space-y-4">
-                <span className="inline-flex items-center gap-2 rounded-[var(--badge-radius)] border border-sky-300/20 bg-sky-400/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--accent)] dark:text-sky-200">
-                  <PlaySquare className="h-3.5 w-3.5" />
-                  Демо
-                </span>
-                <div className="space-y-3">
-                  <h2 className="text-xl font-semibold tracking-tight xl:text-[1.7rem]">
-                    Презентационный контур
-                  </h2>
-                  <p className="text-sm leading-6 text-[var(--text-soft)]">
-                    Отсюда удобно запускать демо-сценарий, готовить локальные данные и
-                    переключаться в рабочие экраны без лишнего шума в навигации.
-                  </p>
-                </div>
-                <div className="grid gap-3">
-                  <div className="border border-[var(--panel-border)] bg-[var(--panel-muted)] p-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {summaryActions.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={item.onClick}
+                  className="group flex items-center justify-between gap-4 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-4 py-4 text-left transition hover:bg-[var(--panel-hover)]"
+                >
+                  <div>
                     <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                      Когда использовать
+                      {item.label}
                     </p>
-                    <p className="mt-2 text-sm text-[var(--app-fg)]">
-                      Для показа продукта, seed демо-данных и подготовки управляемого сценария.
-                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-[var(--app-fg)]">{item.value}</p>
                   </div>
-                  <div className="border border-[var(--panel-border)] bg-[var(--accent-soft)] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.08em] text-[var(--accent)]">
-                      Режим показа
-                    </p>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-[var(--app-fg)]">
-                      <Play className="h-4 w-4" />
-                      Демо-центр остается отдельным контуром и не мешает рабочей навигации.
-                    </div>
+                  <div className="flex flex-col items-end gap-3 text-[var(--text-muted)] transition group-hover:text-[var(--accent)]">
+                    <Icon className="h-4.5 w-4.5" />
+                    <ArrowRight className="h-4 w-4" />
                   </div>
-                </div>
-              </div>
-
-              <Button onClick={() => navigate({ to: '/demo' })} variant="secondary" className="h-11">
-                Открыть демо-центр
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </article>
-        ) : null}
-      </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </article>
     </section>
   );
 }

@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import {
   Download,
   FileSpreadsheet,
-  FolderClock,
   House,
   LogOut,
   MonitorCog,
@@ -22,6 +21,7 @@ import { useTheme, type ThemeMode } from '../features/theme/theme';
 import { useRunSync } from '../hooks/useRunSync';
 import { useSyncStatus } from '../hooks/useSyncStatus';
 import { cn } from '../lib/utils';
+import { getDefaultTimesheetsSearch } from '../routes/_authenticated/timesheets';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -34,15 +34,6 @@ interface NavigationItem {
   description?: string;
   tone?: 'primary';
 }
-
-const formatLocalDate = (value = new Date()) => {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const startOfToday = () => formatLocalDate();
 
 export default function Layout({ children }: LayoutProps) {
   const auth = useAuth();
@@ -63,6 +54,7 @@ export default function Layout({ children }: LayoutProps) {
   const runSyncMutation = useRunSync();
   const { canInstall, promptInstall } = usePwaInstallPrompt();
   const isEditorRoute = location.pathname.startsWith('/timesheet/');
+  const defaultTimesheetsSearch = React.useMemo(() => getDefaultTimesheetsSearch(), []);
   const navigation: NavigationItem[] = React.useMemo(() => {
     return [
       {
@@ -310,6 +302,7 @@ export default function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.href}
                     to={item.href}
+                    search={item.href === '/timesheets' ? defaultTimesheetsSearch : undefined}
                     title={item.label}
                     className={cn(
                       'group relative flex items-center rounded-[var(--control-radius)] border border-transparent text-[var(--text-soft)] transition',
@@ -525,7 +518,7 @@ export default function Layout({ children }: LayoutProps) {
             isMobileChromeHidden && 'translate-y-full'
           )}
         >
-          <div className="mx-auto grid max-w-md grid-cols-3 items-center gap-0.5">
+          <div className="mx-auto grid max-w-sm grid-cols-2 items-center gap-0.5">
             <Link
               to="/"
               className={cn(
@@ -544,11 +537,7 @@ export default function Layout({ children }: LayoutProps) {
             </Link>
             <Link
               to="/timesheets"
-              search={{
-                period: startOfToday().slice(0, 7),
-                status: 'all',
-                q: '',
-              }}
+              search={defaultTimesheetsSearch}
               className={cn(
                 'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
                 location.pathname.startsWith('/timesheets')
@@ -564,25 +553,6 @@ export default function Layout({ children }: LayoutProps) {
               />
               <FileSpreadsheet className="h-4.5 w-4.5" />
               <span>Табели</span>
-            </Link>
-            <Link
-              to="/timesheet/$date"
-              params={{ date: startOfToday() }}
-              className={cn(
-                'relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-[var(--control-radius)] px-2 py-1 text-[11px] font-medium transition',
-                location.pathname.startsWith('/timesheet/')
-                  ? 'text-[var(--accent)]'
-                  : 'text-[var(--text-muted)]'
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute bottom-0.5 left-1/2 h-[3px] -translate-x-1/2 rounded-full bg-transparent transition-all duration-200',
-                  location.pathname.startsWith('/timesheet/') ? 'w-5 bg-[var(--accent)]' : 'w-0'
-                )}
-              />
-              <FolderClock className="h-4.5 w-4.5" />
-              <span>Сегодня</span>
             </Link>
           </div>
         </nav>
