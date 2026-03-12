@@ -447,7 +447,7 @@ export default function TimesheetsList() {
           >
             <DocumentTableToolbar
               filters={
-                <div className="grid gap-3 xl:grid-cols-[minmax(0,1.25fr)_280px_220px_160px] xl:items-end">
+                <div className="grid gap-3 xl:grid-cols-[minmax(200px,480px)_280px_220px_160px] xl:items-end">
                 <label className="flex min-w-0 flex-col gap-2">
                   <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                     <Search className="h-3.5 w-3.5" />

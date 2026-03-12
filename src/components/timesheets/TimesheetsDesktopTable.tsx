@@ -3,7 +3,6 @@ import {
   createColumnHelper,
   type ColumnDef,
 } from '@tanstack/react-table';
-import { ArrowRight } from 'lucide-react';
 import type { Timesheet } from '../../api/mockBackend';
 import { DocumentDataTable } from '../workspace/DocumentDataTable';
 
@@ -96,24 +95,6 @@ export function TimesheetsDesktopTable({
           <span className="block max-w-[34rem] truncate text-[var(--text-muted)]">
             {row.original.rows[0]?.description || 'Без описания работ'}
           </span>
-        ),
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: () => '',
-        enableSorting: false,
-        enableHiding: false,
-        cell: ({ row }) => (
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={() => onOpenTimesheet(row.original.date)}
-              className="inline-flex items-center gap-2 border border-[var(--panel-border)] bg-[var(--panel-muted)] px-3 py-2 text-sm font-medium transition hover:bg-[var(--panel-hover)]"
-            >
-              Открыть
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
         ),
       }),
     ],

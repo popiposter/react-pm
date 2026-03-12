@@ -497,14 +497,7 @@ export default function Layout({ children }: LayoutProps) {
                 : 'pb-[var(--mobile-nav-content-offset)]'
             )}
           >
-            <div
-              className={cn(
-                'mx-auto w-full',
-                isEditorRoute
-                  ? 'max-w-[1580px] 2xl:max-w-[1700px]'
-                  : 'max-w-[1520px] 2xl:max-w-[1660px]'
-              )}
-            >
+            <div className="w-full">
               {children}
             </div>
           </main>
